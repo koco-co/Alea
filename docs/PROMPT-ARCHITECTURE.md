@@ -5,7 +5,7 @@
 | 文档版本 | v1.0 |
 | 日期 | 2026-07-19 |
 | 状态 | 待评审 |
-| 上游依据 | PRD v1.4、TECH v1.2、`football-match-analysis` 方法论 |
+| 上游依据 | PRD v1.6、TECH v1.2、`football-match-analysis` 方法论 |
 
 ---
 

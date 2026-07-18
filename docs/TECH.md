@@ -2,9 +2,9 @@
 
 | 项 | 内容 |
 |---|---|
-| 文档版本 | v1.2 |
+| 文档版本 | v1.3 |
 | 日期 | 2026-07-19 |
-| 上游依据 | PRD v1.4 |
+| 上游依据 | PRD v1.6 |
 | 状态 | 架构候选；Gate 0 通过前禁止进入业务功能开发 |
 
 ---
@@ -118,6 +118,7 @@
 | 算票与方案卡不上传用户选择 | 浏览器 TypeScript 纯函数 + 版本化规则 JSON | 用户参数仅本地；TS/Python 使用同一 fixtures | 规则不一致或赔率过期则禁止出图 |
 | 模拟盘、排行、赛果更正 | immutable `account_entries` + settlement runs | 只消费公证终态；重复结算不重复记账；更正用冲正 | 赛果冲突时冻结整条下游链 |
 | 复盘与教训注入 | review/lesson 表 + `lesson_set_versions` | 编辑留版本；每桌冻结教训集合 | 自动复盘失败不改变既有结算 |
+| 方法论提议、回测与评审 | `methodology_*` 表 + 类型化评审圆桌 + `prompt_versions` | 提议不自动生效；回测只读赛前快照；发布新版本不覆盖历史 | 样本不足/回测失败禁止评审，未获管理员确认禁止发布 |
 | 定时圆桌、通知 | schedule lease + outbox + idempotency key | 重叠调度不重复发起；同事件通知一次 | misfire 按类型补跑或告警 |
 
 ---
@@ -405,6 +406,9 @@ class BaseProvider(Protocol):
     async def form_bet(
         self, context: BetFormContext, request: ProviderRequest
     ) -> ProviderResult[BetProposal]: ...
+    async def review_methodology(
+        self, context: MethodologyReviewContext, request: ProviderRequest
+    ) -> ProviderResult[MethodologyReview]: ...
 
 # 兼容传输只覆盖已通过 contract test 的 DeepSeek/Kimi/Qwen 模型
 class OpenAICompatProvider:
@@ -432,6 +436,7 @@ class OpenAICompatProvider:
 - 圆桌开始时冻结 `provider_connection_version`、模型版本和提示词版本，历史任务不追随之后的配置修改。
 - Provider 返回内容必须通过结构化 Schema 校验；展示给用户的 Markdown、链接和引用在前端渲染前执行白名单净化。
 - 模型别名会漂移或下线；启用时保存 provider 返回的具体 model ID/版本，并由每日健康检查标记 deprecated/unavailable。健康检查不能静默替换模型。
+- 模型目录与「测试连接」均由 FastAPI 代理；目录结果按连接版本短期缓存并标记采集时间。测试只验证认证、端点和所选模型的最小能力，不把一次成功等同于生产可用，启用实例仍须通过 Provider contract。
 
 ### 5.3 数据源降级链
 
@@ -610,6 +615,16 @@ waiting
 - 新预测全员通知受用户偏好控制；关注卡赛果、关注卡复盘以及管理员专属通知分别使用独立偏好。
 - 用户注销时删除关注和通知偏好；系统审计日志只保留匿名化主体标识。
 
+### 5.9 方法论提议、回测与评审
+
+- lesson 聚合任务只创建 `pending_review` 提议和证据关联，使用规范化模式哈希与唯一约束去重；不得直接修改 `prompt_versions`。
+- 回测读取公证预测所引用的赛前 `input_snapshots`，对 OLD/NEW 使用同一比赛集合、模型/连接版本、参数、输出 Schema 与评价器版本；输入查询必须在存储层排除赛果、赛后事件和复盘内容，防止数据泄漏。
+- 单次 LLM 输出并非确定性证据。回测保存每次尝试的原始结构化结果、随机参数/seed（厂商支持时）、成功/失败数和聚合指标；是否需要重复次数与置信区间由 Gate 0 方法论回测实验确定，不得只展示一个命中率差值。
+- 方法论评审复用 `roundtable_jobs`、参与者冻结、阶段运行、事件序列、Realtime 补拉和审计机制，以 `job_type=methodology_review` 区分；评审结果使用独立 Schema，不与比分预测或组单结果混写。
+- 提议状态通过带版本号的条件更新流转：`pending_review → backtesting → ready_for_review → reviewing → pending_admin_confirmation → published/rejected/revise_and_review/archived`。任何回测或评审重试创建新 attempt，不覆盖旧记录。
+- 发布在单个数据库事务中锁定提议，校验回测、终投/人工绕过理由、管理员身份和预期当前方法论版本，然后向 `prompt_versions(key=core_methodology)` 追加新版本并写审计；并发确认只能成功一次。
+- 回滚不是把旧行改回当前，而是以目标历史内容追加一个新版本，并记录来源版本、差异、原因和管理员；运行中圆桌继续使用启动时冻结的版本。
+
 ---
 
 ## 6. 数据库核心表结构（Supabase PostgreSQL）
@@ -657,6 +672,7 @@ prompt_versions       -- 提示词及输出 Schema 版本
 lesson_set_versions   -- 每次圆桌冻结的教训集合
 score_formula_versions-- 综合分、先验与票权算法版本
 sporttery_rule_versions -- 算票与结算规则 JSON 版本
+methodology_review_results -- 方法论评审的独立结构化结论与投票
 ```
 
 ### 6.4 模拟盘
@@ -673,6 +689,9 @@ ranking_snapshots -- 按公式版本和统计窗口生成的排行快照
 reviews           -- 复盘报告
 lessons           -- 教训档案（结构化，关联AI实例 + 复盘 + 比赛）
 lesson_injections -- 教训注入记录（哪次预测用了哪批教训）
+methodology_proposals -- 提议文本、状态、乐观锁版本与目标方法论版本
+methodology_proposal_evidence -- 提议与 lesson/review/match 的证据关联
+methodology_backtest_runs -- 冻结样本、OLD/NEW版本、尝试、评价器与聚合结果
 ```
 
 ### 6.6 关注、通知与调度
@@ -865,6 +884,7 @@ make check
 | 未发布草稿、公证完整载荷 | 无权 | 只读审核 | 写入 |
 | 圆桌直播与执行审计 | 无权；终止归档按 PRD 公开摘要 | 只读 + 受控操作 | 追加 |
 | AI 阵容、密钥引用、系统配置 | 无权 | 受控读写 | 读取冻结版本 |
+| 方法论提议、回测、评审与版本 | 无权 | 受控读写/确认发布 | 聚合、回测、追加评审与版本 |
 | 用户关注、通知、偏好 | 仅本人 | 仅本人；用户管理不得读取无关内容 | 生成通知 |
 | 真实盘 | 无权 | 受控读写并留操作日志 | 结算辅助 |
 
@@ -917,14 +937,15 @@ make check
 
 | 层级 | 必测范围 |
 |---|---|
-| 单元测试 | 投票权重、平票、法定人数、规则计算、风控缩仓、事实状态机、错误分类 |
+| 单元测试 | 投票权重、平票、法定人数、规则计算、风控缩仓、事实状态机、方法论提议去重/状态机、错误分类 |
 | Golden/属性测试 | 五种玩法、复式、过关、设胆、`M串N`、无效场次重算、金额舍入、官方更正；TS/Python 结果一致 |
 | Provider contract | fake server 覆盖结构化输出、超时、限流、无效 JSON、拒绝、密钥脱敏；每个启用的真实 vendor/model 另跑 staging capability test |
 | 数据源 contract | Sporttery 200/403/超时/字段变更、缓存与限频、实体映射、原始快照、缺失字段、冲突、过期和降级链 |
 | 数据库/RLS | 用户隔离、管理员权限、private topic、客户端禁止 Broadcast、不可变表 UPDATE/DELETE、专用函数与四个运行时角色权限 |
 | 密钥 | 明文不落库/日志/响应，密文篡改失败，错误 KEK 失败，轮换可回滚，备份中无 KEK |
 | 状态机/集成 | 重复 Celery 投递、Worker 重启、迟到结果、人工终止、未达法定人数、outbox 恢复 |
-| E2E | PRD P0 主链，以及零场入围、终投前终止、Provider 部分失败、数据冲突、撤回、过期赔率禁止出图 |
+| 方法论回测 | 赛前快照防泄漏、OLD/NEW 同条件、样本不足、部分 Provider 失败、重复 attempt、并发确认、发布与回滚只追加 |
+| E2E | PRD P0 主链，以及零场入围、终投前终止、Provider 部分失败、数据冲突、撤回、过期赔率禁止出图；方法论 P1 流程单独验收 |
 
 质量门禁：
 
@@ -954,8 +975,10 @@ make check
    完成标准：部分 Provider 失败、重复投递、Worker 重启和人工终止均可恢复并留痕。
 4. **公证、发布与结算**：不可变入账、质检、撤回、账户分录、排行和赛果更正。
    完成标准：发布状态不影响统计；重复结算不重复记账；更正保留前后记录。
-5. **调度、通知、复盘与上线运维**。
-   完成标准：定时任务幂等、通知不重复、自动复盘可关闭，staging 主链与失败分支通过。
+5. **调度、通知、复盘与方法论闭环**。
+   完成标准：定时任务幂等、通知不重复、自动复盘可关闭；方法论提议不重复、回测无赛果泄漏、评审/人工绕过留痕、确认发布与回滚只追加新版本。
+6. **上线运维**。
+   完成标准：staging 主链、方法论 P1 流程与失败分支通过，备份恢复和告警达到 Gate 0 已确认目标。
 
 ## 16. Gate 0：开发前架构验证
 
