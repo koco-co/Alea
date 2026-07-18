@@ -1,0 +1,990 @@
+# Alea — 技术架构设计文档
+
+| 项 | 内容 |
+|---|---|
+| 文档版本 | v1.2 |
+| 日期 | 2026-07-19 |
+| 上游依据 | PRD v1.4 |
+| 状态 | 架构候选；Gate 0 通过前禁止进入业务功能开发 |
+
+---
+
+## 0. 结论、边界与开发准入
+
+本文档已经完成对 PRD 的静态追踪，并用官方文档核验了 Supabase、Celery、Redis、Docker Compose、uv、Bun、Next.js 以及六类 AI Provider 的关键技术边界。它不是“架构已被运行验证”的证明：当前仓库没有可运行应用、数据库迁移、真实 Provider 额度或 staging 环境，因此容量、故障恢复、RLS 和模型输出仍需通过 §16 的 Gate 0 实验。
+
+在 Gate 0 全部通过前，只允许实现验证脚手架、迁移、fake provider、固定数据 fixtures 和最小纵切，不得并行铺开页面与业务模块。任何失败必须先修改架构决策或缩小范围，不能以 TODO、人工兜底或“后续优化”绕过。
+
+当前可信程度：
+
+| 范围 | 当前证据 | 结论 |
+|---|---|---|
+| PRD → 模块/状态/数据追踪 | 已逐项静态审阅 | 可作为候选设计 |
+| 官方 SDK/API 行为 | 已查官方文档，来源见 §17 | 已核验文档边界，尚未用真实账户调用 |
+| Supabase RLS/Realtime/恢复 | 仅官方文档 | 必须跑迁移、越权、断线补拉与恢复实验 |
+| Celery 至少一次/崩溃恢复 | 仅官方文档 | 必须跑 kill/retry/重复投递实验 |
+| 六家模型结构化输出 | 仅官方文档 | 每个启用模型必须跑真实 contract test |
+| 体彩赛程、赔率、赛果 | 已从移动足球数据页脚本定位 Web API，并于 2026-07-19 实测列表/详情 HTTP 200 | 个人模式可用；无公开 SLA，必须缓存、限频、容错，公开托管/再分发另行评估 |
+| 容量、成本、RPO/RTO | 尚无业务量与部署套餐 | 不得声称已验证 |
+
+架构硬边界：
+
+- PostgreSQL 是业务事实源；Redis、Celery 状态和 Realtime 消息都可丢、可重建，不能作为公证、结算或恢复依据。
+- 浏览器只持有 Supabase publishable key 和用户 JWT；Supabase secret key、数据库角色凭据、Provider 密钥绝不进入浏览器或 Next.js 公共环境。
+- 统一接口不等于假设厂商完全兼容。业务 Schema 统一，传输协议、参数、错误、能力与模型版本由各适配器显式处理。
+- 不引入 Kubernetes、Kafka、独立微服务集群或自研工作流引擎。首版保持一个 Web、一个 API 代码库、Celery Worker、Dispatcher、Scheduler、Redis 和 Supabase。
+
+---
+
+## 1. 技术决策汇总
+
+| 决策项 | 选择 | 理由 |
+|---|---|---|
+| 开发环境 | 本地 Docker Compose | 本地统一启动 Redis、Web、API、Worker、Scheduler；生产拓扑另见 §12 |
+| 前端语言 | TypeScript — Next.js App Router | 与 Supabase JS SDK 原生兼容；具体版本由 `bun.lock` 锁定 |
+| AI 编排语言 | Python — FastAPI + Celery | 更成熟的异步任务队列生态，provider SDK 完整 |
+| Python 工具链 | `uv` | 管理 Python 版本、虚拟环境、依赖解析与 `uv.lock` |
+| Node 工具链 | `bun` | 统一安装依赖、执行脚本与维护 `bun.lock`，不混用 npm/pnpm/yarn |
+| 统一命令入口 | `make` | 开发、测试、迁移、检查均通过稳定的 Make target 执行 |
+| 数据库 / 认证 | Supabase Cloud（已有账号） | Auth + PostgreSQL + Storage + Realtime 一体，省去本地 PG |
+| 消息队列 | Redis + Celery | 本地容器运行，支持长任务、重试、并发扩展 |
+| 后台数据库访问 | 直连 PostgreSQL 的最小权限角色 | Supabase secret key 会绕过 RLS；API/Worker/Dispatcher/Scheduler 必须隔离权限 |
+| 动态 Provider 密钥 | 应用层 envelope encryption | 密文入库，KEK 由部署平台注入；不把 Public Alpha 的 Vault 作为唯一生产边界 |
+| 对象存储 | Supabase Storage（按需） | 只存平台管理的公共素材；用户算票配置与方案卡默认仅在浏览器本地生成，不上传 |
+| 实时推流 | 持久事件表 + Supabase Realtime Broadcast 私有频道 | PG 可补拉，Broadcast 负责低延迟通知；不把短期 Realtime 消息当历史记录 |
+| AI 接入 | 统一业务合同 + 厂商适配器/能力画像 | 避免把“协议兼容”误当作参数、Schema、错误和模型能力完全一致 |
+| 体彩数据 | 个人模式优先使用中国竞彩网移动页 Web API；缓存/人工导入兜底 | 满足个人预测；接口无 SLA、页面声明部分数据仅供参考，不能伪装成强保证数据服务 |
+
+---
+
+## 2. 整体架构图
+
+```
+浏览器
+  │  HTTPS（页面/API）+ Supabase Realtime Broadcast（圆桌通知）
+  ▼
+┌─────────────────────────────────────────────────────┐
+│                  Docker Compose (本地)               │
+│                                                     │
+│  ┌──────────────────┐    ┌────────────────────────┐ │
+│  │  web             │    │  api                   │ │
+│  │  Next.js         │◄──►│  FastAPI (Python)      │ │
+│  │  前端 + 薄网关   │    │  圆桌编排 / 数据同步   │ │
+│  └──────────────────┘    └──────────┬─────────────┘ │
+│                                     │               │
+│                           ┌─────────▼─────────────┐ │
+│                           │  worker               │ │
+│                           │  Celery (Python)      │ │
+│                           │  长任务 / 并发AI调用   │ │
+│                           └─────────┬─────────────┘ │
+│                                     │               │
+│  ┌──────────────────┐               │               │
+│  │  dispatcher      │  扫描事务 outbox 并投递 Celery│
+│  └──────────────────┘               │               │
+│  ┌──────────────────┐               │               │
+│  │  scheduler       │  定时扫描并获取数据库租约      │
+│  └──────────────────┘               │               │
+│  ┌──────────────────┐    ┌──────────▼─────────────┐ │
+│  │  redis           │◄───┤  (Celery Broker)       │ │
+│  │  Redis 7         │    └────────────────────────┘ │
+│  └──────────────────┘                               │
+│                                                     │
+│  ┌──────────────────┐                               │
+│  │  nginx           │  反向代理，统一 80 入口        │
+│  └──────────────────┘                               │
+└─────────────────────────────────────────────────────┘
+         │ 浏览器：publishable key + JWT
+         │ 服务端：最小权限 PostgreSQL 角色
+         ▼
+┌─────────────────────────────────────────────────────┐
+│  Supabase Cloud                                     │
+│  Auth · PostgreSQL · Realtime · Storage             │
+└─────────────────────────────────────────────────────┘
+         │ API/Worker 解密动态 Provider 密钥
+         ▼
+    AI 提供商（外部）
+```
+
+### 2.1 PRD 核心承诺的归属
+
+| PRD 承诺 | 唯一事实源/执行位置 | 不变量 | 失败处理 |
+|---|---|---|---|
+| 登录、用户/管理员隔离 | Supabase Auth + `profiles` + RLS/GRANT | 客户端角色字段不可信；后台入口隐藏不算授权 | JWT/RLS 失败即拒绝，不降级为匿名管理员 |
+| 体彩赛程、玩法、赔率、赛果 | Sporttery Web Source → `source_records` / `sporttery_offers` / `result_versions` | 每个事实带页面/API、采集/生效时间与原始哈希；历史只追加 | 403/变更/过期时使用缓存或人工导入，冲突则冻结结算 |
+| 多 AI 独立预测/匿名辩论/终投 | `roundtable_jobs` 状态机 + phase/result 表 | 阵容、输入、模型、提示词、规则和票权在开桌时冻结 | 超时/缺席/终止显式入审计，迟到结果不推进 |
+| 首份结果即执行审计 | `execution_audits` + immutable trigger | 一旦创建不可删改；终止/失败也公开留痕 | 写审计失败则阶段事务回滚 |
+| 法定人数后公证、无法事后挑战绩 | `notarize_roundtable()` + `notarized_predictions` | 只插入；发布/撤回不影响统计；幂等键唯一 | 公证事务失败则不进入 completed |
+| 辩论直播与登录后回放 | `roundtable_events` + private Broadcast + API backfill | PG 事件是事实；Realtime 只通知；event_seq 单调 | 断线/跳号按序补拉 |
+| 算票与方案卡不上传用户选择 | 浏览器 TypeScript 纯函数 + 版本化规则 JSON | 用户参数仅本地；TS/Python 使用同一 fixtures | 规则不一致或赔率过期则禁止出图 |
+| 模拟盘、排行、赛果更正 | immutable `account_entries` + settlement runs | 只消费公证终态；重复结算不重复记账；更正用冲正 | 赛果冲突时冻结整条下游链 |
+| 复盘与教训注入 | review/lesson 表 + `lesson_set_versions` | 编辑留版本；每桌冻结教训集合 | 自动复盘失败不改变既有结算 |
+| 定时圆桌、通知 | schedule lease + outbox + idempotency key | 重叠调度不重复发起；同事件通知一次 | misfire 按类型补跑或告警 |
+
+---
+
+## 3. Supabase 项目配置（需要你操作）
+
+### 3.1 需要从 Supabase 控制台取的信息
+
+登录 https://supabase.com/dashboard，打开项目，在 **Settings → API Keys** 里创建新式 publishable/secret key。Supabase 已宣布 legacy `anon` / `service_role` key 将在 2026 年底弃用，新项目不再以 legacy key 命名：
+
+| 变量名 | 位置 | 说明 |
+|---|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | Project URL | 形如 `https://xxxx.supabase.co` |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Publishable key | 可进入浏览器；数据权限仍由用户 JWT、GRANT 与 RLS 控制 |
+| `SUPABASE_SECRET_KEY` | Secret key | 仅 API 的受控 Auth/Storage 管理流程使用；会绕过 RLS |
+| `DATABASE_URL_ALEA_API` | 自定义数据库角色 | API 只获业务 RPC/表的必要权限 |
+| `DATABASE_URL_ALEA_WORKER` | 自定义数据库角色 | Worker 只获阶段、事件、公证等必要权限 |
+| `DATABASE_URL_ALEA_DISPATCHER` | 自定义数据库角色 | 只读/认领 outbox 并更新投递状态 |
+| `DATABASE_URL_ALEA_SCHEDULER` | 自定义数据库角色 | 只读配置、获取调度租约、创建调度命令 |
+
+### 3.2 需要开启的 Supabase 功能
+
+在控制台逐项确认：
+
+- **Authentication → Providers**：开启 Email（已默认）、GitHub OAuth、Google OAuth（需填 Client ID/Secret，各自去 GitHub/Google 申请）
+- **Realtime Settings**：关闭 public channel access；只允许 private channel
+- **Database migrations**：创建 `roundtable_events` 的 Broadcast trigger，并为 `realtime.messages` 建立按 topic 校验的 RLS
+- **Storage**：首版不为用户算票器创建 Bucket；若后台需要上传球队/人物等平台素材，再创建独立私有 Bucket 并配置对象级 RLS
+
+Secret key 只用于 Supabase Admin/Auth/Storage 能力，不能作为常规业务数据库连接。它映射到 `service_role` 且拥有 `BYPASSRLS`；业务写入使用自定义数据库角色、GRANT、约束和专用函数收口。RLS 是浏览器 Data API 的边界，不是后台服务的不可变性边界。
+
+### 3.3 OAuth 配置回调地址
+
+本地开发回调地址（填入 GitHub/Google 控制台）：
+```
+http://localhost:3000/auth/callback
+```
+
+测试与生产环境必须分别配置 Site URL 与 Redirect URL 白名单；不得使用通配符回调地址。
+
+---
+
+## 4. 仓库结构（Monorepo）
+
+```
+Alea/
+├── web/                        # Next.js 前端
+│   ├── src/
+│   │   ├── app/                # App Router 页面
+│   │   │   ├── (marketing)/    # 营销首页（游客）
+│   │   │   ├── (auth)/         # 登录/注册
+│   │   │   ├── console/        # 用户控制台
+│   │   │   └── api/            # Next.js API Routes（薄网关）
+│   │   ├── components/
+│   │   │   ├── ui/             # shadcn/ui 基础组件
+│   │   │   ├── marketing/      # 营销页专属组件
+│   │   │   ├── prediction/     # 预测卡片、辩论回放
+│   │   │   ├── calculator/     # 算票器
+│   │   │   └── charts/         # 盈亏曲线、校准图
+│   │   ├── lib/
+│   │   │   ├── supabase/       # Supabase 客户端初始化
+│   │   │   └── api-client.ts   # 调用 Python FastAPI 的封装
+│   │   └── types/              # 前端类型（从 shared/ 引用）
+│   ├── package.json
+│   ├── bun.lock
+│   └── next.config.ts
+│
+├── api/                        # Python FastAPI + Celery
+│   ├── app/
+│   │   ├── main.py             # FastAPI 入口
+│   │   ├── routers/
+│   │   │   ├── roundtable.py   # 圆桌发起/状态/事件补拉
+│   │   │   ├── matches.py      # 赛程/赔率同步
+│   │   │   ├── ledger.py       # 模拟盘结算
+│   │   │   └── admin.py        # AI阵容/系统配置
+│   │   ├── orchestration/
+│   │   │   ├── roundtable.py   # 圆桌状态机
+│   │   │   ├── phases/
+│   │   │   │   ├── select.py   # 选场阶段
+│   │   │   │   ├── predict.py  # 独立预测阶段
+│   │   │   │   ├── debate.py   # 匿名辩论阶段
+│   │   │   │   ├── vote.py     # 终投阶段
+│   │   │   │   └── bet_form.py # 组单阶段
+│   │   │   └── voting.py       # 加权投票 + 法定人数校验
+│   │   ├── providers/          # AI 厂商适配器
+│   │   │   ├── contract.py     # 统一业务合同与错误分类
+│   │   │   ├── capabilities.py # 按 vendor/model 记录结构化输出等能力
+│   │   │   ├── openai.py       # OpenAI 原生适配器
+│   │   │   ├── anthropic.py    # Anthropic Messages 适配器
+│   │   │   ├── google.py       # Google GenAI 适配器
+│   │   │   └── openai_compat.py# DeepSeek/Kimi/Qwen 兼容传输层
+│   │   ├── secrets/
+│   │   │   └── envelope.py     # Provider 动态密钥加解密与轮换
+│   │   ├── datasources/        # 体彩 Web、可选供应商与人工导入
+│   │   │   ├── contract.py     # 来源、部署模式、时效、哈希合同
+│   │   │   ├── sporttery_web.py# 中国竞彩网移动足球数据页适配器
+│   │   │   ├── licensed.py     # 可选的授权供应商适配器
+│   │   │   ├── admin_import.py # CSV/JSON 手动导入
+│   │   │   └── evidence.py     # 低可信证据候选，不覆盖正式竞彩事实
+│   │   ├── calculators/
+│   │   │   └── sporttery_calc.py # 五种玩法/过关/结算（纯确定性计算）
+│   │   └── workers/
+│   │       ├── celery_app.py   # Celery 配置
+│   │       ├── tasks.py        # Celery 任务定义
+│   │       ├── dispatcher.py   # outbox 投递
+│   │       └── recovery.py     # 超时 lease/未完成阶段恢复扫描
+│   ├── pyproject.toml
+│   └── uv.lock
+│
+├── shared/                     # 前后端共享类型（JSON Schema）
+│   └── schemas/
+│       ├── roundtable.json
+│       ├── prediction_card.json
+│       └── match.json
+│
+├── supabase/
+│   └── migrations/             # 数据库迁移 SQL
+│
+├── docker-compose.yml
+├── docker-compose.dev.yml      # 开发模式覆盖（热重载）
+├── Makefile                    # 统一开发/检查/测试/迁移入口
+├── .env.example                # 只列变量名和安全占位值
+└── docs/
+```
+
+工具链约束：
+
+- Python 依赖只通过 `uv add/remove/sync` 修改，提交 `pyproject.toml` 与 `uv.lock`。
+- Node 依赖只通过 `bun add/remove/install` 修改，提交 `package.json` 与 `bun.lock`。
+- CI 与开发者都调用同一组 Make targets，禁止在 CI 中复制另一套安装、迁移或测试命令。
+- `web/.env.local` 只保存 `NEXT_PUBLIC_*` 等前端允许读取的变量；`SUPABASE_SECRET_KEY`、各数据库角色凭据、Provider KEK 与数据源密钥只进入明确需要它们的服务端进程。
+
+---
+
+## 5. 核心模块技术设计
+
+### 5.1 圆桌编排（最复杂模块）
+
+#### 状态机
+
+```python
+class RoundtableState(str, Enum):
+    PENDING       = "pending"
+    SELECTING     = "selecting"       # 自主模式：选场投票
+    PREDICTING    = "predicting"      # 各AI独立比分预测
+    DEBATING      = "debating"        # 匿名辩论（1-2轮）
+    VOTING        = "voting"          # 比分终投
+    FORMING_BETS  = "forming_bets"    # 组单：玩法/串关/仓位
+    NOTARIZING    = "notarizing"      # 写入公证账本（不可变）
+    COMPLETED     = "completed"
+    TERMINATED    = "terminated"
+    FAILED        = "failed"
+```
+
+状态迁移只允许由服务端执行，并使用 `roundtable_jobs.state_version` 做乐观锁：
+
+| 当前状态 | 允许进入 | 进入条件 |
+|---|---|---|
+| `pending` | `selecting` / `predicting` / `terminated` | 配置与阵容快照已冻结 |
+| `selecting` | `predicting` / `completed` / `terminated` / `failed` | 入围场次确定；零场入围可直接完成为「今日休战」 |
+| `predicting` | `debating` / `voting` / `terminated` / `failed` | 有效实例结果已收齐或达到阶段超时 |
+| `debating` | `debating` / `voting` / `terminated` / `failed` | 当前轮结束；最多执行配置的轮数 |
+| `voting` | `forming_bets` / `notarizing` / `terminated` / `failed` | 比分终投完成；指定模式可不追加组单 |
+| `forming_bets` | `notarizing` / `terminated` / `failed` | 方案终投完成 |
+| `notarizing` | `completed` / `failed` | 公证事务提交成功或失败 |
+| 任意非终态 | `terminated` / `failed` | 人工终止或不可恢复错误；必须记录原因 |
+
+可靠性约束：
+
+- Celery 任务按“至少一次”执行设计。每个任务使用业务幂等键 `job_id:match_id:phase:round:instance_id`，重复投递不得产生重复结果或重复扣款。
+- `roundtable_phase_runs` 保存每次阶段尝试的状态、开始/结束时间、超时、错误分类与 Celery task ID；Worker 重启后从数据库检查点恢复，而不是依赖内存对象。
+- 状态更新、事件追加与下一阶段任务派发使用同一数据库事务加 transactional outbox；事务提交后由独立 dispatcher 投递 Celery，避免“数据库已更新但任务未发出”。
+- 每个 AI 调用必须有连接超时、总超时和有限重试；认证失败、参数错误不重试，限流和临时网络错误按退避策略重试。
+- 管理员终止使用数据库状态和取消令牌；已开始的外部调用即使无法物理取消，其迟到结果也只能记录为 `ignored_after_termination`，不得推进状态机。
+
+长任务的 Celery 基线配置：
+
+```python
+task_serializer = "json"
+accept_content = ["json"]
+task_acks_late = True
+task_track_started = True
+worker_prefetch_multiplier = 1
+task_reject_on_worker_lost = False  # Gate G3 证明不会形成毒任务循环后才可开启
+```
+
+- `acks_late` 代表任务可能执行多次，不代表 exactly-once；幂等性由数据库唯一键、状态版本和事务保证。
+- 每类 Provider 任务分别设置 soft/hard time limit，Redis visibility timeout 必须大于最长 hard limit；禁止用一个无限等待任务占住 Worker。
+- Celery result backend 只用于运维可见性。业务成功、失败、重试次数和恢复位置只认 PostgreSQL。
+- 长短任务使用独立 queue；同步/通知等短任务不能排在 10–30 分钟的圆桌调用后面。
+- `task_reject_on_worker_lost=True` 可能造成消息循环，只有 kill -9、OOM、重复投递和毒任务实验都通过后才能开启；未开启时由数据库 recovery scanner 重建丢失任务。
+
+#### 匿名辩论实现
+
+辩论阶段每个 AI 实例只看到匿名代号：
+
+```python
+async def run_debate_round(job_id, match_id, round_num):
+    job = await get_job(job_id)
+    active_instances = [inst for inst in job.instances if inst.status != "absent"]
+    # 分配代号
+    codenames = {inst_id: name
+                 for inst_id, name in zip(
+                     [inst.id for inst in active_instances], CODENAMES)}
+
+    # 并发调用所有实例（互不等待，各自看到上轮所有匿名发言）
+    tasks = [
+        call_instance_for_debate(
+            instance=inst,
+            my_codename=codenames[inst.id],
+            all_predictions=anonymize(job.phase1[match_id], codenames),
+            prev_debate=anonymize(job.debate[match_id][round_num-1], codenames),
+            self_history=get_history(inst.id),   # 历史准确率 + 教训
+        )
+        for inst in active_instances
+    ]
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+    for inst, result in zip(active_instances, results):
+        await persist_debate_result(job_id, match_id, round_num, inst.id, result)
+```
+
+#### 事实声明隔离与核验
+
+AI 输出不能直接进入其他 AI 的上下文。每份预测或辩论结果先经过结构化解析：
+
+1. 使用 Pydantic/JSON Schema 校验比分、置信度、理由和事实声明数组；无法解析时记录失败，禁止把原始文本当作有效投票。
+2. 将每条事实声明写入 `fact_claims`，初始状态为 `extracted`，并记录声明文本、提交实例、所在阶段与结果版本。
+3. 核验服务只查询已同步的可信数据快照，以实体、时间范围和事实类型匹配证据；状态流转为 `verifying → verified / unsupported / unavailable`。
+4. 只有 `verified` 声明可以附带来源快照进入其他 AI 的下一轮上下文。`unsupported` 与 `unavailable` 只能在管理员直播和用户回放中展示为「未经证实」，不得作为终投理由。
+5. 核验状态、证据快照、判断时间与算法版本全部追加到执行审计；任何状态变更都不覆盖原记录。
+
+圆桌事件分为 `result_received`、`claim_extracted`、`claim_verified`、`claim_rejected`、`vote_changed` 等明确类型。前端不根据自由文本推断业务状态。
+
+#### 实时推流（辩论直播）
+
+```
+Celery Worker
+   └─ 事务写 roundtable_events 表（持久事实）
+          └─ AFTER INSERT trigger → realtime.broadcast_changes()
+                 └─ Supabase Realtime private channel
+                        topic = roundtable:{job_id}:events
+                        └─ 更新辩论时间线 UI
+```
+
+Supabase 官方建议大多数生产场景使用 Broadcast，而不是直接把 Postgres Changes 当扩展路径。Realtime 只负责“有新事件”的低延迟投递，`roundtable_events` 才是历史、回放和断线恢复的事实源。浏览器加入频道前先设置用户 JWT；频道必须为 private，并通过 `realtime.messages` 的 SELECT policy 校验当前用户是否有权读取该 job。客户端不得拥有 Broadcast INSERT 权限。
+
+为消除“补拉与订阅之间丢事件”的竞态，客户端按以下顺序连接：
+
+1. 记录当前已应用的 `last_event_seq`。
+2. 订阅 private Broadcast channel，等待 `SUBSCRIBED`。
+3. 调用 API 补拉 `event_seq > last_event_seq` 的事件并按序应用。
+4. Broadcast 到达时仅把 payload 当提示；按 `event_seq` 去重，发现跳号立即再次补拉。
+
+```typescript
+await supabase.realtime.setAuth()
+const channel = supabase
+  .channel(`roundtable:${jobId}:events`, {
+    config: { private: true },
+  })
+  .on('broadcast', { event: 'INSERT' }, ({ payload }) => {
+    scheduleBackfill(payload.event_seq)
+  })
+  .subscribe()
+```
+
+`roundtable_events` 对每个 job 使用数据库分配的单调递增 `event_seq`，并以 `(job_id, event_seq)` 唯一约束去重。发布前的直播只允许管理员读取；普通用户仅能读取已发布预测关联的回放事件。Broadcast 消息不是持久记录，任何超时、断线或消息保留期都不能影响补拉结果。
+
+### 5.2 AI Provider 统一接口
+
+所有厂商共享业务输入/输出和错误分类，但不共享“假定完全一致”的请求参数：
+
+- OpenAI 使用 OpenAI 原生适配器；Anthropic 使用 Messages API；Gemini 使用 Google GenAI 原生适配器。
+- DeepSeek、Kimi、Qwen 官方提供 OpenAI 兼容端点，可复用 `openai_compat` 传输层，但每个厂商仍有独立 capability profile、参数过滤、模型发现、错误映射和 contract test。
+- Gemini 虽也提供 OpenAI 兼容层，但 Google 官方说明其高级能力存在映射限制；首版直接用原生 API，避免兼容层特殊分支继续扩散。
+- “支持结构化输出”按具体模型而非厂商判断。Schema 子集、字段大小写、思考模式、流式格式和拒绝响应必须由适配器归一化后再交给业务层。
+
+```python
+class BaseProvider(Protocol):
+    async def predict_score(
+        self, context: MatchContext, request: ProviderRequest
+    ) -> ProviderResult[ScorePrediction]: ...
+    async def debate_response(
+        self, context: DebateContext, request: ProviderRequest
+    ) -> ProviderResult[DebateMessage]: ...
+    async def form_bet(
+        self, context: BetFormContext, request: ProviderRequest
+    ) -> ProviderResult[BetProposal]: ...
+
+# 兼容传输只覆盖已通过 contract test 的 DeepSeek/Kimi/Qwen 模型
+class OpenAICompatProvider:
+    def __init__(
+        self,
+        vendor: Vendor,
+        base_url: str,
+        secret_ref: str,
+        model: str,
+        capabilities: ProviderCapabilities,
+    ):
+        api_key = secret_store.resolve(secret_ref)
+        self.client = AsyncOpenAI(base_url=base_url, api_key=api_key)
+```
+
+`ProviderRequest` 固定携带 `request_id`、业务幂等键、模型版本、提示词版本、输入快照 ID、输出 Schema 版本、超时与 token 上限。`ProviderResult` 返回结构化数据、厂商 request ID、用量、耗时、重试次数和经过脱敏的错误分类；原始密钥、Authorization 头与完整 Provider 错误不得写日志或数据库。
+
+管理员在「AI 阵容」页填写的每个实例配置（vendor / api_url / api_key / model）运行时由工厂函数实例化对应 Provider：
+
+- 新增/轮换密钥只发送到 FastAPI。API 使用 AES-256-GCM envelope encryption：每条密钥随机 DEK/nonce，绑定 connection ID 与版本作为 associated data；DEK 由部署平台注入的版本化 KEK 包裹。数据库只保存 ciphertext、wrapped DEK、nonce、key version、尾号和审计信息。
+- KEK 仅注入 API/Worker，不进入 Web、Dispatcher、Scheduler、数据库、镜像或日志；密钥读取接口永不返回明文，管理员只能覆盖、测试、轮换和停用。
+- Supabase Vault 虽可加密保存 secret，但当前官方标记为 Public Alpha，且有可解密 view 的权限风险。首版不把它作为唯一生产实现；若改用 Vault，必须另做 ADR、最小 GRANT 和泄露测试。
+- `api_url` 只允许 HTTPS，并按厂商连接配置白名单校验域名、端口与重定向目标，阻止 SSRF。
+- 密钥新增、轮换、测试连接和停用必须写管理员操作日志；测试连接返回统一错误，不向前端暴露上游响应正文。
+- 圆桌开始时冻结 `provider_connection_version`、模型版本和提示词版本，历史任务不追随之后的配置修改。
+- Provider 返回内容必须通过结构化 Schema 校验；展示给用户的 Markdown、链接和引用在前端渲染前执行白名单净化。
+- 模型别名会漂移或下线；启用时保存 provider 返回的具体 model ID/版本，并由每日健康检查标记 deprecated/unavailable。健康检查不能静默替换模型。
+
+### 5.3 数据源降级链
+
+#### 个人模式的 Sporttery Web Source
+
+个人预测模式默认接入用户指定的中国竞彩网移动足球数据页：
+
+- 页面：`https://m.sporttery.cn/mjc/zqsj/?tab=result`
+- 列表：`https://webapi.sporttery.cn/gateway/uniform/fb/getMatchDataPageListV1.qry`
+- 条件：`https://webapi.sporttery.cn/gateway/uniform/fb/getConditionsV1.qry`
+- 详情：`https://webapi.sporttery.cn/gateway/uniform/fb/getMatchGeneral.qry`
+- 直播：`https://webapi.sporttery.cn/gateway/uniform/fb/getMatchLiveV1.qry`
+- 五玩法固定奖金：`https://webapi.sporttery.cn/gateway/uniform/football/getMatchCalculatorV1.qry?channel=c`
+- 固定奖金历史：`https://webapi.sporttery.cn/gateway/uniform/football/getOddsHistoryV1.qry`
+
+页面脚本当前使用列表参数 `method=concern|all|live|result`。2026-07-19 实测：
+
+| 调用 | HTTP | 已观察字段 |
+|---|---:|---|
+| `method=concern` | 200 | 竞彩编号、联赛、球队、开赛时间、状态、胜/平/负参考值 |
+| `method=all` | 200 | 在售、直播与完成比赛的混合列表 |
+| `method=live` | 200 | 直播状态、比分与比赛阶段 |
+| `method=result&pageSize=10` | 200 | 半场/全场比分、完成/无效状态 |
+| `getMatchGeneral?matchId=...&matchStatus=11` | 200 | `matchResultList`，含 `HAD/HHAD/CRS/TTG/HAFU` 的开奖结果与对应值 |
+| `getMatchCalculatorV1?channel=c` | 200 | 在售场次与 `HAD/HHAD/CRS/TTG/HAFU` 五玩法完整固定奖金、让球线、更新时间 |
+
+裸服务端请求实测返回 403；带该页面正常浏览器请求所具有的 `Referer`、`Origin`、`Accept` 和合理 `User-Agent` 后返回 200。适配器可以复现正常页面请求，但必须遵守以下边界：
+
+- 低频同步、数据库缓存、指数退避和随机抖动；不得为每个页面访问实时回源。
+- 遇到 403、验证码、WAF、字段变更或连续失败时立即停用并告警；不得代理轮换、破解验证码或绕过访问控制。
+- 原始响应按 hash 去重并保留解析器版本；业务表不能直接绑定上游易变字段。
+- 页面明确提示部分数据来自第三方、仅供参考；系统展示来源和采集时间，不声称该 Web API 有公开 SLA。
+- 自动结算先写 `pending_confirmation`；下一次成功同步结果一致，或用户在个人后台确认后，才进入最终结算。无效场次和更正同时核对中国竞彩网「足球赛果开奖」页面/公告。
+- 若未来对外提供托管服务或公开再分发数据，必须重新评估使用条款；该要求不阻断当前单用户个人模式。
+
+```python
+class MatchDataService:
+    """所有数据请求统一返回带来源、部署模式与时间边界的 SourcedFact。"""
+
+    async def get_team_form(self, team_id) -> SourcedFact:
+        for source in self.enabled_sources(
+            capability="team_form",
+            deployment_mode=self.deployment_mode,
+        ):
+            if result := await source.get_team_form(team_id):
+                return self.to_sourced_fact(result, source)
+        return SourcedFact(state="unavailable")
+
+    async def get_odds(self, match_id) -> SourcedFact:
+        if self.deployment_mode == "personal":
+            if result := await self.sporttery_web.get_odds(match_id):
+                return self.to_sourced_fact(result, self.sporttery_web)
+        if result := await self.admin_import.get_odds(match_id):
+            return self.to_sourced_fact(result, self.admin_import)
+        return SourcedFact(state="unavailable")
+```
+
+普通足球赛事数据与“体彩选择了哪些场次、开放了哪些玩法、固定奖金是多少、何时停售、官方开奖结果是什么”是两种能力，不能互相冒充。通用 football API 可以补充球队近况，但不能生成或替代竞彩市场事实。Web Search 只可产生待核验证据候选，不进入赔率、赛果、结算或已验证事实。
+
+**关键约束**：AI 实例的工具调用（`get_injuries`、`get_standings` 等）全部经由这一层，绝不允许 AI 自己决定去哪个 URL 抓数据。来源切换只影响可用性，不能隐藏部署模式、口径或可信等级变化。
+
+数据可追溯约束：
+
+- `data_sources` 保存来源、能力范围、部署模式、地域、使用边界、健康状态和解析器版本；授权供应商另保存许可证明、展示/再分发范围和到期时间。
+- 每次同步先写 `sync_runs`，每个上游响应保存为 `source_records`：来源、请求范围、HTTP 状态、采集时间、事实生效时间、解析器版本、原始内容哈希与脱敏后的原始载荷。
+- 统一实体映射表维护上游球队/球员/赛事 ID 到 Alea canonical ID 的对应关系；映射不确定时进入人工处理，不得用名称模糊匹配后静默入库。
+- `SourcedFact` 必须引用 `source_record_id`，同时包含 `observed_at`、`valid_from`、`expires_at`、可信等级和字段级缺失状态。
+- “降级链”只决定可用性，不代表后来的低优先级来源可以覆盖更可信的既有事实。多源结果冲突时写入 `data_conflicts`，赛果冲突必须由管理员裁定后才能触发结算。
+- Web Search 仅作低可信证据候选，必须保存具体结果 URL、标题、采集时间与内容快照；它不能将声明升级为 `verified`，也不得仅以 `source="web-search"` 作为可审计来源。
+- 每次圆桌冻结其消费的 `input_snapshot_id`；后续同步不能改变历史圆桌的输入上下文。
+
+### 5.4 算票器（确定性计算，纯代码不走 AI）
+
+```python
+# calculators/sporttery_calc.py
+# 体彩规则配置化（版本号管理，见 PRD §13.5）
+
+def calculate_ticket(input: CalculationInput, rules: SportteryRules) -> CalculationResult:
+    """
+    纯函数：
+    - 校验过关组合是否合法（随玩法的串关上限）
+    - 计算注数
+    - 计算总金额（注数 × 2 × 倍数）
+    - 计算理论最高奖金（受单票上限约束）
+    """
+    validate_combo(input, rules)  # 非法组合抛异常，前端实时置灰
+    bets = calc_combinations(input)
+    stake = bets * 2 * input.multiplier
+    max_payout = calc_max_payout(input, rules)
+    return CalculationResult(bets=bets, stake=stake, max_payout=max_payout)
+```
+
+浏览器算票器使用 `web/src/lib/calculator/` 下的 TypeScript 纯函数直接计算，用户选择、预算与方案卡图片均只保存在浏览器。后端 Python 实现仅用于 AI 组单校验、模拟盘结算与发布质检，不作为用户算票器 API。
+
+前后端共同消费一份版本化规则 JSON，并使用同一组 golden fixtures 验证注数、金额、最高奖金、复式、设胆、`M串N`、无效场次组合重算与官方更正。任一 fixture 在两端结果不一致时禁止发布规则新版本。
+
+### 5.5 公证账本（不可变审计）
+
+写入规则：
+1. 圆桌启动后第一条 AI 结果产生 → 创建 `execution_audits` 记录（不可删除）
+2. 终投完成且满足法定人数 → 写入 `notarized_predictions`（`INSERT ONLY`，RLS 禁止 UPDATE/DELETE）
+3. 发布/撤回只改 `published_predictions` 的 `status` 字段，**不影响公证账本**
+
+不可变性不能只依赖 RLS。应用通过单一数据库函数 `notarize_roundtable(job_id)` 入账，该函数在一个事务内：
+
+1. 锁定任务并再次校验状态、法定人数、终投结果、规则版本与幂等键。
+2. 写入预测、逐实例投票、赔率快照引用、输入快照、模型/提示词/教训/综合分/票权/规则版本和申报/执行仓位。
+3. 创建虚拟账户待结算分录，不直接修改可变余额。
+4. 将任务推进为 `completed` 并追加审计事件。
+
+权限与触发器：
+
+```sql
+REVOKE UPDATE, DELETE, TRUNCATE ON notarized_predictions FROM PUBLIC;
+REVOKE UPDATE, DELETE, TRUNCATE ON notarized_predictions FROM authenticated;
+
+CREATE FUNCTION reject_immutable_change()
+RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+  RAISE EXCEPTION 'immutable ledger rows cannot be changed';
+END;
+$$;
+
+CREATE TRIGGER notarized_predictions_immutable
+BEFORE UPDATE OR DELETE ON notarized_predictions
+FOR EACH ROW EXECUTE FUNCTION reject_immutable_change();
+```
+
+Supabase secret key 映射到 `service_role` 并绕过 RLS，不能视为不可变性边界，也不授予公证流程使用。`alea_worker` 只能 `EXECUTE notarize_roundtable(...)`，不能直接 INSERT/UPDATE/DELETE 公证表；表 owner 与迁移角色不提供给运行时。审计与公证记录保存规范化载荷哈希，便于检测意外损坏，但哈希不替代数据库权限、约束和备份。
+
+### 5.6 结算、模拟盘与排行
+
+结算由确定性引擎执行，输入仅来自公证账本、已确认体彩赛果和公证时冻结的规则版本。
+
+```text
+waiting
+  ├─ 部分场次完赛 → partially_settled
+  ├─ 多源赛果冲突 → conflict_frozen
+  ├─ 体彩判定无效 → 组合去除该腿后重新计算
+  └─ 全部进入终态 → settled_hit / settled_miss / settled_refund
+
+体彩官方更正已公布结果
+  └─ corrected → 追加冲正分录 → 按原规则版本重新结算
+```
+
+- `settlement_runs` 使用 `(notarized_prediction_id, result_version)` 唯一约束实现幂等；重复同步同一赛果不得重复记账。
+- 资金采用不可变 `account_entries` 分录：投入、返还、派奖、冲正分别追加记录；`virtual_accounts.current_balance` 是可重建缓存，不是唯一事实源。
+- 每个 AI 账户结算该实例自己的最终组单提案；共识账户结算终投胜出方案。并列方案分配、单日 15% 与同场 5% 风控按 PRD 执行，并保存缩减前后仓位及触发原因。
+- 无效场次必须从原投注时刻的每个过关组合中移除后重算，不允许简单把赔率统一改成 1.0。
+- 赛果冲突在管理员裁定前冻结结算、排行、卡片盖章和自动复盘。
+- 单次事务完成：写结算分录 → 更新余额缓存 → 更新卡片腿状态 → 投递排行/通知/复盘 outbox。任一步失败均整体回滚。
+- 排行聚合只消费公证且已结算记录；综合分公式、贝叶斯先验、厂商归一化与准入门槛均按版本计算，历史结果不被新版本重算，除非执行显式离线迁移并保留前后快照。
+
+### 5.7 定时任务
+
+使用 Celery Beat 作为首版 Scheduler，负责：
+
+- 赛程与赔率周期同步、临近开赛加密同步、赛后赛果拉取。
+- 管理员配置的每日自动圆桌。
+- 赛果确认后的自动复盘草稿。
+- 草稿临近停售、同步失败、Provider 健康异常等后台检查任务。
+
+调度约束：
+
+- 数据库存储用户配置的北京时间时刻，Scheduler 内部统一转换为 UTC；所有任务记录计划时间与实际触发时间。
+- Celery Beat 只产生“该检查了”的命令；周期任务可能重叠，实际执行前必须取得带过期时间的数据库 lease。
+- 自动圆桌使用 `schedule_id + business_date` 唯一键和数据库锁，避免 Scheduler/Worker 重启或多副本导致重复发起。
+- 明确 misfire 策略：数据同步错过后立即补跑；自动圆桌超过可配置窗口后不补跑并通知管理员；自动复盘可延迟补跑。
+- UI 修改配置写数据库版本记录，不尝试修改运行中容器环境变量。
+
+### 5.8 站内通知与关注
+
+- `follows` 是唯一用户订阅行为，目标类型为比赛或预测卡；查看、采纳、算票都不自动创建关注。
+- `notifications` 保存类型、接收用户、目标、生成时间、已读时间和幂等键；同一业务事件对同一用户最多生成一条通知。
+- 串关卡只在所有腿进入结算终态后通知一次；冲突冻结、待开和同步失败不算终态。
+- 新预测全员通知受用户偏好控制；关注卡赛果、关注卡复盘以及管理员专属通知分别使用独立偏好。
+- 用户注销时删除关注和通知偏好；系统审计日志只保留匿名化主体标识。
+
+---
+
+## 6. 数据库核心表结构（Supabase PostgreSQL）
+
+### 6.1 身份与权限
+```sql
+profiles          -- 关联 auth.users，存储角色 (user/admin)
+user_consents     -- 年龄确认、风险/隐私条款版本与同意时间
+notification_preferences -- 三类通知开关
+ai_providers      -- 厂商与允许的 API 域名
+provider_connections -- 模型、端点、capability profile 与版本
+provider_secrets  -- envelope ciphertext/wrapped DEK/nonce/key version/尾号
+ai_instances      -- AI实例（昵称/状态/连接版本引用），不存密钥
+admin_audit_logs  -- 管理员配置、密钥轮换、裁定、撤回、归档等操作
+```
+
+### 6.2 赛事数据
+```sql
+competitions      -- 赛事（英超/西甲/世界杯...）
+matches           -- 比赛（关联体彩编号）
+sporttery_offers  -- 五种玩法赔率快照（每次同步追加，不覆盖）
+team_intel        -- 球队情报（近况/伤停/阵容，带 SourcedFact 结构）
+data_sources      -- 来源、能力、部署模式、使用边界、健康与解析器版本
+sync_runs         -- 自动/手动同步任务
+source_records    -- 上游原始记录、内容哈希与解析器版本
+source_entity_maps-- 上游实体 ID 到 Alea canonical ID
+input_snapshots   -- 圆桌冻结的输入记录集合
+data_conflicts    -- 多源冲突与管理员裁定
+result_versions   -- 体彩赛果版本与官方更正链
+```
+
+### 6.3 圆桌与预测
+```sql
+roundtable_jobs       -- 圆桌任务、状态版本、配置快照与业务幂等键
+roundtable_participants -- 冻结阵容、厂商家族与票权版本
+roundtable_phase_runs -- 阶段/轮次/实例的执行尝试与恢复检查点
+roundtable_results    -- 独立预测、辩论、终投、组单的结构化结果
+fact_claims           -- 事实声明隔离、核验状态与证据快照
+roundtable_events     -- 类型化追加事件，按 job_id + event_seq 唯一
+outbox_events         -- 数据库事务提交后待投递的任务/通知
+execution_audits      -- 执行审计（首条AI结果产生时创建，不可删）
+notarized_predictions -- 公证账本（终投完成后写入，不可变）
+published_predictions -- 发布状态（引用公证账本，可撤回）
+prompt_versions       -- 提示词及输出 Schema 版本
+lesson_set_versions   -- 每次圆桌冻结的教训集合
+score_formula_versions-- 综合分、先验与票权算法版本
+sporttery_rule_versions -- 算票与结算规则 JSON 版本
+```
+
+### 6.4 模拟盘
+```sql
+virtual_accounts  -- AI实例或共识账户（account_type 区分）
+virtual_trades    -- 每张方案的申报/实际仓位与结算状态
+account_entries   -- 不可变资金分录；余额可由分录重建
+settlement_runs   -- 公证预测 + 赛果版本的幂等结算执行
+ranking_snapshots -- 按公式版本和统计窗口生成的排行快照
+```
+
+### 6.5 复盘与教训
+```sql
+reviews           -- 复盘报告
+lessons           -- 教训档案（结构化，关联AI实例 + 复盘 + 比赛）
+lesson_injections -- 教训注入记录（哪次预测用了哪批教训）
+```
+
+### 6.6 关注、通知与调度
+```sql
+follows             -- 用户显式关注比赛/预测卡
+notifications       -- 站内通知、已读状态与业务幂等键
+schedules           -- 定时圆桌、同步和自动复盘配置
+schedule_runs       -- 计划时间、实际触发时间与执行结果
+```
+
+核心约束与索引：
+
+- 所有外键列建立匹配索引；不可使用缺少参照完整性的 UUID 数组代替关联表。
+- 追加表使用 UUID 主键和 `created_at timestamptz`，业务事件另有稳定幂等键；数据库统一存 UTC，显示时转换为北京时间。
+- `roundtable_events(job_id, event_seq)`、`settlement_runs(notarized_prediction_id, result_version_id)`、`notifications(user_id, idempotency_key)`、`schedule_runs(schedule_id, business_date)` 建唯一约束。
+- 公开查询通过 `security_invoker` 视图或受控 RPC，禁止依赖复制到子表的角色/可见性字段做授权判断。
+- RLS 策略按游客、authenticated user、admin 和后台服务逐表列入迁移测试；管理员身份必须从服务端可信 profile/claim 判定，不能接受客户端传入的角色。
+
+---
+
+## 7. Docker Compose
+
+```yaml
+services:
+  nginx:
+    image: nginx:alpine
+    ports: ["80:80"]
+    volumes: ["./nginx.conf:/etc/nginx/nginx.conf:ro"]
+    restart: unless-stopped
+    depends_on:
+      web: { condition: service_healthy }
+      api: { condition: service_healthy }
+
+  web:
+    build: ./web
+    restart: unless-stopped
+    environment:
+      - NEXT_PUBLIC_SUPABASE_URL
+      - NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+      - INTERNAL_API_URL=http://api:8000
+    healthcheck:
+      test: ["CMD", "bun", "-e", "fetch('http://localhost:3000/api/health').then(r=>{if(!r.ok)process.exit(1)})"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 20s
+
+  api:
+    build: ./api
+    restart: unless-stopped
+    environment:
+      - SUPABASE_URL
+      - SUPABASE_PUBLISHABLE_KEY
+      - SUPABASE_SECRET_KEY
+      - DATABASE_URL_ALEA_API
+      - PROVIDER_KEK_V1
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      redis: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 20s
+
+  worker:
+    build: ./api
+    command: uv run --locked celery -A app.workers.celery_app worker --loglevel=info --concurrency=4
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL_ALEA_WORKER
+      - PROVIDER_KEK_V1
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      redis: { condition: service_healthy }
+
+  dispatcher:
+    build: ./api
+    command: uv run --locked python -m app.workers.dispatcher
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL_ALEA_DISPATCHER
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      redis: { condition: service_healthy }
+
+  scheduler:
+    build: ./api
+    command: uv run --locked celery -A app.workers.celery_app beat --loglevel=info
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL_ALEA_SCHEDULER
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      redis: { condition: service_healthy }
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes --appendfsync everysec
+    restart: unless-stopped
+    volumes: ["redis_data:/data"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  redis_data:
+```
+
+Compose 只定义本地开发与单机预览。Provider、Supabase 和数据源密钥通过服务端环境或密钥存储注入，不写入镜像、Compose 文件或前端环境。管理员在 UI 修改的动态配置统一写版本化数据库表。
+
+`depends_on: condition: service_healthy` 只解决本地容器启动顺序；每个进程仍必须对 Redis/数据库瞬时不可用做有界重连。Redis AOF `everysec` 仍可能丢失短时间消息，因此恢复只认 PostgreSQL outbox/phase run。
+
+---
+
+## 8. 依赖与版本锁定
+
+本文档只规定依赖类别，确切版本以提交的锁文件为准，避免文档版本与仓库漂移。
+
+- `api/.python-version` 固定 Python minor；`api/pyproject.toml` 声明兼容范围；`api/uv.lock` 锁定所有直接和传递依赖。
+- `web/package.json` 使用 `packageManager: "bun@<exact>"` 固定 Bun，并声明 Next.js 所需的 Node 兼容下限；`web/bun.lock` 锁定所有 Node 依赖。
+- Python 核心依赖：FastAPI、Celery、Redis client、Supabase client、Pydantic、HTTPX，以及各 Provider SDK。
+- Web 核心依赖：Next.js App Router、Supabase SSR/JS、Zod、TanStack Query、表单、图表、动画和图片导出库。
+- CI 先执行 `uv lock --check`，再执行 `uv sync --locked`；`--frozen` 不检查 `pyproject.toml` 与 lock 是否同步，不能单独作为 CI 门禁。
+- CI 使用 `bun ci`（等价于 `bun install --frozen-lockfile`）；只允许审阅后的包进入 `trustedDependencies`，避免依赖安装脚本静默执行。
+- 锁文件变化必须与依赖声明同一提交；Dockerfile 中 uv/Bun 基础镜像或二进制固定版本，生产镜像不可使用 `latest`。
+- 每月检查安全更新；生产升级先通过算票 golden tests、Provider contract tests、RLS 测试和主链 E2E。
+
+---
+
+## 9. 开发启动步骤（待实现时参考）
+
+```bash
+cd /Users/poco/Projects/Alea
+
+# 首次准备：检查 uv、bun、docker、supabase CLI，并安装锁定依赖
+make bootstrap
+
+# 从安全占位模板创建本地配置；前端与服务端配置分开
+make env-init
+
+# 启动 Redis，再分别启动 Web/API/Worker/Dispatcher/Scheduler 热重载进程
+make dev
+
+# 迁移本地或明确选定的 Supabase 环境
+make db-push
+
+# 提交前检查
+make check
+```
+
+建议 Make targets：
+
+| Target | 行为 |
+|---|---|
+| `make bootstrap` | `uv lock --check`、`uv sync --locked`、`bun ci`、工具版本检查 |
+| `make env-init` | 创建 `web/.env.local` 与 `api/.env`，已存在时拒绝覆盖 |
+| `make dev` | 启动本地依赖和 Web/API/Worker/Dispatcher/Scheduler；任一进程退出时明确报错 |
+| `make dev-down` | 停止本地 Compose 依赖 |
+| `make format` | Python 与 TypeScript 格式化 |
+| `make lint` | Python/TypeScript/SQL/Markdown 静态检查 |
+| `make typecheck` | Pydantic/mypy 与 TypeScript 类型检查 |
+| `make test` | 单元、contract、RLS 与集成测试 |
+| `make test-e2e` | P0 主链及关键失败分支 |
+| `make db-diff` | 生成并人工审阅迁移差异 |
+| `make db-push ENV=local|staging` | 推送到显式环境；禁止默认推生产 |
+| `make check` | `format-check + lint + typecheck + test` |
+
+---
+
+## 10. 认证、授权与安全边界
+
+### 10.1 请求身份链
+
+1. Supabase Auth 签发用户会话。
+2. Next.js Server Components/Route Handlers 使用 Supabase SSR 校验会话；不能仅检查浏览器传入的角色字段。
+3. Next.js 调用 FastAPI 时传递用户 JWT 和独立的内部请求 ID。
+4. FastAPI 使用 Supabase JWKS 验证 JWT 的签名、issuer、audience、过期时间，再从可信 profile/claim 解析角色。
+5. API 的普通业务查询/写入使用 `alea_api` 数据库角色；Supabase secret key 只留给确实需要的 Auth Admin/Storage 操作，并使用独立 client，防止用户 session 覆盖 Authorization。
+6. Worker/Dispatcher/Scheduler 不接受用户 JWT，也不持有 Supabase secret key；各自使用不同的最小权限数据库角色，所有关键写入经过数据库约束和专用函数。
+
+### 10.2 授权矩阵
+
+| 资源 | 用户 | 管理员 | 后台服务 |
+|---|---|---|---|
+| 已发布预测、公证摘要、回放 | 只读 | 只读 | 写入/结算 |
+| 未发布草稿、公证完整载荷 | 无权 | 只读审核 | 写入 |
+| 圆桌直播与执行审计 | 无权；终止归档按 PRD 公开摘要 | 只读 + 受控操作 | 追加 |
+| AI 阵容、密钥引用、系统配置 | 无权 | 受控读写 | 读取冻结版本 |
+| 用户关注、通知、偏好 | 仅本人 | 仅本人；用户管理不得读取无关内容 | 生成通知 |
+| 真实盘 | 无权 | 受控读写并留操作日志 | 结算辅助 |
+
+前端“不渲染管理员入口”只是体验要求，不能替代服务端授权。所有管理员 Route Handler、FastAPI endpoint、RPC、Realtime topic 和 Storage 对象都必须分别验证权限。迁移测试还必须证明普通用户无法订阅未发布 job 的 private topic，客户端无法向任何服务端事件 topic 发送 Broadcast。
+
+### 10.3 Web 与网络安全
+
+- 使用 Cookie 的写操作校验 Origin/CSRF；FastAPI CORS 只允许显式 Web 域名。
+- 登录、Provider 测试、手动同步、圆桌发起、图片生成等高成本接口分别限流。
+- 对用户与 AI 产生的文本执行 HTML/Markdown 白名单净化；外链增加协议白名单和安全属性。
+- Provider/Data Source HTTP 客户端禁止访问 loopback、link-local、私网和云 metadata 地址，限制重定向、响应大小与下载类型。
+- 日志、错误响应和审计 payload 统一脱敏 API key、Cookie、Authorization、URL query secret 与上游响应正文。
+
+## 11. 可靠性、可观测性与恢复
+
+### 11.1 可观测性
+
+- 每个 HTTP 请求生成 `request_id`；圆桌使用 `job_id`；每次 Provider 调用使用 `provider_request_id`，三者贯穿结构化日志、Celery headers、数据库事件与错误上报。
+- 核心指标：同步成功率/新鲜度、队列积压、阶段耗时、Provider 成功率/超时/限流、事实核验率、圆桌完成率、公证延迟、结算延迟、通知延迟、token 与费用。
+- 关键告警：数据超过 60 分钟/24 小时、全部 Provider 不可用、Scheduler 停止心跳、队列持续积压、公证或结算事务失败、Realtime 错误率异常。
+- 用户可见错误只返回稳定错误码和安全文案；详细堆栈与上游信息只进入受控日志。
+
+### 11.2 备份与恢复
+
+- 生产建议目标为 **RPO ≤ 15 分钟、RTO ≤ 4 小时**，需在 Gate G6 由产品/运维确认。仅有每日备份最多可能损失一天业务事实，不能满足该候选目标；上线套餐必须支持所选 PITR 保留期。
+- Supabase 日备份/PITR 的可用性与保留期取决于套餐，恢复期间项目不可访问。每季度必须恢复到隔离项目并执行行数、哈希、公证链、角色/RLS 和最小业务 smoke 验证，不能只检查“备份成功”状态。
+- Supabase 数据库备份不包含 Storage 对象内容；如果启用 Storage，必须单独备份对象并用 manifest/hash 校验。自定义数据库角色密码也不在日备份中，恢复 runbook 必须重新注入。
+- 每周生成加密的离站逻辑备份并执行保留/删除策略；备份密钥与数据库不在同一信任域。具体频率在容量和合规评审后调整。
+- Redis 不是业务事实源。队列丢失后由数据库中未完成的 phase run/outbox 恢复；Redis AOF 只降低本地开发和单机预览的丢失概率。
+- 数据库迁移要求向前兼容：先加字段/表，再部署双读写，最后清理旧结构；破坏性迁移必须有备份、回滚步骤和 staging 演练证据。
+- Worker、Scheduler 或 API 重启后必须通过恢复扫描找出超时 lease、未派发 outbox 和未完成结算。
+
+## 12. 环境与部署拓扑
+
+| 环境 | 用途 | 约束 |
+|---|---|---|
+| local | 单机开发 | Docker Compose + 独立 Supabase 开发项目或本地 Supabase；允许热重载 |
+| staging | 迁移、Provider、规则和 E2E 验证 | 独立域名、Supabase 项目、Redis、密钥和测试 Provider 配额；禁止连接生产数据库 |
+| production | 对外服务 | HTTPS 域名；Web/API/Worker/Dispatcher/Scheduler 为长期运行服务；托管 Redis；生产 Supabase；集中密钥与监控 |
+
+生产不以开发者电脑上的 Docker Compose 作为运行环境。Web/API/Worker/Dispatcher/Scheduler 可以部署在同一长期运行主机的容器中作为首版，但必须满足：
+
+- Nginx/负载入口终止 TLS，只开放 80/443；Redis、API 内部端口不对公网开放。
+- 生产 OAuth Site URL、回调白名单、Cookie domain、CORS 与 Supabase Redirect URL 使用正式域名。
+- 服务使用非 root 用户、只读镜像层和最小网络权限；运行时密钥通过部署平台注入。
+- 部署顺序为兼容迁移 → API/Worker/Dispatcher/Scheduler → Web → smoke test；失败时回滚应用版本，数据库迁移按预案处理。
+- 发布后验证健康检查、登录、管理员权限、数据同步、Provider mock、圆桌最小任务、Realtime 补拉和结算 smoke test。
+
+## 13. 测试与质量门禁
+
+| 层级 | 必测范围 |
+|---|---|
+| 单元测试 | 投票权重、平票、法定人数、规则计算、风控缩仓、事实状态机、错误分类 |
+| Golden/属性测试 | 五种玩法、复式、过关、设胆、`M串N`、无效场次重算、金额舍入、官方更正；TS/Python 结果一致 |
+| Provider contract | fake server 覆盖结构化输出、超时、限流、无效 JSON、拒绝、密钥脱敏；每个启用的真实 vendor/model 另跑 staging capability test |
+| 数据源 contract | Sporttery 200/403/超时/字段变更、缓存与限频、实体映射、原始快照、缺失字段、冲突、过期和降级链 |
+| 数据库/RLS | 用户隔离、管理员权限、private topic、客户端禁止 Broadcast、不可变表 UPDATE/DELETE、专用函数与四个运行时角色权限 |
+| 密钥 | 明文不落库/日志/响应，密文篡改失败，错误 KEK 失败，轮换可回滚，备份中无 KEK |
+| 状态机/集成 | 重复 Celery 投递、Worker 重启、迟到结果、人工终止、未达法定人数、outbox 恢复 |
+| E2E | PRD P0 主链，以及零场入围、终投前终止、Provider 部分失败、数据冲突、撤回、过期赔率禁止出图 |
+
+质量门禁：
+
+- `make check` 必须通过后才能合并。
+- 数据库迁移必须在空库和上一版本快照上各执行一次，并通过 RLS 测试。
+- 规则、公式、提示词或输出 Schema 变更必须新增/更新版本记录和对应 fixtures。
+- 真实 Provider 与体彩数据源测试属于 staging smoke，不替代 deterministic/contract tests。
+- 未实际执行的范围不得报告“全量通过”或“完整 E2E 通过”。
+
+## 14. 数据保留、注销与合规
+
+- 注册时保存年龄确认、风险声明与隐私条款的版本和同意时间；未确认不得创建账户。
+- 用户注销删除 Auth 身份、profile、关注、通知和偏好；必须保留的系统审计将主体替换为不可逆匿名标识，不保留邮箱、OAuth ID 等可识别信息。
+- 公证账本、执行审计和结算记录按平台可验证性要求长期保留；Provider 原始响应、HTTP 日志和低价值运行日志设置明确的较短保留期。
+- AI 原始输出可能含个人信息或不当内容；写入展示层前执行内容净化，管理员备注与复盘编辑保存版本和操作者。
+- 全站继续执行“不购彩、不支付、不下单”的产品边界；上线前完成购彩相关法规、未成年人保护、隐私与第三方数据许可专项审查。
+
+## 15. 首版实施顺序与完成标准
+
+0. **Gate 0 架构纵切**：只实现 §16 的迁移、fake/real contract、故障实验和 Sporttery 数据适配验证。
+   完成标准：G1–G6 全部有可复现命令、退出码、测试计数与证据文件；任一 Gate 失败则先改 TECH/PRD，不进入业务铺开。
+1. **基础安全骨架**：认证、角色、RLS、管理员操作日志、动态密钥 envelope encryption。
+   完成标准：权限矩阵测试通过，前端无法绕过后台授权。
+2. **数据与规则底座**：同步快照、实体映射、冲突、体彩规则版本、浏览器算票器。
+   完成标准：本地算票不请求服务端，TS/Python golden fixtures 全部一致。
+3. **可恢复圆桌**：阶段表、Provider contract、事实核验、事件序列、Realtime 补拉、执行审计。
+   完成标准：部分 Provider 失败、重复投递、Worker 重启和人工终止均可恢复并留痕。
+4. **公证、发布与结算**：不可变入账、质检、撤回、账户分录、排行和赛果更正。
+   完成标准：发布状态不影响统计；重复结算不重复记账；更正保留前后记录。
+5. **调度、通知、复盘与上线运维**。
+   完成标准：定时任务幂等、通知不重复、自动复盘可关闭，staging 主链与失败分支通过。
+
+## 16. Gate 0：开发前架构验证
+
+Gate 证据统一写入 `docs/evidence/gate-0/<gate-id>/`，至少包含 README（环境/步骤/结论）、实际命令、退出码、测试 passed/failed/skipped 计数、日志和必要的脱敏截图。只跑生成的最小 runner 只能证明该 runner，不能报告为完整 PRD 或完整 E2E。
+
+| Gate | 必做实验 | 通过标准 | 失败后的动作 |
+|---|---|---|---|
+| G1 Auth/RLS/角色 | 应用迁移；用 anon、普通用户、管理员、`alea_api`、`alea_worker`、`alea_dispatcher`、`alea_scheduler` 逐项执行权限矩阵 | 0 个越权成功；secret key 绕过 RLS 的事实被隔离在 Auth Admin/Storage client；公证表只能经专用函数写入 | 修 GRANT/RLS/函数所有权，不开发页面 |
+| G2 Realtime/补拉 | private Broadcast；未发布/已发布 job 订阅；客户端伪造 INSERT；订阅与补拉竞态；断网重连；制造 event_seq 跳号 | 未授权订阅和客户端发送全部失败；授权端最终无丢失、无重复、顺序一致 | 改 topic/RLS/补拉协议；必要时退回服务端流 |
+| G3 Celery/恢复 | 重复投递、Worker graceful stop、kill -9、Redis restart、Dispatcher restart、任务超时、迟到结果、Beat 重叠、毒任务 | 最终状态唯一；无重复扣款/公证/通知；outbox 全部可恢复；毒任务不会无限循环 | 调整 ack/lease/queue；失败严重则评估 DB-backed/托管队列 |
+| G4 Provider | 对计划启用的每个具体 vendor/model 跑预测/辩论/组单 Schema、拒绝、限流、超时、usage/request-id、密钥脱敏 | 每个模型独立形成 capability report；不合格模型不能启用，不允许靠正则解析自由文本补救 | 修改适配器/Schema，或移除该模型 |
+| G5 数据与规则 | 个人模式实测 Sporttery 列表/详情、403/超时/字段缺失、缓存、限频、历史翻页与赛果二次确认；逐项录入竞彩规则 fixtures | 样本能稳定映射场次/玩法/赔率/停售/赛果；失败时不污染旧快照；TS/Python golden tests 一致 | 修适配器/降级；若上游不可用则启用人工导入，不阻断其它 Gate |
+| G6 备份/容量/成本 | 选生产 Supabase/Redis/运行平台；估算峰值任务、tokens、事件量；压测；执行一次隔离恢复与 runbook | 产品确认 RPO/RTO/预算；恢复达到目标；Realtime/Worker/DB 在目标负载下有余量和告警 | 调整套餐/并发/保留期/部署平台，重新验证 |
+
+仍需用户或外部条件才能关闭的问题：
+
+1. **Sporttery Web API 稳定性**：当前可用但无公开 SLA；必须实现缓存、停止重试阈值、人工导入和字段变更告警。
+2. **未来是否对外托管**：当前按单用户个人模式设计；若改成公开服务，需要重新评估数据使用与再分发边界。
+3. **生产运行平台与预算**：必须承载持久 Worker/Dispatcher/Scheduler、托管 Redis、KEK 注入、监控与恢复。
+4. **预计规模**：日圆桌数、每桌场次/实例/轮次、直播并发、数据保留期决定配额和成本。
+5. **RPO/RTO 接受值**：§11.2 的 15 分钟/4 小时是候选目标，不是已确认承诺。
+6. **竞彩规则初始数据**：必须对照当前规则材料逐项录入，示例数字不得上线。
+
+## 17. 官方核验来源
+
+以下来源用于约束本架构；链接内容仍可能更新，实际实施与升级时必须重新核验。
+
+- Supabase：[API keys 与 RLS 边界](https://supabase.com/docs/guides/getting-started/api-keys)、[迁移到 publishable/secret keys](https://supabase.com/docs/guides/getting-started/migrating-to-new-api-keys)、[Realtime Broadcast 与 Postgres Changes](https://supabase.com/docs/guides/realtime/subscribing-to-database-changes)、[Realtime Authorization](https://supabase.com/docs/guides/realtime/authorization)、[Vault](https://supabase.com/docs/guides/database/vault)、[Vault 阶段](https://supabase.com/features/vault)、[备份与 PITR](https://supabase.com/docs/guides/platform/backups)
+- Celery/Redis/Compose：[Celery Tasks](https://docs.celeryq.dev/en/latest/userguide/tasks.html)、[Celery 长任务与 prefetch](https://docs.celeryq.dev/en/main/userguide/optimizing.html)、[Celery periodic tasks](https://docs.celeryq.dev/en/stable/userguide/periodic-tasks.html)、[Redis persistence](https://redis.io/docs/latest/operate/oss_and_stack/management/persistence/)、[Compose startup order](https://docs.docker.com/compose/how-tos/startup-order/)
+- 工具链：[uv locking/syncing](https://docs.astral.sh/uv/concepts/projects/sync/)、[Bun install/CI](https://bun.com/docs/pm/cli/install)、[Bun lockfile](https://bun.com/docs/pm/lockfile)、[Next.js installation](https://nextjs.org/docs/app/getting-started/installation)
+- AI Provider：[OpenAI models/capabilities](https://developers.openai.com/api/docs/models)、[Anthropic structured outputs](https://platform.claude.com/docs/en/build-with-claude/structured-outputs)、[Gemini OpenAI compatibility](https://ai.google.dev/gemini-api/docs/openai)、[Gemini structured outputs](https://ai.google.dev/gemini-api/docs/structured-output)、[DeepSeek API](https://api-docs.deepseek.com/)、[Kimi API](https://platform.kimi.com/docs/api/overview)、[Qwen API](https://help.aliyun.com/en/model-studio/first-api-call-to-qwen)
+- 体彩数据：[移动足球数据页](https://m.sporttery.cn/mjc/zqsj/?tab=result)、[移动足球计算器](https://m.sporttery.cn/mjc/jsq/zqspf/)、[足球赛果开奖](https://www.sporttery.cn/jc/zqsgkj/)、[比赛数据 API 定义脚本](https://static.sporttery.cn/res_1_0/jcwm/default/common/bssjApis.js)、[计算器 API 定义脚本](https://static.sporttery.cn/res_1_0/jcwm/default/jc/jsq/dataTransfer.js)、[中国竞彩网用户服务协议](https://www.sporttery.cn/bzzx/20260410/10053082.html?gid=10)
