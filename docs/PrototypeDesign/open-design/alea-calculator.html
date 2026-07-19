@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <link rel="icon" href="assets/brand/alea-mark-export.png" type="image/png">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="Alea 竞彩方案：在可信销售数据边界内配置并导出研究方案。">
+  <title>Alea · 竞彩方案</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="alea.css">
+  <style>
+    .calculator-shell{min-height:100vh;background:var(--bg)}
+    .calculator-head{position:sticky;top:0;z-index:30;border-bottom:1px solid var(--border-soft);background:color-mix(in oklab,var(--bg) 94%,transparent);backdrop-filter:blur(14px)}
+    .calculator-head .container{min-height:68px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+    .calculator-head .brand-lockup{height:32px}
+    .sales-status{display:inline-flex;align-items:center;gap:7px;min-height:32px;padding:5px 10px;border:1px solid color-mix(in oklab,var(--warn) 36%,var(--border-soft));border-radius:var(--radius-pill);background:color-mix(in oklab,var(--warn) 8%,var(--surface));color:var(--fg);font:10px/1.3 var(--font-mono)}
+    .sales-status::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--warn)}
+    .calculator-page{padding:28px 0 96px}
+    .calculator-intro{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:20px;align-items:end}
+    .calculator-intro h1{margin-top:6px;font-size:42px}
+    .calculator-intro p{max-width:720px;margin-top:10px;color:var(--muted);font-size:13px}
+    .source-stack{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+    .calc-notice{display:grid;grid-template-columns:auto 1fr;gap:12px;margin-top:20px;padding:14px 16px;border:1px solid color-mix(in oklab,var(--warn) 34%,var(--border-soft));border-radius:var(--radius-lg);background:color-mix(in oklab,var(--warn) 7%,var(--surface))}
+    .calc-notice-mark{width:28px;height:28px;display:grid;place-items:center;border-radius:50%;background:var(--warn);color:var(--surface);font:700 12px var(--font-mono)}
+    .calc-notice strong,.calc-notice p{display:block}.calc-notice p{margin-top:3px;color:var(--muted);font-size:11px;line-height:1.55}
+    .calc-stepper{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:20px}
+    .calc-step-button{min-height:54px;display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border-soft);border-radius:var(--radius-md);background:var(--surface);color:var(--muted);text-align:left;cursor:pointer}
+    .calc-step-button b{width:28px;height:28px;display:grid;place-items:center;flex:0 0 auto;border-radius:50%;background:var(--surface-warm);font:600 11px var(--font-mono)}
+    .calc-step-button.active{border-color:var(--fg);color:var(--fg);box-shadow:var(--elev-ring)}.calc-step-button.active b{background:var(--fg);color:var(--surface)}
+    .calc-step-button small{display:block;margin-top:2px;color:var(--meta);font-size:9px}
+    .calculator-grid{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(320px,.72fr);gap:18px;align-items:start;margin-top:18px}
+    .calc-panel{padding:20px;border:1px solid var(--border-soft);border-radius:var(--radius-lg);background:var(--surface)}
+    .calc-panel[hidden]{display:none!important}
+    .calc-panel-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+    .calc-panel-head h2{margin-top:4px;font-size:27px}.calc-panel-head p{margin-top:7px;color:var(--muted);font-size:11px;line-height:1.55}
+    .fixture-card{display:grid;grid-template-columns:104px minmax(0,1fr) auto;gap:16px;align-items:center;margin-top:16px;padding:18px;border:1px solid var(--border-soft);border-radius:var(--radius-lg);background:var(--surface-warm)}
+    .fixture-flags{display:flex;align-items:center}.fixture-flags img{width:58px;height:38px;object-fit:cover;border:3px solid var(--surface-warm);border-radius:var(--radius-sm);box-shadow:var(--elev-ring)}.fixture-flags img+img{margin-left:-13px}
+    .fixture-card h3{font-size:22px}.fixture-card p{margin-top:5px;color:var(--muted);font-size:11px;line-height:1.5}
+    .fixture-labels{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+    .fixture-score{text-align:right}.fixture-score strong,.fixture-score span{display:block}.fixture-score strong{font:600 30px var(--font-mono)}.fixture-score span{color:var(--muted);font-size:10px}
+    .data-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:14px}
+    .data-item{padding:12px;border:1px solid var(--border-soft);border-radius:var(--radius-md);background:var(--surface)}.data-item span,.data-item strong{display:block}.data-item span{color:var(--meta);font-size:9px}.data-item strong{margin-top:4px;font-size:11px;line-height:1.45}
+    .blocked-card{margin-top:14px;padding:16px;border:1px dashed var(--border);border-radius:var(--radius-lg);background:var(--bg)}
+    .blocked-card h3{font-size:20px}.blocked-card p{margin-top:7px;color:var(--muted);font-size:11px;line-height:1.6}
+    .disabled-controls{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}.disabled-controls label{color:var(--muted);font-size:10px}.disabled-controls input,.disabled-controls select{width:100%;min-height:44px;margin-top:5px;padding:8px 10px;border:1px solid var(--border-soft);border-radius:var(--radius-sm);background:var(--surface-warm);color:var(--muted)}
+    .preview-card{position:sticky;top:88px;overflow:hidden;padding:0;border:1px solid var(--border-soft);border-radius:var(--radius-lg);background:var(--surface)}
+    .preview-card-header{padding:20px;background:var(--fg);color:var(--surface)}.preview-card-header .row{display:flex;align-items:center;justify-content:space-between;gap:12px}.preview-card-header h2{font-size:25px}.preview-card-header p{margin-top:8px;color:color-mix(in oklab,var(--surface) 64%,transparent);font-size:10px}
+    .preview-body{padding:18px}.preview-body h3{font-size:20px}.preview-body p{margin-top:7px;color:var(--muted);font-size:11px;line-height:1.6}
+    .preview-fields{display:grid;gap:0;margin-top:14px}.preview-field{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:10px 0;border-top:1px solid var(--border-soft)}.preview-field span{color:var(--muted);font-size:10px}.preview-field strong{font-size:11px;text-align:right}
+    .preview-actions{display:flex;justify-content:flex-end;gap:8px;padding:14px 18px;border-top:1px solid var(--border-soft)}
+    .compact-icon-button{position:relative;width:44px;min-width:44px;height:44px;min-height:44px;padding:0;border:0;border-radius:var(--radius-md);background:transparent;box-shadow:none}.compact-icon-button::before{content:"";position:absolute;inset:4px;border:1px solid var(--border-soft);border-radius:var(--radius-sm);background:var(--surface);box-shadow:var(--elev-ring)}.compact-icon-button img{position:relative;z-index:1;width:18px;height:18px;margin:auto;object-fit:contain}.compact-icon-button:disabled{cursor:not-allowed}.compact-icon-button:disabled img{opacity:.4}
+    .status-sample{margin-top:14px;padding:12px;border:1px solid var(--border-soft);border-radius:var(--radius-md);background:var(--surface-warm);font-size:10px;line-height:1.55}.status-sample strong{display:block;margin-bottom:3px}
+    .toast{position:fixed;right:18px;bottom:18px;z-index:100;padding:10px 13px;border-radius:var(--radius-sm);background:var(--fg);color:var(--surface);font-size:11px;opacity:0;transform:translateY(8px);pointer-events:none;transition:.18s ease}.toast.show{opacity:1;transform:none}
+    @media(max-width:760px){
+      .calculator-head .container{min-height:64px}.calculator-head .brand-lockup{height:29px}.sales-status{max-width:190px;white-space:normal}
+      .calculator-page{padding-top:20px}.calculator-intro{grid-template-columns:minmax(0,1fr)}.calculator-intro h1{font-size:34px}.source-stack{justify-content:flex-start}
+      .calc-stepper{display:flex;overflow-x:auto;padding-bottom:3px;scrollbar-width:none}.calc-step-button{min-width:168px}
+      .calculator-grid{grid-template-columns:minmax(0,1fr)}.fixture-card{grid-template-columns:82px minmax(0,1fr)}.fixture-flags img{width:48px;height:32px}.fixture-score{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;text-align:left}.fixture-score strong{font-size:24px}
+      .data-grid,.disabled-controls{grid-template-columns:minmax(0,1fr)}.preview-card{position:static}.calc-panel{padding:15px}
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#calculatorContent">跳到主要内容</a>
+  <div class="calculator-shell">
+    <header class="calculator-head">
+      <div class="container">
+        <a class="brand" href="alea-predictions.html"><img class="brand-lockup" src="assets/brand/alea-lockup.png" alt="Alea"></a>
+        <span class="sales-status">待竞彩销售数据确认</span>
+      </div>
+    </header>
+    <main class="calculator-page container" id="calculatorContent">
+      <section class="calculator-intro">
+        <div>
+          <p class="eyebrow">竞彩方案 · 选择比赛</p>
+          <h1>先确认销售数据，再生成方案。</h1>
+          <p>当前只保留 2026 世界杯决赛的 FIFA 已确认事实和固定 AI 推演结果；竞彩场次编号、玩法、固定奖金、停售时间与销售状态尚无可信快照。</p>
+        </div>
+        <div class="source-stack"><span class="tag">AI 推演数据</span><span class="tag">来源：FIFA · 采集 2026-07-19</span></div>
+      </section>
+
+      <section class="calc-notice" role="status" aria-live="polite">
+        <span class="calc-notice-mark" aria-hidden="true">!</span>
+        <div><strong>销售数据缺失，采纳、出图与下载保持禁用</strong><p>不生成场次编号、赔率、固定奖金、理论回报或结算结果。数据接入后仍需重新核验销售状态与规则版本。</p></div>
+      </section>
+
+      <nav class="calc-stepper" aria-label="竞彩方案步骤">
+        <button class="calc-step-button active" type="button" data-step="1" aria-current="step"><b>1</b><span>选择比赛<small>核对比赛身份</small></span></button>
+        <button class="calc-step-button" type="button" data-step="2"><b>2</b><span>配置玩法<small>当前不可配置</small></span></button>
+        <button class="calc-step-button" type="button" data-step="3"><b>3</b><span>方案预览<small>当前不可出图</small></span></button>
+      </nav>
+
+      <div class="calculator-grid">
+        <div>
+          <section class="calc-panel" data-panel="1">
+            <header class="calc-panel-head"><div><p class="eyebrow">步骤 1 · 比赛身份</p><h2>2026 FIFA 世界杯决赛</h2><p>这是当前原型唯一用于贯穿模块的比赛；没有追加虚构联赛或第二场串关比赛。</p></div><span class="tag">第 104 场</span></header>
+            <article class="fixture-card">
+              <div class="fixture-flags" aria-label="西班牙与阿根廷国旗"><img src="assets/flag-spain.png" alt="西班牙国旗"><img src="assets/flag-argentina.png" alt="阿根廷国旗"></div>
+              <div><h3>西班牙 vs 阿根廷</h3><p>北京时间 2026-07-20 03:00<br>New York New Jersey Stadium</p><div class="fixture-labels"><span class="tag">FIFA 已确认</span><span class="tag">竞彩销售待确认</span></div></div>
+              <div class="fixture-score"><strong>2 : 1</strong><span>固定 AI 推演 · 非赛果</span></div>
+            </article>
+            <div class="data-grid">
+              <div class="data-item"><span>竞彩场次编号</span><strong>待竞彩销售数据确认</strong></div>
+              <div class="data-item"><span>销售与停售时间</span><strong>待竞彩销售数据确认</strong></div>
+              <div class="data-item"><span>玩法与固定奖金</span><strong>待竞彩销售数据确认</strong></div>
+              <div class="data-item"><span>最终赛果</span><strong>待赛果确认</strong></div>
+            </div>
+          </section>
+
+          <section class="calc-panel" data-panel="2" hidden>
+            <header class="calc-panel-head"><div><p class="eyebrow">步骤 2 · 玩法配置</p><h2>销售数据未就绪，配置入口已锁定。</h2><p>AI 结论可以查看，但不能替代竞彩玩法、让球值、固定奖金与停售状态。</p></div><span class="tag">禁用</span></header>
+            <div class="blocked-card"><h3>西班牙 2:1 阿根廷 · 半场 1:0</h3><p>5/7 原始票、71% 冻结加权共识。以上均为 AI 推演数据，不代表官方赛果，也不自动映射为可售玩法。</p></div>
+            <div class="disabled-controls">
+              <label>竞彩玩法<select disabled aria-label="竞彩玩法，待销售数据确认"><option>待竞彩销售数据确认</option></select></label>
+              <label>固定奖金<input disabled value="待竞彩销售数据确认" aria-label="固定奖金，待销售数据确认"></label>
+              <label>过关方式<select disabled aria-label="过关方式，待销售数据确认"><option>待竞彩销售数据确认</option></select></label>
+              <label>倍数<input disabled value="—" aria-label="倍数，待销售数据确认"></label>
+            </div>
+            <div class="status-sample"><strong>禁用原因</strong>未取得中国体育彩票可信销售快照，不能计算注数、金额或理论回报。</div>
+          </section>
+
+          <section class="calc-panel" data-panel="3" hidden>
+            <header class="calc-panel-head"><div><p class="eyebrow">步骤 3 · 方案预览</p><h2>当前没有可生成的竞彩方案。</h2><p>比赛事实与 AI 推演仍可追溯；方案卡需要真实销售数据才能形成。</p></div><span class="tag">待数据</span></header>
+            <div class="blocked-card"><h3>不展示伪造票面</h3><p>场次编号、玩法、固定奖金、注数、金额与理论回报全部保留为待确认，不用占位数值制造“已经能买”的错觉。</p></div>
+          </section>
+        </div>
+
+        <aside class="preview-card" aria-label="竞彩方案状态">
+          <header class="preview-card-header"><div class="row"><h2>Alea 方案</h2><span class="tag">不可生成</span></div><p>公证示例 N8C4-02 · AI 推演数据</p></header>
+          <div class="preview-body">
+            <h3>西班牙 vs 阿根廷</h3>
+            <p>固定 AI 推演：西班牙 2:1 阿根廷，半场 1:0。最终赛果待官方确认。</p>
+            <div class="preview-fields">
+              <div class="preview-field"><span>竞彩场次</span><strong>待销售数据确认</strong></div>
+              <div class="preview-field"><span>玩法 / 固定奖金</span><strong>待销售数据确认</strong></div>
+              <div class="preview-field"><span>注数 / 金额</span><strong>—</strong></div>
+              <div class="preview-field"><span>理论回报</span><strong>—</strong></div>
+              <div class="preview-field"><span>结算状态</span><strong>待赛果确认</strong></div>
+            </div>
+            <div class="status-sample"><strong>数据边界</strong>来源：FIFA · 采集 2026-07-19。竞彩销售、首发、伤停、裁判与技术统计均待可信来源确认。</div>
+          </div>
+          <footer class="preview-actions">
+            <button class="compact-icon-button" type="button" disabled aria-label="复制方案卡图片，待竞彩销售数据确认" title="待竞彩销售数据确认"><img src="assets/icons/lucide-copy.svg" alt="" aria-hidden="true"></button>
+            <button class="compact-icon-button" type="button" disabled aria-label="下载方案卡 PNG，待竞彩销售数据确认" title="待竞彩销售数据确认"><img src="assets/icons/lucide-download.svg" alt="" aria-hidden="true"></button>
+          </footer>
+        </aside>
+      </div>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script>
+    const stepButtons=[...document.querySelectorAll('[data-step]')],panels=[...document.querySelectorAll('[data-panel]')],toast=document.getElementById('toast');
+    function showStep(step){
+      const target=String(step);
+      stepButtons.forEach(button=>{const active=button.dataset.step===target;button.classList.toggle('active',active);active?button.setAttribute('aria-current','step'):button.removeAttribute('aria-current')});
+      panels.forEach(panel=>panel.hidden=panel.dataset.panel!==target);
+      history.replaceState(null,'',`#step-${target}`);
+      if(target!=='1'){toast.textContent=target==='2'?'销售数据未确认：玩法配置保持禁用':'销售数据未确认：方案预览与出图保持禁用';toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),1800)}
+    }
+    stepButtons.forEach(button=>button.addEventListener('click',()=>showStep(button.dataset.step)));
+    const initialStep=location.hash.match(/^#step-([123])$/)?.[1]||'1';showStep(initialStep);
+  </script>
+</body>
+</html>

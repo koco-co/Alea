@@ -16,9 +16,11 @@
 - `/Users/poco/Projects/Alea/DESIGN.md`
 - `/Users/poco/Projects/Alea/docs/技术架构设计文档.md`（只用于理解实现边界，不得覆盖 PRD）
 
-当前 OpenDesign 项目位于：
+当前可迁移的 OpenDesign 项目源文件位于仓库：
 
-`/Users/poco/Library/Application Support/Open Design/namespaces/release-stable/data/projects/d99abbfa-a8d0-440e-a1aa-2b18b9926643`
+`docs/PrototypeDesign/open-design/`
+
+在新电脑上先拉取仓库，再将该目录作为 OpenDesign Web Prototype 的项目目录打开；不要继续依赖旧电脑的 `~/Library/Application Support/Open Design/` 内部路径。
 
 用户提供的 OpenDesign 参考截图：
 
@@ -41,7 +43,7 @@
 
 ## 二、先建立完整基线，不允许边看边猜
 
-在修改前建立 `docs/visual-qa/production-pass/`，至少包含：
+在修改前建立并持续维护 `docs/PrototypeDesign/visual-qa/production-pass/`，至少包含：
 
 - `route-state-matrix.md`：PRD 章节、角色、路由/原型文件、入口、关键状态、关键交互、参考来源、截图、通过/失败、剩余问题。
 - `asset-ledger.md`：资产名称、类型、真实/虚构、来源与许可、原始路径、原始尺寸、展示尺寸、裁切规则、降级规则、使用页面。

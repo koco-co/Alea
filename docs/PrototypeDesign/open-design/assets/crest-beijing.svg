@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 72" role="img" aria-labelledby="title">
+  <title id="title">北境工业队徽</title>
+  <path fill="#3d3d3a" d="M32 2 59 12v22c0 18-10 29-27 36C15 63 5 52 5 34V12Z"/>
+  <path fill="#e8e6dc" d="M18 20h28v7H18zm-4 13h36v7H14zm7 13h22v7H21z"/>
+  <circle cx="32" cy="20" r="6" fill="#c96442"/>
+</svg>

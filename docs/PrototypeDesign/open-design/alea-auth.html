@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <link rel="icon" href="assets/brand/alea-mark-export.png" type="image/png">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="Alea 公共入口：登录、注册与密码找回，完成后返回每日总览、竞猜赛程、太玄问机或竞彩方案。">
+  <title>Alea · 账户认证</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="alea.css">
+  <style>
+    .auth-page{min-height:calc(100svh - 72px);padding:44px 0 64px}
+    .auth-layout{display:grid;grid-template-columns:minmax(0,.92fr) minmax(380px,1.08fr);overflow:hidden;border:1px solid var(--border-soft);border-radius:24px;background:var(--surface);box-shadow:var(--elev-raised)}
+    .auth-story{display:flex;min-width:0;flex-direction:column;justify-content:space-between;gap:48px;padding:42px;background:var(--fg);color:var(--surface)}
+    .auth-story h1{max-width:10ch;margin-top:14px;font-size:clamp(40px,5vw,62px)}
+    .auth-story .story-lead{max-width:34ch;margin-top:20px;color:color-mix(in oklab,var(--surface) 68%,transparent);font-size:17px}
+    .auth-story .eyebrow{color:color-mix(in oklab,var(--surface) 52%,transparent)}
+    .research-boundary{padding-top:22px;border-top:1px solid color-mix(in oklab,var(--surface) 18%,transparent)}
+    .research-boundary strong{display:block;font-family:var(--font-display);font-size:20px;font-weight:500}
+    .research-boundary p{margin-top:8px;color:color-mix(in oklab,var(--surface) 60%,transparent);font-size:12px}
+    .auth-panel{min-width:0;padding:38px 42px 42px}
+    .auth-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding:5px;border-radius:var(--radius-md);background:var(--surface-warm)}
+    .auth-tab{min-height:44px;display:grid;place-items:center;border:0;border-radius:9px;background:transparent;color:var(--muted);font-size:13px;font-weight:600;cursor:pointer}
+    .auth-tab:hover{color:var(--fg)}
+    .auth-tab.active{background:var(--surface);color:var(--fg);box-shadow:var(--elev-ring)}
+    .auth-view{padding-top:32px}
+    .auth-view h2{margin-top:7px;font-size:clamp(34px,4vw,46px)}
+    .auth-intro{margin-top:10px;color:var(--muted);font-size:14px}
+    .return-label{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:18px;padding:11px 13px;border:1px solid var(--border-soft);border-radius:var(--radius-md);background:color-mix(in oklab,var(--fg) 2%,var(--surface));font-size:12px}
+    .return-label span:first-child{color:var(--muted)}
+    .return-label strong{font:600 12px var(--font-mono)}
+    .oauth-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:22px}
+    .oauth-grid .btn{width:100%}
+    .auth-divider{display:flex;align-items:center;gap:12px;margin:20px 0;color:var(--meta);font:11px var(--font-mono)}
+    .auth-divider::before,.auth-divider::after{content:"";height:1px;flex:1;background:var(--border-soft)}
+    .auth-form{display:grid;gap:16px}
+    .auth-form .field label{font-size:12px}
+    .field-note{margin-top:5px;color:var(--meta);font-size:11px}
+    .form-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .text-link{min-height:44px;display:inline-flex;align-items:center;color:var(--fg-2);font-size:13px;font-weight:600}
+    .text-link:hover{text-decoration:underline;text-underline-offset:3px}
+    .auth-alert{padding:13px 14px;border:1px solid color-mix(in oklab,var(--danger) 34%,var(--border-soft));border-radius:var(--radius-md);background:color-mix(in oklab,var(--danger) 7%,var(--surface))}
+    .auth-alert .status{margin-bottom:6px}
+    .auth-alert p{color:var(--fg-2);font-size:12px}
+    .auth-success{padding:16px;border:1px solid color-mix(in oklab,var(--success) 30%,var(--border-soft));border-radius:var(--radius-md);background:color-mix(in oklab,var(--success) 7%,var(--surface))}
+    .auth-success h3{margin-top:10px;font-size:21px}
+    .auth-success p{margin-top:7px;color:var(--muted);font-size:12px}
+    .check-list{display:grid;gap:10px}
+    .auth-check{min-height:48px;display:grid;grid-template-columns:20px 1fr;gap:10px;align-items:start;padding:11px 12px;border:1px solid var(--border-soft);border-radius:var(--radius-md);background:var(--surface);cursor:pointer;font-size:12px}
+    .auth-check:hover{border-color:var(--meta)}
+    .auth-check input{width:18px;height:18px;margin:1px 0 0;accent-color:var(--accent)}
+    .auth-check span{color:var(--fg-2)}
+    .auth-form .btn-primary{width:100%}
+    .access-demo{margin-top:18px;padding-top:18px;border-top:1px solid var(--border-soft)}
+    .access-demo-head{display:flex;align-items:end;justify-content:space-between;gap:18px;margin-bottom:12px}
+    .access-demo-head h2{margin-top:4px;font-size:25px}
+    .access-demo-head p:not(.eyebrow){max-width:44ch;color:var(--muted);font-size:11px;text-align:right}
+    .shell-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .shell-card{overflow:hidden;border:1px solid var(--border-soft);border-radius:var(--radius-md);background:var(--surface)}
+    .shell-bar{min-height:48px;display:flex;align-items:center;gap:12px;padding:8px 10px;border-bottom:1px solid var(--border-soft);background:color-mix(in oklab,var(--fg) 2%,var(--surface))}
+    .shell-brand{font:500 17px var(--font-display)}
+    .shell-nav{display:flex;align-items:center;gap:4px;margin-left:auto}
+    .shell-nav span{min-height:32px;display:flex;align-items:center;padding:0 8px;border-radius:8px;color:var(--muted);font-size:10px}
+    .shell-nav .mini-admin-entry{border:1px solid color-mix(in oklab,var(--accent) 52%,var(--border-soft));color:var(--accent)}
+    .shell-caption{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 10px;font-size:10px}
+    .shell-caption span:first-child{font-weight:700}
+    .shell-caption span:last-child{color:var(--muted)}
+    .auth-toast{position:fixed;right:20px;bottom:20px;z-index:80;max-width:min(360px,calc(100% - 40px));padding:12px 16px;border-radius:var(--radius-md);background:var(--fg);color:var(--surface);box-shadow:var(--elev-raised);font-size:13px;opacity:0;pointer-events:none;translate:0 8px;transition:opacity var(--motion-fast) var(--ease-standard),translate var(--motion-fast) var(--ease-standard)}
+    .auth-toast.show{opacity:1;translate:0 0}
+    @media(max-width:900px){.auth-layout{grid-template-columns:1fr}.auth-story{gap:28px;padding:32px}.auth-story h1{max-width:16ch}.research-boundary{max-width:60ch}.auth-panel{padding:32px}.access-demo-head{align-items:start}.access-demo-head p:not(.eyebrow){text-align:left}}
+    @media(max-width:600px){.auth-page{padding:18px 0 40px}.auth-story{padding:26px}.auth-story h1{font-size:40px}.auth-panel{padding:24px 18px 28px}.auth-tabs{gap:3px}.auth-tab{padding-inline:5px}.oauth-grid,.shell-grid{grid-template-columns:1fr}.access-demo-head{display:block}.access-demo-head p:not(.eyebrow){margin-top:6px}.form-row{align-items:start;flex-direction:column}.form-row .text-link{min-height:32px}.shell-nav span{padding-inline:7px}}
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#content">跳到主要内容</a>
+  <header class="topbar" data-od-id="auth-header">
+    <div class="container">
+      <a class="brand" href="alea.html" aria-label="返回 Alea 首页"><img class="brand-lockup" src="assets/brand/alea-lockup.png" alt="Alea"></a>
+      <nav class="nav" aria-label="访客导航"><a href="alea.html#roundtable">圆桌方法</a><a href="alea.html#proof">盈亏样例</a></nav>
+      <div class="header-actions"><a class="btn btn-secondary" href="alea.html">返回首页</a></div>
+    </div>
+  </header>
+
+  <main class="auth-page" id="content">
+    <div class="container">
+      <section class="auth-layout" data-od-id="authentication-shell">
+        <aside class="auth-story" data-od-id="authentication-editorial-panel">
+          <div>
+            <p class="eyebrow">Alea 研究账户 · 可追溯预测</p>
+            <h1>把每一次判断，带回完整证据链。</h1>
+            <p class="story-lead">登录后继续查看匿名辩论、公证终投、历史战绩与算票研究记录。</p>
+          </div>
+          <div class="research-boundary">
+            <strong>只做预测研究，不提供购彩服务。</strong>
+            <p>账户用于保存研究偏好、关注比赛和方案记录；不承接代购、支付或投注平台功能。</p>
+          </div>
+        </aside>
+
+        <div class="auth-panel">
+          <nav class="auth-tabs" role="tablist" aria-label="账户认证方式" data-od-id="authentication-tabs">
+            <button class="auth-tab" id="loginTab" type="button" role="tab" data-route="login" aria-controls="login" aria-selected="false">登录</button>
+            <button class="auth-tab" id="signupTab" type="button" role="tab" data-route="signup" aria-controls="signup" aria-selected="false">注册</button>
+            <button class="auth-tab" id="forgotTab" type="button" role="tab" data-route="forgot" aria-controls="forgot" aria-selected="false">找回密码</button>
+          </nav>
+
+          <section class="auth-view" id="login" role="tabpanel" aria-labelledby="loginTab" data-od-id="login-screen">
+            <p class="eyebrow">欢迎回来</p>
+            <h2 id="loginHeading" tabindex="-1">登录 Alea</h2>
+            <p class="auth-intro">继续查看你的预测研究与圆桌记录。</p>
+            <div class="return-label" data-od-id="protected-route-return-label"><span>登录后返回</span><strong id="returnTargetLabel">太玄问机 · 今日推演</strong></div>
+            <div class="oauth-grid" aria-label="第三方登录">
+              <button class="btn btn-secondary" type="button" data-auth-intent="login" data-provider="GitHub" data-od-id="github-login-button">使用 GitHub 登录</button>
+              <button class="btn btn-secondary" type="button" data-auth-intent="login" data-provider="Google" data-od-id="google-login-button">使用 Google 登录</button>
+            </div>
+            <div class="auth-divider">或使用邮箱</div>
+            <form class="auth-form" id="loginForm" novalidate>
+              <div class="auth-alert" id="loginError" role="alert" tabindex="-1" data-od-id="invalid-credentials-state" hidden>
+                <span class="status status-bad">登录失败</span>
+                <p>邮箱或密码不正确。请检查输入，或通过“找回密码”重置凭据。</p>
+              </div>
+              <div class="field"><label for="loginEmail">邮箱</label><input id="loginEmail" type="email" autocomplete="email" required value="researcher@example.com"></div>
+              <div class="field"><label for="loginPassword">密码</label><input id="loginPassword" type="password" autocomplete="current-password" required></div>
+              <div class="form-row"><label class="auth-check" style="min-height:44px;padding-block:10px"><input id="rememberLogin" type="checkbox"><span>在此设备保持登录</span></label><a class="text-link" href="#forgot">忘记密码</a></div>
+              <button class="btn btn-secondary" id="fillLoginDemo" type="button">填入演示账户</button>
+              <button class="btn btn-primary" type="submit" data-od-id="login-submit-button">登录并返回今日推演</button>
+            </form>
+          </section>
+
+          <section class="auth-view" id="signup" role="tabpanel" aria-labelledby="signupTab" data-od-id="signup-screen" hidden>
+            <p class="eyebrow">建立研究账户</p>
+            <h2 id="signupHeading" tabindex="-1">注册 Alea</h2>
+            <p class="auth-intro">账户用于保存研究记录，不包含任何购彩功能。</p>
+            <p class="field-note" id="signupOAuthRequirement">请先在下方确认已年满 18 周岁并同意风险声明与隐私条款，之后才能使用第三方注册。</p>
+            <div class="oauth-grid" aria-label="第三方一键注册" data-auth-intent="signup">
+              <button class="btn btn-secondary" type="button" data-auth-intent="signup" data-provider="GitHub" data-od-id="github-signup-button" aria-describedby="signupOAuthRequirement">使用 GitHub 注册</button>
+              <button class="btn btn-secondary" type="button" data-auth-intent="signup" data-provider="Google" data-od-id="google-signup-button" aria-describedby="signupOAuthRequirement">使用 Google 注册</button>
+            </div>
+            <div class="auth-divider">或使用邮箱</div>
+            <form class="auth-form" id="signupForm" novalidate>
+              <div class="field"><label for="signupEmail">邮箱</label><input id="signupEmail" type="email" autocomplete="email" required aria-describedby="signupRequirements"></div>
+              <div class="field"><label for="signupPassword">密码</label><input id="signupPassword" type="password" autocomplete="new-password" minlength="8" required aria-describedby="signupRequirements"></div>
+              <div class="field"><label for="signupConfirm">确认密码</label><input id="signupConfirm" type="password" autocomplete="new-password" minlength="8" required aria-describedby="signupRequirements"></div>
+              <p class="field-note" id="signupRequirements">请使用有效邮箱与至少 8 位密码，并确保两次输入一致。</p>
+              <div class="check-list">
+                <label class="auth-check"><input id="ageConfirm" type="checkbox" required><span>我确认已年满 18 周岁。</span></label>
+                <label class="auth-check"><input id="termsConfirm" type="checkbox" required><span>我已阅读并同意风险声明与隐私条款，理解 Alea 仅提供预测研究、不提供购彩服务。</span></label>
+              </div>
+              <button class="btn btn-secondary" id="fillSignupDemo" type="button">演示：填入有效资料</button>
+              <button class="btn btn-primary" id="signupSubmit" type="button" disabled data-od-id="signup-submit-button">创建研究账户</button>
+              <div class="auth-success" id="signupSuccess" role="status" aria-live="polite" tabindex="-1" hidden>
+                <span class="status status-good">账户已创建</span>
+                <h3>研究账户已创建</h3>
+                <p>演示账户已准备好，可继续查看今日预测与历史公证记录。</p>
+              </div>
+            </form>
+          </section>
+
+          <section class="auth-view" id="forgot" role="tabpanel" aria-labelledby="forgotTab" data-od-id="forgot-password-screen" hidden>
+            <p class="eyebrow">重置访问凭据</p>
+            <h2 id="forgotHeading" tabindex="-1">找回密码</h2>
+            <p class="auth-intro">输入注册邮箱，我们会发送一次性重置链接。</p>
+            <form class="auth-form" id="forgotForm" style="margin-top:22px" novalidate>
+              <div class="field"><label for="forgotEmail">邮箱</label><input id="forgotEmail" type="email" autocomplete="email" required></div>
+              <button class="btn btn-primary" id="forgotSubmit" type="submit" data-od-id="forgot-submit-button">发送重置链接</button>
+              <a class="text-link" href="#login">返回登录</a>
+              <div class="auth-success" id="forgotSuccess" role="status" aria-live="polite" tabindex="-1" data-od-id="password-reset-sent-state" hidden>
+                <span class="status status-good">邮件已发送</span>
+                <h3>请检查你的收件箱。</h3>
+                <p id="forgotSuccessText">重置链接已发送。若未收到邮件，请检查垃圾邮件目录或稍后重新发送。</p>
+              </div>
+            </form>
+          </section>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <div class="auth-toast" id="authToast" role="status" aria-live="polite">操作已更新</div>
+  <script>
+    const routes=['login','signup','forgot'];
+    const views=[...document.querySelectorAll('.auth-view')];
+    const routeTabs=[...document.querySelectorAll('.auth-tab[data-route]')];
+    const authToast=document.getElementById('authToast');
+    let toastTimer;
+
+    function showToast(message){
+      clearTimeout(toastTimer);
+      authToast.textContent=message;
+      authToast.classList.add('show');
+      toastTimer=setTimeout(()=>authToast.classList.remove('show'),1800);
+    }
+
+    function syncRoute(){
+      const requested=location.hash.slice(1);
+      const route=routes.includes(requested)?requested:'login';
+      if(requested&&requested!==route){
+        try{history.replaceState(null,'',`#${route}`)}catch(error){}
+      }
+      views.forEach(view=>{view.hidden=view.id!==route});
+      routeTabs.forEach(tab=>{
+        const active=tab.dataset.route===route;
+        tab.classList.toggle('active',active);
+        tab.setAttribute('aria-selected',String(active));
+        tab.tabIndex=active?0:-1;
+      });
+      const heading=document.querySelector(`#${route} h2`);
+      if(requested&&heading)heading.focus({preventScroll:true});
+    }
+
+    window.addEventListener('hashchange',syncRoute);
+    routeTabs.forEach((tab,index)=>{
+      tab.addEventListener('click',()=>{location.hash=tab.dataset.route});
+      tab.addEventListener('keydown',event=>{
+        if(!['ArrowLeft','ArrowRight'].includes(event.key))return;
+        event.preventDefault();
+        const nextIndex=(index+(event.key==='ArrowRight'?1:-1)+routeTabs.length)%routeTabs.length;
+        location.hash=routeTabs[nextIndex].dataset.route;
+        routeTabs[nextIndex].focus({preventScroll:true});
+      });
+    });
+    syncRoute();
+
+    function resolveReturnTarget(){
+      const fallback='alea-predictions.html#today';
+      const requested=new URLSearchParams(window.location.search).get('return');
+      if(!requested)return fallback;
+      try{
+        const url=new URL(requested,window.location.href);
+        const file=url.pathname.split('/').pop();
+        const allowed=/^alea-(?:console|predictions|calculator)\.html$/;
+        const currentDirectory=new URL('.',window.location.href).pathname;
+        const targetDirectory=url.pathname.slice(0,url.pathname.lastIndexOf('/')+1);
+        if(url.origin!==window.location.origin||targetDirectory!==currentDirectory||!allowed.test(file))return fallback;
+        return `${file}${url.search}${url.hash}`;
+      }catch(error){return fallback;}
+    }
+
+    const returnTarget=resolveReturnTarget();
+    const returnTargetLabel=document.getElementById('returnTargetLabel');
+    const returnLabels={
+      'alea-console.html':'竞猜赛程 · 比赛详情',
+      'alea-predictions.html':'太玄问机 · 今日推演',
+      'alea-calculator.html':'竞彩方案 · 方案预览'
+    };
+    const returnFile=returnTarget.split(/[?#]/)[0];
+    returnTargetLabel.textContent=returnLabels[returnFile]||'太玄问机 · 今日推演';
+
+    const loginForm=document.getElementById('loginForm');
+    const loginError=document.getElementById('loginError');
+    const loginInputs=[document.getElementById('loginEmail'),document.getElementById('loginPassword')];
+    loginInputs.forEach(input=>input.addEventListener('input',()=>{
+      loginError.hidden=true;
+      input.removeAttribute('aria-invalid');
+    }));
+    document.getElementById('fillLoginDemo').addEventListener('click',()=>{
+      loginInputs[0].value='researcher@example.com';
+      loginInputs[1].value='Alea2026!9';
+      loginInputs[1].focus({preventScroll:true});
+    });
+    loginForm.addEventListener('submit',event=>{
+      event.preventDefault();
+      const validDemo=loginInputs[0].value.trim().toLowerCase()==='researcher@example.com'&&loginInputs[1].value==='Alea2026!9';
+      if(validDemo){
+        loginError.hidden=true;
+        loginInputs.forEach(input=>input.removeAttribute('aria-invalid'));
+        showToast('登录成功，正在返回研究页面');
+        window.setTimeout(()=>{window.location.href=returnTarget},700);
+        return;
+      }
+      loginError.hidden=false;
+      loginInputs.forEach(input=>input.setAttribute('aria-invalid','true'));
+      loginError.focus({preventScroll:true});
+    });
+
+    document.querySelectorAll('[data-provider]').forEach(button=>button.addEventListener('click',()=>{
+      if(button.dataset.authIntent==='signup'&&(!ageConfirm.checked||!termsConfirm.checked)){
+        showToast('请先确认年龄与风险条款，再使用第三方注册');
+        (!ageConfirm.checked?ageConfirm:termsConfirm).focus({preventScroll:true});
+        return;
+      }
+      const action=button.dataset.authIntent==='signup'?'注册':'登录';
+      showToast(`${button.dataset.provider} ${action}成功，正在返回研究页面`);
+      window.setTimeout(()=>{window.location.href=returnTarget},700);
+    }));
+
+    const signupForm=document.getElementById('signupForm');
+    const signupEmail=document.getElementById('signupEmail');
+    const signupPassword=document.getElementById('signupPassword');
+    const signupConfirm=document.getElementById('signupConfirm');
+    const ageConfirm=document.getElementById('ageConfirm');
+    const termsConfirm=document.getElementById('termsConfirm');
+    const signupSubmit=document.getElementById('signupSubmit');
+    const signupSuccess=document.getElementById('signupSuccess');
+    const signupOauthButtons=[...document.querySelectorAll('[data-auth-intent="signup"][data-provider]')];
+
+    function validateSignup(){
+      const email=signupEmail.value.trim();
+      const emailReady=/\S+@\S+\.\S+/.test(email);
+      const passwordReady=signupPassword.value.length>=8;
+      const passwordsMatch=signupPassword.value===signupConfirm.value;
+      signupConfirm.setCustomValidity(signupConfirm.value.length>0&&!passwordsMatch?'两次输入的密码不一致':'');
+      const confirmReady=signupConfirm.value.length>=8&&passwordsMatch;
+      const ready=emailReady&&passwordReady&&confirmReady&&ageConfirm.checked&&termsConfirm.checked;
+      const consentReady=ageConfirm.checked&&termsConfirm.checked;
+      signupSubmit.disabled=!ready;
+      signupSubmit.setAttribute('aria-disabled',String(!ready));
+      signupOauthButtons.forEach(button=>{
+        button.disabled=!consentReady;
+        button.setAttribute('aria-disabled',String(!consentReady));
+      });
+      if(ageConfirm.checked)ageConfirm.removeAttribute('aria-invalid');
+      if(termsConfirm.checked)termsConfirm.removeAttribute('aria-invalid');
+      return ready;
+    }
+
+    [signupEmail,signupPassword,signupConfirm,ageConfirm,termsConfirm].forEach(control=>{control.addEventListener('input',validateSignup);control.addEventListener('change',validateSignup)});
+    [signupEmail,signupPassword,signupConfirm].forEach(input=>input.addEventListener('keyup',validateSignup));
+    document.getElementById('fillSignupDemo').addEventListener('click',()=>{
+      signupEmail.value='qa@example.com';
+      signupPassword.value='Alea2026!';
+      signupConfirm.value='Alea2026!';
+      ageConfirm.checked=true;
+      termsConfirm.checked=true;
+      validateSignup();
+      signupSubmit.focus({preventScroll:true});
+    });
+    validateSignup();
+    function completeSignup(event){
+      if(event)event.preventDefault();
+      if(!validateSignup()){
+        if(!ageConfirm.checked){ageConfirm.setAttribute('aria-invalid','true');ageConfirm.setAttribute('aria-describedby','signupRequirements')}
+        if(!termsConfirm.checked){termsConfirm.setAttribute('aria-invalid','true');termsConfirm.setAttribute('aria-describedby','signupRequirements')}
+        signupForm.reportValidity();
+        return;
+      }
+      signupSuccess.hidden=false;
+      signupSuccess.focus({preventScroll:true});
+      showToast('研究账户已创建');
+    }
+    signupSubmit.addEventListener('click',completeSignup);
+    signupForm.addEventListener('submit',completeSignup);
+
+    const forgotForm=document.getElementById('forgotForm');
+    const forgotEmail=document.getElementById('forgotEmail');
+    const forgotSubmit=document.getElementById('forgotSubmit');
+    const forgotSuccess=document.getElementById('forgotSuccess');
+    const forgotSuccessText=document.getElementById('forgotSuccessText');
+    forgotForm.addEventListener('submit',event=>{
+      event.preventDefault();
+      if(!forgotEmail.validity.valid){forgotEmail.reportValidity();return;}
+      forgotSuccessText.textContent=`重置链接已发送至 ${forgotEmail.value}。若未收到邮件，请检查垃圾邮件目录或稍后重新发送。`;
+      forgotSuccess.hidden=false;
+      forgotSubmit.textContent='重新发送重置链接';
+      forgotSuccess.focus({preventScroll:true});
+    });
+  </script>
+</body>
+</html>

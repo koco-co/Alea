@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "kind": "html",
+  "title": "alea-console.html",
+  "entry": "alea-console.html",
+  "renderer": "html",
+  "status": "complete",
+  "exports": [
+    "html",
+    "pdf",
+    "zip"
+  ],
+  "createdAt": "2026-07-17T16:33:36.696Z",
+  "updatedAt": "2026-07-17T16:33:36.696Z",
+  "metadata": {
+    "inferred": true,
+    "reconciled": true
+  }
+}

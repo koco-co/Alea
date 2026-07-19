@@ -1,0 +1,1052 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <link rel="icon" href="assets/brand/alea-mark-export.png" type="image/png">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="Alea 多 AI 足球预测研究平台">
+  <title>Alea · 让七个 AI，为你吵一场球</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="alea.css">
+  <script>document.documentElement.classList.add('js')</script>
+  <style>
+    body.cinematic-home {
+      background: var(--fg);
+      color: var(--surface);
+    }
+
+    .cinematic-home .topbar {
+      position: fixed;
+      z-index: 80;
+      inset: 0 0 auto;
+      background: linear-gradient(180deg, color-mix(in oklab,var(--fg) 80%,transparent), color-mix(in oklab,var(--fg) 8%,transparent));
+      border-bottom-color: color-mix(in oklab,var(--surface) 8%,transparent);
+      backdrop-filter: blur(18px);
+    }
+
+    .cinematic-home .topbar .brand,
+    .cinematic-home .topbar .nav a {
+      color: var(--surface);
+    }
+
+    .cinematic-home .topbar .brand-lockup {
+      height: 38px;
+      max-width: 158px;
+      padding: 5px 9px;
+      border-radius: 12px;
+      background: color-mix(in oklab,var(--surface) 94%,transparent);
+      box-shadow: 0 0 24px color-mix(in oklab,var(--accent) 38%,transparent);
+    }
+
+    .cinematic-home .topbar .btn-secondary {
+      color: var(--surface);
+      border-color: color-mix(in oklab,var(--surface) 24%,transparent);
+      background: color-mix(in oklab,var(--surface) 6%,transparent);
+      backdrop-filter: blur(12px);
+    }
+
+    .cinematic-home .marketing-main {
+      overflow: hidden;
+      background: var(--fg);
+    }
+
+    .marketing-hero-cinematic {
+      position: relative;
+      isolation: isolate;
+      min-height: 100svh;
+      display: block;
+      padding: 0;
+      overflow: hidden;
+      color: var(--surface);
+      background: var(--fg);
+    }
+
+    .hero-backdrop,
+    .hero-overlay,
+    .hero-particles,
+    .hero-spotlights {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .hero-backdrop {
+      z-index: -5;
+      object-fit: cover;
+      object-position: center;
+      filter: saturate(.88) contrast(1.08);
+    }
+
+    .hero-overlay {
+      z-index: -4;
+      background:
+        radial-gradient(circle at 64% 54%, color-mix(in oklab,var(--accent) 12%,transparent), transparent 30%),
+        linear-gradient(90deg, color-mix(in oklab,var(--fg) 96%,transparent) 0%, color-mix(in oklab,var(--fg) 74%,transparent) 43%, color-mix(in oklab,var(--fg) 46%,transparent) 72%, color-mix(in oklab,var(--fg) 82%,transparent) 100%),
+        linear-gradient(180deg, color-mix(in oklab,var(--fg) 40%,transparent), color-mix(in oklab,var(--fg) 90%,transparent));
+    }
+
+    .hero-particles {
+      z-index: -2;
+      pointer-events: none;
+    }
+
+    .hero-spotlights {
+      z-index: -3;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    .spotlight {
+      position: absolute;
+      top: -18%;
+      width: 34vw;
+      height: 88%;
+      opacity: .22;
+      filter: blur(26px);
+      transform-origin: 50% 0;
+      mix-blend-mode: screen;
+      background: linear-gradient(180deg, color-mix(in oklab,var(--surface) 52%,transparent), transparent);
+      clip-path: polygon(45% 0, 55% 0, 100% 100%, 0 100%);
+      animation: spotlightSway 7s ease-in-out infinite alternate;
+    }
+
+    .spotlight-left { left: 10%; transform: rotate(8deg); }
+    .spotlight-right { right: 8%; transform: rotate(-10deg); animation-delay: -3.5s; }
+
+    .hero-shell {
+      position: relative;
+      z-index: 4;
+      min-height: 100svh;
+      display: grid;
+      grid-template-columns: minmax(330px, .72fr) minmax(660px, 1.28fr);
+      gap: clamp(28px, 4vw, 68px);
+      align-items: center;
+      padding-top: 104px;
+      padding-bottom: 56px;
+    }
+
+    .marketing-hero-cinematic .hero-copy {
+      max-width: 590px;
+    }
+
+    .marketing-hero-cinematic .hero-copy h1 {
+      max-width: 640px;
+      margin: 18px 0 22px;
+      font-size: clamp(52px, 5vw, 82px);
+      line-height: .98;
+      letter-spacing: -.04em;
+      color: var(--surface);
+    }
+
+    .hero-title-line { display: block; }
+
+    .hero-title-char {
+      display: inline-block;
+      opacity: 1;
+      transform: none;
+      will-change: transform, opacity;
+    }
+
+    .js .hero-title-char { opacity: 0; transform: translateY(20px); }
+
+    .is-ready .hero-title-char {
+      animation: charIn 480ms var(--ease-standard) both;
+      animation-delay: calc(var(--char-index) * 50ms);
+    }
+
+    .marketing-hero-cinematic .eyebrow {
+      color: color-mix(in oklab, var(--surface) 72%, transparent);
+    }
+
+    .marketing-hero-cinematic .hero-subtitle {
+      max-width: 47ch;
+      margin: 0;
+      color: color-mix(in oklab, var(--surface) 72%, transparent);
+      font-size: 18px;
+      line-height: 1.72;
+      opacity: 1;
+      transform: none;
+    }
+
+    .js .marketing-hero-cinematic .hero-subtitle { opacity: 0; transform: translateY(24px); }
+
+    .is-ready .hero-subtitle {
+      animation: riseIn 520ms var(--ease-standard) 1.33s both;
+    }
+
+    .marketing-hero-cinematic .hero-actions {
+      opacity: 1;
+      transform: none;
+      transform-origin: left center;
+    }
+
+    .js .marketing-hero-cinematic .hero-actions { opacity: 0; transform: scale(.9); }
+
+    .is-ready .marketing-hero-cinematic .hero-actions {
+      animation: buttonBounceIn 620ms cubic-bezier(.2, .9, .25, 1.25) 1.48s both;
+    }
+
+    .marketing-hero-cinematic .hero-actions .btn {
+      min-height: 48px;
+      padding-inline: 22px;
+    }
+
+    .marketing-hero-cinematic .hero-actions .btn-primary {
+      color: var(--accent-on);
+      box-shadow: 0 10px 28px color-mix(in oklab,var(--accent) 24%,transparent);
+      transition: transform var(--motion-base) var(--ease-standard), box-shadow var(--motion-base) var(--ease-standard), background var(--motion-base) var(--ease-standard);
+    }
+
+    .marketing-hero-cinematic .hero-actions .btn-primary:hover {
+      transform: scale(1.04);
+      box-shadow: 0 0 24px color-mix(in oklab,var(--accent) 55%,transparent);
+    }
+
+    .marketing-hero-cinematic .hero-actions .btn-secondary {
+      color: var(--surface);
+      border-color: color-mix(in oklab,var(--surface) 28%,transparent);
+      background: color-mix(in oklab,var(--surface) 8%,transparent);
+      backdrop-filter: blur(16px);
+    }
+
+    .marketing-hero-cinematic .hero-actions .btn-secondary:hover {
+      border-color: color-mix(in oklab,var(--surface) 56%,transparent);
+      background: color-mix(in oklab,var(--surface) 14%,transparent);
+    }
+
+    .marketing-hero-cinematic .hero-proof {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 18px;
+      margin-top: 38px;
+      padding-top: 20px;
+      border-top-color: color-mix(in oklab,var(--surface) 14%,transparent);
+      opacity: 1;
+      transform: none;
+    }
+
+    .js .marketing-hero-cinematic .hero-proof { opacity: 0; transform: translateY(18px); }
+
+    .is-ready .marketing-hero-cinematic .hero-proof {
+      animation: riseIn 520ms var(--ease-standard) 1.68s both;
+    }
+
+    .marketing-hero-cinematic .hero-proof strong {
+      color: var(--surface);
+    }
+
+    .marketing-hero-cinematic .hero-proof span {
+      color: color-mix(in oklab, var(--surface) 58%, transparent);
+    }
+
+    .marketing-hero-cinematic .roundtable-stage {
+      min-height: 680px;
+      border: 1px solid color-mix(in oklab,var(--surface) 8%,transparent);
+      background: color-mix(in oklab,var(--fg) 75%,transparent);
+      backdrop-filter: blur(20px);
+      box-shadow: 0 38px 90px color-mix(in oklab,var(--fg) 42%,transparent), inset 0 1px 0 color-mix(in oklab,var(--surface) 5%,transparent);
+    }
+
+    .marketing-hero-cinematic .roundtable-stage::before {
+      content: "";
+      position: absolute;
+      z-index: 0;
+      inset: 0;
+      pointer-events: none;
+      background: radial-gradient(circle at 50% 48%, color-mix(in oklab,var(--accent) 12%,transparent), transparent 42%);
+    }
+
+    .stage-top .match-label {
+      display: block;
+      max-width: 30ch;
+      color: var(--surface);
+      font-family: var(--font-display);
+      font-size: 18px;
+      line-height: 1.25;
+    }
+
+    .core-score {
+      font-size: 56px;
+      text-shadow: 0 0 32px color-mix(in oklab,var(--accent) 60%,transparent);
+    }
+
+    .hit-mark {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      padding: 4px 9px;
+      border: 1px solid color-mix(in oklab, var(--success) 54%, transparent);
+      border-radius: var(--radius-pill);
+      color: color-mix(in oklab, var(--success) 62%, var(--surface));
+      background: color-mix(in oklab, var(--success) 16%, transparent);
+      font: 600 10px/1 var(--font-body);
+    }
+
+    .match-core .hit-mark { margin-top: 10px; }
+
+    .js .marketing-hero-cinematic .node {
+      opacity: 0;
+      scale: .8;
+      filter: blur(4px);
+      will-change: scale, filter, opacity;
+    }
+
+    .is-ready .marketing-hero-cinematic .node {
+      animation: nodeIn 620ms var(--ease-standard) both;
+      animation-delay: calc(1.68s + var(--node-order) * 70ms);
+    }
+
+    .marketing-hero-cinematic .node-1 { --node-order: 0; }
+    .marketing-hero-cinematic .node-2 { --node-order: 1; }
+    .marketing-hero-cinematic .node-3 { --node-order: 2; }
+    .marketing-hero-cinematic .node-4 { --node-order: 3; }
+    .marketing-hero-cinematic .node-5 { --node-order: 4; }
+    .marketing-hero-cinematic .node-6 { --node-order: 5; }
+    .marketing-hero-cinematic .node-7 { --node-order: 6; }
+
+    .roundtable-stage[data-phase="debate"] .thread {
+      overflow: visible;
+      background: color-mix(in oklab, var(--accent) 70%, transparent);
+      box-shadow: 0 0 12px color-mix(in oklab, var(--accent) 56%, transparent);
+      animation: threadPulse 1.45s ease-in-out infinite;
+    }
+
+    .roundtable-stage[data-phase="debate"] .thread::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 0;
+      width: 7px;
+      height: 7px;
+      translate: -50% -50%;
+      border-radius: 50%;
+      background: var(--surface);
+      box-shadow: 0 0 14px var(--surface), 0 0 22px var(--accent);
+      animation: dataFlow 1.25s linear infinite;
+    }
+
+    .roundtable-stage[data-phase="flip"] .node .flip { display: none; }
+    .roundtable-stage[data-phase="flip"] .node-1,
+    .roundtable-stage[data-phase="flip"] .node-5 {
+      border-color: color-mix(in oklab, var(--surface) 14%, transparent);
+      transform: none;
+    }
+    .roundtable-stage[data-phase="flip"] .node-4 .flip { display: block; }
+    .roundtable-stage[data-phase="flip"] .node-4 {
+      border-color: var(--accent);
+      transform: translateY(-4px);
+    }
+    .roundtable-stage[data-phase="independent"] .consensus-meter i { width: 0; }
+    .roundtable-stage[data-phase="converge"] .consensus-meter i { width: 71%; }
+
+    .mobile-vote-strip { display: none; }
+
+    .marketing-strip.cinematic-strip {
+      padding: 30px 0;
+      color: var(--surface);
+      border-block-color: color-mix(in oklab,var(--surface) 8%,transparent);
+      background: var(--fg-2);
+    }
+
+    .cinematic-strip .strip-item span {
+      color: color-mix(in oklab, var(--surface) 56%, transparent);
+    }
+
+    .cinematic-section {
+      position: relative;
+      scroll-margin-top: 122px;
+      padding: var(--section-y-desktop) 0;
+      color: var(--surface);
+      background: var(--fg);
+      border-top: 1px solid color-mix(in oklab,var(--surface) 7%,transparent);
+    }
+
+    .cinematic-section.section-alt { background: var(--fg-2); }
+
+    .cinematic-section .muted {
+      color: color-mix(in oklab, var(--surface) 62%, transparent);
+    }
+
+    .cinematic-section .card,
+    .cinematic-card {
+      color: var(--surface);
+      border-color: color-mix(in oklab,var(--surface) 8%,transparent);
+      background: color-mix(in oklab,var(--surface) 5.5%,transparent);
+      box-shadow: inset 0 1px 0 color-mix(in oklab,var(--surface) 4%,transparent), 0 20px 50px color-mix(in oklab,var(--fg) 18%,transparent);
+      backdrop-filter: blur(16px);
+    }
+
+    .cinematic-section .card .card {
+      background: color-mix(in oklab,var(--surface) 4.5%,transparent) !important;
+    }
+
+    .cinematic-section h2,
+    .cinematic-section h3 { color: var(--surface); }
+
+    .evidence-story { --evidence-progress: .25; position: relative; background: var(--fg); }
+    .evidence-nav { position: sticky; z-index: 24; top: 64px; color: var(--surface); border-block: 1px solid color-mix(in oklab, var(--surface) 10%, transparent); background: color-mix(in oklab, var(--fg) 88%, transparent); backdrop-filter: blur(18px); }
+    .evidence-nav-list { display: grid; grid-template-columns: repeat(4, 1fr); margin: 0; padding: 0; list-style: none; }
+    .evidence-nav a { min-height: 56px; display: flex; align-items: center; gap: 10px; color: color-mix(in oklab, var(--surface) 62%, transparent); font-size: 13px; transition: color var(--motion-fast) var(--ease-standard); }
+    .evidence-nav a span { font: 500 10px/1 var(--font-mono); letter-spacing: .08em; }
+    .evidence-nav a.is-active { color: var(--surface); }
+    .evidence-progress { position: absolute; inset: auto 0 -1px; height: 2px; background: color-mix(in oklab, var(--surface) 10%, transparent); }
+    .evidence-progress i { display: block; width: 100%; height: 100%; background: var(--accent); transform: scaleX(var(--evidence-progress)); transform-origin: left center; transition: transform var(--motion-base) var(--ease-standard); }
+    .evidence-split { min-height: min(76svh, 820px); display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: clamp(40px, 7vw, 96px); align-items: center; }
+    .evidence-split.reverse { grid-template-columns: minmax(0, 1.2fr) minmax(0, .8fr); }
+    .evidence-copy { max-width: 570px; }
+    .evidence-artifact { padding-block: clamp(28px, 5vw, 56px); border-block: 1px solid color-mix(in oklab, var(--surface) 13%, transparent); }
+    .vote-shift { display: grid; grid-template-columns: 1fr auto 1fr; align-items: end; gap: var(--space-5); margin-top: var(--space-8); }
+    .vote-shift > div:last-child { text-align: right; }
+    .vote-score { display: block; margin-top: var(--space-2); font: 500 clamp(54px, 7vw, 94px)/.88 var(--font-mono); letter-spacing: -.08em; }
+    .vote-arrow { padding-bottom: 10px; color: var(--accent); font: 400 clamp(28px, 4vw, 48px)/1 var(--font-display); }
+    .evidence-quote { margin: var(--space-8) 0 0; max-width: 19ch; font: 500 clamp(24px, 3vw, 38px)/1.2 var(--font-display); }
+    .evidence-meta { display: flex; flex-wrap: wrap; gap: 10px 24px; margin-top: var(--space-8); padding-top: var(--space-4); border-top: 1px solid color-mix(in oklab, var(--surface) 10%, transparent); color: color-mix(in oklab, var(--surface) 62%, transparent); font-size: 13px; }
+    .record-sequence { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: var(--space-6); border-top: 1px solid color-mix(in oklab, var(--surface) 10%, transparent); }
+    .record-sequence div { padding: var(--space-4) var(--space-4) 0 0; }
+    .record-sequence div + div { padding-left: var(--space-4); border-left: 1px solid color-mix(in oklab, var(--surface) 10%, transparent); }
+    .record-sequence strong { display: block; margin-top: var(--space-1); font-family: var(--font-mono); }
+    .learning-ledger { border-top: 1px solid color-mix(in oklab, var(--surface) 14%, transparent); }
+    .learning-row { min-height: 118px; display: grid; grid-template-columns: 54px 1fr auto; gap: var(--space-5); align-items: center; padding-block: var(--space-5); border-bottom: 1px solid color-mix(in oklab, var(--surface) 10%, transparent); }
+    .learning-row h3 { font-size: var(--text-xl); }
+    .learning-row p { margin-top: var(--space-1); }
+    .evidence-ticket { max-width: 520px; margin-inline: auto; padding: clamp(24px, 4vw, 44px) !important; }
+    .evidence-ticket.ticket-preview::after { background: color-mix(in oklab, var(--surface) 14%, transparent); }
+
+    .record-panel {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .record-glow {
+      position: absolute;
+      width: 220px;
+      height: 220px;
+      right: -70px;
+      top: -90px;
+      border-radius: 50%;
+      background: var(--accent);
+      opacity: .12;
+      filter: blur(40px);
+      pointer-events: none;
+    }
+
+    .equity-chart { margin-top: var(--space-6); }
+
+    .equity-path {
+      stroke-dasharray: 900;
+      stroke-dashoffset: 900;
+    }
+
+    .is-visible .equity-path {
+      animation: drawEquity 1.45s var(--ease-standard) 240ms forwards;
+    }
+
+    [data-reveal] { opacity: 1; transform: none; }
+
+    .js [data-reveal] {
+      opacity: 0;
+      transform: translateY(40px);
+      transition: opacity 480ms var(--ease-standard), transform 480ms var(--ease-standard);
+      transition-delay: var(--reveal-delay, 0ms);
+    }
+
+    [data-reveal].is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .ticket-section { background: var(--fg-2) !important; }
+
+    .ticket-preview {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .ticket-preview::after {
+      content: "研究方案 · 非彩票";
+      position: absolute;
+      right: -44px;
+      top: 28px;
+      width: 180px;
+      padding: 7px 0;
+      rotate: 35deg;
+      text-align: center;
+      color: color-mix(in oklab, var(--surface) 70%, transparent);
+      background: color-mix(in oklab, var(--accent) 62%, transparent);
+      font: 600 10px/1 var(--font-mono);
+      letter-spacing: .08em;
+    }
+
+    .intro-overlay {
+      position: fixed;
+      z-index: 999;
+      inset: 0;
+      display: none;
+      place-items: center;
+      background: var(--fg);
+      transition: opacity 360ms var(--ease-standard), visibility 360ms linear;
+    }
+
+    .js .intro-overlay { display: grid; }
+
+    .intro-overlay.is-hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .intro-lockup {
+      display: grid;
+      justify-items: center;
+      gap: 18px;
+    }
+
+    .intro-overlay .intro-brand-mark {
+      display: block;
+      width: 80px;
+      height: 80px;
+      object-fit: contain;
+      opacity: 0;
+      transform: scale(.6);
+      animation: introMark 520ms cubic-bezier(.2, .9, .25, 1.25) 80ms forwards;
+      box-shadow: 0 0 42px color-mix(in oklab,var(--accent) 35%,transparent);
+    }
+
+    .brand-on-dark {
+      height: 40px;
+      max-width: 164px;
+      padding: 6px 10px;
+      border-radius: 12px;
+      background: var(--surface);
+    }
+
+    .evidence-ticket .brand-mark-image {
+      padding: 4px;
+      border-radius: 10px;
+      background: var(--surface);
+    }
+
+    .intro-word {
+      margin: 0;
+      color: var(--surface);
+      font: 500 18px/1 var(--font-mono);
+      letter-spacing: .38em;
+      opacity: 0;
+      transform: translateY(30px);
+      animation: introWord 420ms var(--ease-standard) 220ms forwards;
+    }
+
+    @keyframes charIn {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes riseIn {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes buttonBounceIn {
+      0% { opacity: 0; transform: scale(.9); }
+      72% { opacity: 1; transform: scale(1.025); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes nodeIn {
+      to { opacity: 1; scale: 1; filter: blur(0); }
+    }
+
+    @keyframes spotlightSway {
+      from { rotate: -4deg; opacity: .14; }
+      to { rotate: 6deg; opacity: .28; }
+    }
+
+    @keyframes threadPulse {
+      50% { opacity: .46; }
+    }
+
+    @keyframes dataFlow {
+      to { left: 100%; }
+    }
+
+    @keyframes drawEquity {
+      to { stroke-dashoffset: 0; }
+    }
+
+    @keyframes introMark {
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes introWord {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 1180px) {
+      .hero-shell {
+        grid-template-columns: 1fr;
+        padding-top: 118px;
+      }
+
+      .marketing-hero-cinematic .hero-copy { max-width: 760px; }
+      .marketing-hero-cinematic .hero-copy h1 { max-width: 820px; }
+      .marketing-hero-cinematic .roundtable-stage { min-height: 660px; }
+    }
+
+    @media (max-width: 920px) {
+      [data-od-id="marketing-footer"] .row-between { align-items: flex-start; flex-direction: column; }
+
+      .cinematic-section { padding: var(--section-y-tablet) 0; }
+      .evidence-split, .evidence-split.reverse { min-height: auto; grid-template-columns: 1fr; }
+      .evidence-split.reverse .evidence-copy { order: -1; }
+    }
+
+    @media (max-width: 760px) {
+      .cinematic-home .topbar .nav { display: none; }
+      .hero-shell { padding-top: 94px; padding-bottom: 34px; }
+
+      .marketing-hero-cinematic .hero-copy h1 {
+        font-size: clamp(44px, 14vw, 60px);
+      }
+
+      .marketing-hero-cinematic .hero-subtitle { font-size: 16px; }
+      .marketing-hero-cinematic .hero-actions { display: grid; grid-template-columns: 1fr; }
+      .marketing-hero-cinematic .hero-actions .btn { justify-content: center; }
+      .marketing-hero-cinematic .hero-proof { grid-template-columns: 1fr 1fr; }
+
+      .marketing-hero-cinematic .roundtable-stage {
+        min-height: 690px;
+        border-radius: 18px;
+      }
+
+      .marketing-hero-cinematic .stage-top { inset-inline: 16px; }
+      .marketing-hero-cinematic .phase-nav { justify-items: start; }
+      .marketing-hero-cinematic .phase-tabs { width: 100%; }
+      .marketing-hero-cinematic .pitch-map { bottom: 160px; }
+      .marketing-hero-cinematic .match-core { width: 204px; }
+      .marketing-hero-cinematic .core-score { font-size: 48px; }
+      .marketing-hero-cinematic .node-4, .marketing-hero-cinematic .node-7 { display: none; }
+
+      .mobile-vote-strip {
+        position: absolute;
+        z-index: 8;
+        left: 12px;
+        right: 12px;
+        bottom: 82px;
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        padding-bottom: 4px;
+        scrollbar-width: none;
+      }
+
+      .mobile-vote-strip::-webkit-scrollbar { display: none; }
+
+      .mobile-vote {
+        flex: 0 0 auto;
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        min-height: 38px;
+        padding: 8px 10px;
+        border: 1px solid color-mix(in oklab,var(--surface) 1%,transparent);
+        border-radius: var(--radius-pill);
+        background: color-mix(in oklab,var(--fg) 82%,transparent);
+        color: var(--surface);
+        font-size: 10px;
+        backdrop-filter: blur(12px);
+      }
+
+      .mobile-vote strong { font-family: var(--font-mono); }
+      .marketing-hero-cinematic .stage-footer { inset-inline: 14px; }
+      .cinematic-section { padding: var(--section-y-phone) 0; }
+      .evidence-nav { top: 64px; }
+      .evidence-nav .container { padding-inline: 0; }
+      .evidence-nav-list { display: flex; overflow-x: auto; scrollbar-width: none; scroll-snap-type: x proximity; }
+      .evidence-nav-list::-webkit-scrollbar { display: none; }
+      .evidence-nav-list li { flex: 0 0 112px; scroll-snap-align: start; }
+      .evidence-nav a { min-height: 48px; justify-content: center; }
+      .vote-shift { gap: var(--space-3); }
+      .vote-score { font-size: clamp(46px, 15vw, 68px); }
+      .record-sequence { grid-template-columns: 1fr; }
+      .record-sequence div + div { padding-left: 0; border-left: 0; }
+      .learning-row { grid-template-columns: 42px 1fr; }
+      .learning-row > :last-child { grid-column: 2; justify-self: start; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto !important; }
+      .hero-title-char,
+      .hero-subtitle,
+      .marketing-hero-cinematic .hero-actions,
+      .marketing-hero-cinematic .hero-proof,
+      .marketing-hero-cinematic .node,
+      [data-reveal] {
+        opacity: 1 !important;
+        transform: none !important;
+        scale: 1 !important;
+        filter: none !important;
+        animation: none !important;
+        transition: none !important;
+      }
+
+      .spotlight,
+      .thread,
+      .thread::after,
+      .equity-path,
+      .intro-overlay .intro-brand-mark,
+      .intro-word {
+        animation: none !important;
+      }
+
+      .equity-path { stroke-dashoffset: 0; }
+      .evidence-progress i { transition: none !important; }
+      .intro-overlay { display: none; }
+    }
+  </style>
+</head>
+<body class="cinematic-home">
+  <div class="intro-overlay" id="introOverlay" aria-hidden="true">
+    <div class="intro-lockup">
+      <img class="intro-brand-mark" src="assets/brand/alea-mark.png" alt="">
+      <p class="intro-word">ALEA</p>
+    </div>
+  </div>
+
+  <a class="skip-link" href="#content">跳到主要内容</a>
+  <header class="topbar" data-od-id="marketing-header">
+    <div class="container">
+      <a class="brand" href="alea.html" aria-label="Alea 首页"><img class="brand-lockup" src="assets/brand/alea-lockup.png" alt="Alea"></a>
+      <nav class="nav" aria-label="访客导航"><a href="#roundtable">产品</a><a href="#proof">盈亏样例</a><a href="alea-auth.html#signup">注册</a></nav>
+      <div class="header-actions"><a class="btn btn-secondary" href="alea-auth.html#login">登录</a></div>
+    </div>
+  </header>
+
+  <main class="marketing-main" id="content">
+    <section class="hero marketing-hero-cinematic" id="roundtable" data-od-id="marketing-hero">
+      <!-- 本地球场夜景素材仅作为气氛背景；页面球队、比分与公证信息均为 Alea 原型演示数据。 -->
+      <img class="hero-backdrop" id="heroBackdrop" src="./assets/hero-wc-final.jpg" alt="" aria-hidden="true">
+      <div class="hero-overlay" aria-hidden="true"></div>
+      <div class="hero-spotlights" aria-hidden="true"><i class="spotlight spotlight-left"></i><i class="spotlight spotlight-right"></i></div>
+      <canvas class="hero-particles" id="hero-particles" aria-hidden="true"></canvas>
+
+      <div class="container hero-shell">
+        <div class="hero-copy" data-od-id="marketing-hero-copy">
+          <p class="eyebrow mono">多 AI 圆桌 · 可追溯研究演示</p>
+          <h1 aria-label="让七个 AI，为你吵一场球。">
+            <span aria-hidden="true">
+              <span class="hero-title-line"><span class="hero-title-char" style="--char-index:0">让</span><span class="hero-title-char" style="--char-index:1">七</span><span class="hero-title-char" style="--char-index:2">个</span><span class="hero-title-char" style="--char-index:3">&nbsp;</span><span class="hero-title-char" style="--char-index:4">A</span><span class="hero-title-char" style="--char-index:5">I</span><span class="hero-title-char" style="--char-index:6">，</span></span>
+              <span class="hero-title-line"><span class="hero-title-char" style="--char-index:7">为</span><span class="hero-title-char" style="--char-index:8">你</span><span class="hero-title-char" style="--char-index:9">吵</span><span class="hero-title-char" style="--char-index:10">一</span><span class="hero-title-char" style="--char-index:11">场</span><span class="hero-title-char" style="--char-index:12">球</span><span class="hero-title-char" style="--char-index:13">。</span></span>
+            </span>
+          </h1>
+          <p class="hero-subtitle">多模型独立预测、匿名圆桌辩论、公开改票与投票收敛。最终比分、半场判断与每一次立场变化，都留在可复盘的证据链上。</p>
+          <div class="hero-actions"><a class="btn btn-primary" href="alea-auth.html#signup">免费注册</a><a class="btn btn-secondary" href="#debate-story">看看它们怎么吵</a></div>
+          <div class="hero-proof" id="proof">
+            <div><strong class="mono">7</strong><span>个 AI 实例</span></div>
+            <div><strong class="mono">6</strong><span>个模型家族</span></div>
+            <div><strong class="mono">71%</strong><span>圆桌终投共识</span></div>
+            <div><strong class="mono">2 : 1</strong><span>最终赛果 · 已命中 ✓</span></div>
+          </div>
+        </div>
+
+        <section class="roundtable-stage" id="roundtableStage" data-phase="independent" role="tabpanel" aria-labelledby="phase-independent" aria-live="polite" data-od-id="ai-roundtable-stage">
+          <div class="stage-top">
+            <div><p class="eyebrow mono">海湾超级联赛 · 7 月 18 日 21:00 北京时间 · 情景演示</p><strong class="match-label">澜城竞技 vs 赤湾联</strong></div>
+            <div class="phase-nav"><div class="phase-tabs" role="tablist" aria-label="圆桌阶段"><button class="active" id="phase-independent" data-phase="independent" role="tab" aria-selected="true" aria-controls="roundtableStage">01 独立预测</button><button id="phase-debate" data-phase="debate" role="tab" aria-selected="false" aria-controls="roundtableStage">02 匿名交锋</button><button id="phase-flip" data-phase="flip" role="tab" aria-selected="false" aria-controls="roundtableStage">03 公开改票</button><button id="phase-converge" data-phase="converge" role="tab" aria-selected="false" aria-controls="roundtableStage">04 冻结收敛</button></div><p class="phase-legend">独立判断 → 匿名质询 → 公开改票 → 冻结票权</p></div>
+          </div>
+
+          <div class="pitch-map">
+            <div class="thread thread-1" aria-hidden="true"></div><div class="thread thread-2" aria-hidden="true"></div><div class="thread thread-3" aria-hidden="true"></div><div class="thread thread-4" aria-hidden="true"></div><div class="thread thread-5" aria-hidden="true"></div><div class="thread thread-6" aria-hidden="true"></div>
+            <div class="match-core"><span class="tag">AI 终投比分</span><div class="core-teams"><img class="crest" src="assets/crest-lancheng.png" alt=""><div><div class="core-score">2 : 1</div><div class="core-half">半场 1 : 0</div></div><img class="crest" src="assets/crest-chiwan.png" alt=""></div><span class="hit-mark">最终赛果 2 : 1 · 已命中 ✓</span><div class="consensus-meter" aria-label="圆桌终投共识 71%"><i></i></div><small>加权共识 <span class="mono" id="consensusValue">待收敛</span></small></div>
+
+            <article class="node node-1"><div class="ai-id"><span class="ai-avatar" data-instance="1"><img class="ai-mark" src="assets/vendors/deepseek.svg" alt=""></span><span><strong>选手 C</strong><small>DeepSeek-1</small></span></div><div class="prediction">2 : 1</div><p class="reason">独立票 · 初稿已冻结</p></article>
+            <article class="node node-2"><div class="ai-id"><span class="ai-avatar" data-instance="2"><img class="ai-mark" src="assets/vendors/deepseek.svg" alt=""></span><span><strong>选手 A</strong><small>DeepSeek-2</small></span></div><div class="prediction">2 : 1</div><p class="reason">独立票 · 初稿已冻结</p></article>
+            <article class="node node-3"><div class="ai-id"><span class="ai-avatar" data-instance="1"><img class="ai-mark" src="assets/vendors/anthropic.svg" alt=""></span><span><strong>选手 F</strong><small>Claude-1</small></span></div><div class="prediction">2 : 1</div><p class="reason">独立票 · 初稿已冻结</p></article>
+            <article class="node node-4"><div class="ai-id"><span class="ai-avatar" data-instance="1"><img class="ai-mark" src="assets/vendors/openai.svg" alt=""></span><span><strong>选手 B</strong><small>GPT-1</small></span></div><div class="prediction">2 : 0</div><p class="reason">独立票 · 初稿已冻结</p><div class="flip"><s>2 : 0</s> → 2 : 1 · 客队反击窗口已核验</div></article>
+            <article class="node node-5"><div class="ai-id"><span class="ai-avatar" data-instance="1"><img class="ai-mark" src="assets/vendors/gemini.svg" alt=""></span><span><strong>选手 D</strong><small>Gemini-1</small></span></div><div class="prediction">2 : 1</div><p class="reason">独立票 · 初稿已冻结</p></article>
+            <article class="node node-6"><div class="ai-id"><span class="ai-avatar" data-instance="1"><img class="ai-mark" src="assets/vendors/kimi.png" alt=""></span><span><strong>选手 G</strong><small>Kimi-1</small></span></div><div class="prediction">2 : 2</div><p class="reason">独立票 · 初稿已冻结</p></article>
+            <article class="node node-7"><div class="ai-id"><span class="ai-avatar" data-instance="1"><img class="ai-mark" src="assets/vendors/qwen.svg" alt=""></span><span><strong>选手 E</strong><small>Qwen-1</small></span></div><div class="prediction">2 : 1</div><p class="reason">独立票 · 初稿已冻结</p></article>
+            <div class="exchange-bubble bubble-a">“选手 B，你是否低估了客队反击？”</div><div class="exchange-bubble bubble-b">“来源已核验，我把零封修订为失一球。”</div>
+          </div>
+
+          <div class="mobile-vote-strip" aria-label="七个 AI 的独立投票">
+            <span class="mobile-vote">DeepSeek-1 <strong>2 : 1</strong></span><span class="mobile-vote">DeepSeek-2 <strong>1 : 1</strong></span><span class="mobile-vote">Claude-1 <strong>2 : 1</strong></span><span class="mobile-vote">GPT-1 <strong>2 : 0</strong></span><span class="mobile-vote">Gemini-1 <strong>2 : 1</strong></span><span class="mobile-vote">Kimi-1 <strong>2 : 2</strong></span><span class="mobile-vote">Qwen-1 <strong>2 : 1</strong></span>
+          </div>
+
+          <div class="stage-footer"><div class="pnl-line"><svg viewBox="0 0 560 58" role="img" aria-label="圆桌共识逐步收敛至 71%"><path d="M0 43 C58 38 74 49 126 35 S210 29 256 39 S345 17 399 25 S489 9 560 13" fill="none" stroke="var(--accent)" stroke-width="3"/><path d="M0 44 H560" stroke="color-mix(in oklab,var(--surface) 12%,transparent)" stroke-width="1"/></svg></div><div class="stage-summary"><strong class="mono">71%</strong><span>终投共识 · 已命中 ✓</span></div></div>
+        </section>
+      </div>
+    </section>
+
+    <section class="marketing-strip cinematic-strip" data-od-id="marketing-proof-strip"><div class="container"><div class="strip-item"><strong>先独立，再辩论</strong><span>七个实例先冻结初稿</span></div><div class="strip-item"><strong>事实先核验</strong><span>依据与改票原因同时留档</span></div><div class="strip-item"><strong>终投即公证</strong><span>共识 71% 后冻结票权</span></div><div class="strip-item"><strong>输赢都复盘</strong><span>最终赛果 2 : 1 · 已命中 ✓</span></div></div></section>
+
+    <div class="evidence-story" data-od-id="marketing-evidence-story">
+      <nav class="evidence-nav" aria-label="证据链章节" data-od-id="marketing-evidence-nav"><div class="container"><ol class="evidence-nav-list"><li><a class="is-active" href="#debate-story" aria-current="step"><span>01</span>改票</a></li><li><a href="#record-story"><span>02</span>入账</a></li><li><a href="#learning-story"><span>03</span>复盘</a></li><li><a href="#ticket-story"><span>04</span>采纳</a></li></ol><div class="evidence-progress" aria-hidden="true"><i></i></div></div></nav>
+
+      <section class="cinematic-section" id="debate-story" data-chapter="1" data-od-id="marketing-debate-story">
+        <div class="container evidence-split"><div class="evidence-copy"><p class="eyebrow">01 · 圆桌辩论</p><h2 data-reveal style="font-size:var(--text-3xl);margin-top:var(--space-3)">一张改票，把争议留在台面上。</h2><p class="muted" data-reveal style="--reveal-delay:80ms;margin-top:var(--space-4)">七个实例先独立提交，再匿名互相质询。比分变化、触发原因与终投结果按时间线完整保留。</p></div><div class="evidence-artifact" data-reveal data-od-id="evidence-vote-change" style="--reveal-delay:160ms"><div class="row-between"><span class="status status-good">已命中 ✓</span><span class="mono muted">GPT-1 · 公开改票</span></div><div class="vote-shift"><div><span class="eyebrow">独立初稿</span><strong class="vote-score">2 : 0</strong></div><span class="vote-arrow" aria-hidden="true">→</span><div><span class="eyebrow">圆桌终投</span><strong class="vote-score">2 : 1</strong></div></div><blockquote class="evidence-quote">“客队反击窗口已由同步情报核验。”</blockquote><div class="evidence-meta"><span>原始票与终投票同时保留</span><span>终投已冻结</span><span>圆桌共识 <strong class="mono">71%</strong></span></div></div></div>
+      </section>
+
+      <section class="cinematic-section section-alt" id="record-story" data-chapter="2" data-od-id="marketing-verifiable-record">
+        <div class="container evidence-split reverse"><div class="card record-panel" data-reveal style="padding:var(--space-8)"><span class="record-glow" aria-hidden="true"></span><div class="row-between"><div><p class="eyebrow mono">海湾超级联赛 · 情景演示记录</p><h3 style="font-size:var(--text-2xl);margin-top:var(--space-3)">预测入账后，无法挑着展示。</h3></div><span class="hit-mark">已命中 ✓</span></div><svg class="equity-chart" viewBox="0 0 620 180" role="img" aria-label="可验战绩曲线从左至右绘制"><path class="equity-path" d="M0 126 C72 112 105 145 170 111 S286 78 350 104 S468 44 530 70 S586 47 620 51" fill="none" stroke="var(--accent)" stroke-width="4"/><path d="M0 148 H620" fill="none" stroke="color-mix(in oklab,var(--surface) 12%,transparent)" stroke-width="1"/></svg><div class="record-sequence"><div><span class="muted">独立初稿</span><strong>GPT-1 · 2 : 0</strong></div><div><span class="muted">圆桌终投</span><strong>2 : 1 · 71%</strong></div><div><span class="muted">最终赛果</span><strong>2 : 1 · 半场 1 : 0</strong></div></div></div><div class="evidence-copy"><p class="eyebrow">02 · 战绩可验</p><h2 data-reveal style="font-size:var(--text-3xl);margin-top:var(--space-3)">命中和失误，都留在同一条证据链上。</h2><p class="muted" data-reveal style="--reveal-delay:80ms;margin-top:var(--space-4)">这场终投已标记“已命中 ✓”。同一套记录也会如实保留未命中场次，发布与否不改变结果。</p></div></div>
+      </section>
+
+      <section class="cinematic-section" id="learning-story" data-chapter="3" data-od-id="marketing-learning-loop">
+        <div class="container evidence-split"><div class="evidence-copy"><p class="eyebrow">03 · 赛后复盘</p><h2 data-reveal style="font-size:var(--text-3xl);margin-top:var(--space-3)">把这次命中，也变成下一场的约束。</h2><p class="muted" data-reveal style="--reveal-delay:80ms;margin-top:var(--space-4)">结果不是终点。赛果、改票轨迹与判断依据被结构化留存，进入下一场的研究上下文。</p></div><div class="learning-ledger"><article class="learning-row" data-reveal style="--reveal-delay:80ms"><span class="mono muted">01</span><div><h3>赛果对照</h3><p class="muted">澜城竞技 2 : 1 赤湾联，半场 1 : 0；终投比分与赛果一致。</p></div><span class="hit-mark">已命中 ✓</span></article><article class="learning-row" data-reveal style="--reveal-delay:160ms"><span class="mono muted">02</span><div><h3>GPT-1 修订立场</h3><p class="muted">从 2 : 0 改为 2 : 1，原因保留为“客队反击窗口已核验”。</p></div><span class="tag">改票轨迹</span></article><article class="learning-row" data-reveal style="--reveal-delay:240ms"><span class="mono muted">03</span><div><h3>教训进入下次上下文</h3><p class="muted">判断依据、改票节点与终投结果被结构化留存，供下一场复用。</p></div><span class="status status-good">已入档</span></article></div></div>
+      </section>
+
+      <section class="cinematic-section ticket-section" id="ticket-story" data-chapter="4" data-od-id="marketing-ticket-output">
+        <div class="container evidence-split"><div class="evidence-copy"><p class="eyebrow">04 · 落地到方案图</p><h2 data-reveal style="font-size:var(--text-3xl);margin-top:var(--space-3)">采纳共识，生成一张可分享的研究方案。</h2><p class="muted" data-reveal style="--reveal-delay:80ms;margin-top:var(--space-4)">终投比分、半场判断与共识比例会被带入算票器；所有计算仅在浏览器本地完成。</p><a class="btn btn-primary" data-reveal href="alea-auth.html#signup" style="--reveal-delay:160ms;margin-top:var(--space-6)">免费创建研究账户</a></div><div class="card ticket-preview evidence-ticket" data-reveal style="--reveal-delay:240ms"><div class="row-between"><span class="brand"><img class="brand-mark-image" src="assets/brand/alea-mark.png" alt=""><span>Alea 方案</span></span><span class="hit-mark">已命中 ✓</span></div><div style="margin-top:var(--space-6);padding-block:var(--space-4);border-block:1px solid color-mix(in oklab,var(--surface) 10%,transparent)"><span class="mono muted">海湾超级联赛 · 7 月 18 日 21:00 · 情景演示</span><h3 style="margin-top:var(--space-2)">澜城竞技 vs 赤湾联</h3><p class="mono" style="margin-top:var(--space-2)">终投比分 · 2 : 1（半场 1 : 0）</p></div><div class="row-between" style="margin-top:var(--space-5)"><span>圆桌共识</span><strong class="mono">71%</strong></div><p class="muted" style="font-size:12px;margin-top:var(--space-5)">本图非彩票、非投注凭证，不构成投注建议；购彩须本人前往正规实体店，未满 18 周岁禁止购彩。</p></div></div>
+      </section>
+    </div>
+  </main>
+
+  <footer data-od-id="marketing-footer" style="padding:56px 0;background:var(--fg);color:var(--surface)">
+    <div class="container">
+      <div class="row-between" style="align-items:flex-start;gap:48px;flex-wrap:wrap">
+        <div>
+          <a class="brand" href="alea.html" aria-label="Alea 首页"><img class="brand-lockup brand-on-dark" src="assets/brand/alea-lockup.png" alt="Alea"></a>
+          <p style="margin-top:16px;max-width:28ch;color:color-mix(in oklab,var(--surface) 55%,transparent);font-size:13px;line-height:1.65">竞彩足球多 AI 预测研究平台<br>仅供研究参考，不构成投注建议</p>
+          <div style="display:flex;gap:16px;margin-top:24px"><a href="alea-auth.html#login" style="color:color-mix(in oklab,var(--surface) 60%,transparent);font-size:13px">登录</a><a href="alea-auth.html#signup" style="color:var(--accent);font-size:13px">免费注册</a></div>
+        </div>
+        <div style="flex:1;min-width:280px;max-width:520px;padding:20px 24px;border:1px solid color-mix(in oklab,var(--surface) 14%,transparent);border-radius:12px">
+          <p class="eyebrow" style="color:color-mix(in oklab,var(--surface) 38%,transparent);margin-bottom:10px">风险提示</p>
+          <p style="font-size:12px;line-height:1.75;color:color-mix(in oklab,var(--surface) 55%,transparent)">本平台仅提供 AI 分析研究，不构成投注建议；不提供任何购彩服务；未满 18 周岁禁止购彩；理性购彩。首页内容为情景演示，不请求实时赛事接口；过往表现不代表未来结果。</p>
+          <p style="margin-top:10px;font-size:11px;color:color-mix(in oklab,var(--surface) 32%,transparent)">原型状态 · 备案信息将在正式部署域名确定后接入</p>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    (() => {
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+      const body = document.body;
+      const intro = document.getElementById('introOverlay');
+      const heroBackdrop = document.getElementById('heroBackdrop');
+      const introKey = 'alea-intro-seen';
+      let introSeen = false;
+
+      try { introSeen = sessionStorage.getItem(introKey) === '1'; } catch (error) { introSeen = false; }
+      heroBackdrop.addEventListener('error', () => { heroBackdrop.hidden = true; });
+
+      const revealPage = () => requestAnimationFrame(() => body.classList.add('is-ready'));
+      if (introSeen || reducedMotion.matches) {
+        intro.remove();
+        revealPage();
+      } else {
+        window.setTimeout(() => {
+          intro.classList.add('is-hidden');
+          revealPage();
+          try { sessionStorage.setItem(introKey, '1'); } catch (error) { /* 会话存储不可用时仅跳过标记 */ }
+        }, 800);
+        window.setTimeout(() => intro.remove(), 1220);
+      }
+
+      const stage = document.getElementById('roundtableStage');
+      const phaseButtons = [...document.querySelectorAll('.phase-tabs [data-phase]')];
+      const consensus = document.getElementById('consensusValue');
+      const phases = ['independent', 'debate', 'flip', 'converge'];
+      let phaseIndex = 0;
+      let phaseTimer;
+      let roundtablePlayed = false;
+      let stageVisible = !('IntersectionObserver' in window);
+
+      function setPhase(phase) {
+        phaseIndex = phases.indexOf(phase);
+        stage.dataset.phase = phase;
+        phaseButtons.forEach((button) => {
+          const active = button.dataset.phase === phase;
+          button.classList.toggle('active', active);
+          button.setAttribute('aria-selected', String(active));
+        });
+        stage.setAttribute('aria-labelledby', `phase-${phase}`);
+        consensus.textContent = phase === 'converge' ? '71%' : '待收敛';
+      }
+
+      function stopRoundtable() { window.clearTimeout(phaseTimer); }
+      function playRoundtable() {
+        stopRoundtable();
+        if (roundtablePlayed) { setPhase('converge'); return; }
+        roundtablePlayed = true;
+        setPhase(phases[0]);
+        if (reducedMotion.matches) { setPhase('converge'); return; }
+        const advance = () => {
+          setPhase(phases[phaseIndex + 1]);
+          if (phaseIndex < phases.length - 1) phaseTimer = window.setTimeout(advance, 1200);
+        };
+        phaseTimer = window.setTimeout(advance, 1200);
+      }
+
+      phaseButtons.forEach((button) => button.addEventListener('click', () => {
+        stopRoundtable();
+        setPhase(button.dataset.phase);
+      }));
+
+      if ('IntersectionObserver' in window) {
+        const stageObserver = new IntersectionObserver((entries) => { stageVisible = entries[0].isIntersecting; if (stageVisible) playRoundtable(); else stopRoundtable(); }, { threshold: .15 });
+        stageObserver.observe(stage);
+      } else playRoundtable();
+
+      const revealItems = [...document.querySelectorAll('[data-reveal]')];
+      if (reducedMotion.matches || !('IntersectionObserver' in window)) {
+        revealItems.forEach((item) => item.classList.add('is-visible'));
+      } else {
+        const storyObserver = new IntersectionObserver((entries, observer) => {
+          entries.forEach((entry) => {
+            if (!entry.isIntersecting) return;
+            entry.target.classList.add('is-visible');
+            observer.unobserve(entry.target);
+          });
+        }, { threshold: .18, rootMargin: '0px 0px -8% 0px' });
+        revealItems.forEach((item) => storyObserver.observe(item));
+      }
+
+      const evidenceStory = document.querySelector('.evidence-story');
+      const evidenceNavList = document.querySelector('.evidence-nav-list');
+      const evidenceLinks = [...document.querySelectorAll('.evidence-nav a')];
+      const evidenceSections = [...document.querySelectorAll('.evidence-story [data-chapter]')];
+      function setEvidenceChapter(section) {
+        const chapter = Number(section.dataset.chapter);
+        evidenceStory.style.setProperty('--evidence-progress', String(chapter / 4));
+        evidenceLinks.forEach((link) => {
+          const active = link.hash === `#${section.id}`;
+          link.classList.toggle('is-active', active);
+          if (active) {
+            link.setAttribute('aria-current', 'step');
+            if (evidenceNavList.scrollWidth > evidenceNavList.clientWidth) evidenceNavList.scrollTo({ left: Math.max(0, link.parentElement.offsetLeft - 12), behavior: reducedMotion.matches ? 'auto' : 'smooth' });
+          } else link.removeAttribute('aria-current');
+        });
+      }
+      setEvidenceChapter(evidenceSections[0]);
+      if ('IntersectionObserver' in window) {
+        const chapterObserver = new IntersectionObserver((entries) => entries.forEach((entry) => { if (entry.isIntersecting) setEvidenceChapter(entry.target); }), { rootMargin: '-38% 0px -50% 0px' });
+        evidenceSections.forEach((section) => chapterObserver.observe(section));
+      }
+
+      const canvas = document.getElementById('hero-particles');
+      const context = canvas.getContext?.('2d');
+      if (!context) canvas.hidden = true;
+      else {
+      const particles = [];
+      const confettiColors = ['hsl(44 96% 62%)', 'hsl(1 74% 53%)', 'hsl(205 82% 64%)'];
+      const AMBIENT_MOTION_LIMIT_MS = 4800;
+      let frameId = 0;
+      let motionStartedAt = 0;
+      let motionComplete = false;
+      let width = 0;
+      let height = 0;
+      let pixelRatio = 1;
+
+      function seedParticles() {
+        particles.length = 0;
+        for (let index = 0; index < 72; index += 1) {
+          particles.push({
+            kind: 'confetti',
+            x: Math.random() * width,
+            y: Math.random() * height,
+            size: 3 + Math.random() * 5,
+            speed: .45 + Math.random() * 1.25,
+            drift: -.4 + Math.random() * .8,
+            rotation: Math.random() * Math.PI,
+            spin: -.025 + Math.random() * .05,
+            color: confettiColors[index % confettiColors.length],
+            alpha: .48 + Math.random() * .42
+          });
+        }
+        for (let index = 0; index < 58; index += 1) {
+          particles.push({
+            kind: 'dust',
+            x: Math.random() * width,
+            y: Math.random() * height,
+            size: .6 + Math.random() * 1.8,
+            speed: .06 + Math.random() * .16,
+            drift: -.08 + Math.random() * .16,
+            phase: Math.random() * Math.PI * 2,
+            alpha: .2 + Math.random() * .55
+          });
+        }
+      }
+
+      function resizeCanvas() {
+        const rect = canvas.getBoundingClientRect();
+        width = rect.width;
+        height = rect.height;
+        if (!width || !height) return;
+        pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.max(1, Math.floor(width * pixelRatio));
+        canvas.height = Math.max(1, Math.floor(height * pixelRatio));
+        context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+        seedParticles();
+        drawParticles(false);
+      }
+
+      function drawParticles(update = true) {
+        context.clearRect(0, 0, width, height);
+        particles.forEach((particle) => {
+          if (particle.kind === 'confetti') {
+            context.save();
+            context.globalAlpha = particle.alpha;
+            context.fillStyle = particle.color;
+            context.translate(particle.x, particle.y);
+            context.rotate(particle.rotation);
+            context.fillRect(-particle.size, -particle.size * .3, particle.size * 2, particle.size * .6);
+            context.restore();
+            if (update) {
+              particle.y += particle.speed;
+              particle.x += particle.drift + Math.sin(particle.y * .012) * .18;
+              particle.rotation += particle.spin;
+              if (particle.y > height + 12) { particle.y = -12; particle.x = Math.random() * width; }
+            }
+          } else {
+            const pulse = .42 + Math.sin(particle.phase) * .34;
+            context.beginPath();
+            context.globalAlpha = particle.alpha * pulse;
+            context.fillStyle = 'white';
+            context.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+            context.fill();
+            if (update) {
+              particle.y -= particle.speed;
+              particle.x += particle.drift;
+              particle.phase += .02;
+              if (particle.y < -6) { particle.y = height + 6; particle.x = Math.random() * width; }
+            }
+          }
+        });
+        context.globalAlpha = 1;
+      }
+
+      function animateParticles(timestamp) {
+        if (!motionStartedAt) motionStartedAt = timestamp;
+        drawParticles(true);
+        if (timestamp - motionStartedAt < AMBIENT_MOTION_LIMIT_MS) frameId = requestAnimationFrame(animateParticles);
+        else { motionComplete = true; drawParticles(false); }
+      }
+
+      function setParticleMotion() {
+        cancelAnimationFrame(frameId);
+        drawParticles(false);
+        if (!reducedMotion.matches && !document.hidden && !motionComplete) frameId = requestAnimationFrame(animateParticles);
+      }
+
+      window.addEventListener('resize', resizeCanvas, { passive: true });
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          stopRoundtable();
+          cancelAnimationFrame(frameId);
+        } else {
+          if (stageVisible) playRoundtable();
+          setParticleMotion();
+        }
+      });
+      reducedMotion.addEventListener?.('change', () => {
+        setParticleMotion();
+        if (reducedMotion.matches) { stopRoundtable(); setPhase('converge'); }
+      });
+      resizeCanvas();
+      setParticleMotion();
+      }
+    })();
+  </script>
+</body>
+</html>

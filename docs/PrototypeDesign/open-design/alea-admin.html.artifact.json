@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "kind": "html",
+  "title": "alea-admin.html",
+  "entry": "alea-admin.html",
+  "renderer": "html",
+  "status": "complete",
+  "exports": [
+    "html",
+    "pdf",
+    "zip"
+  ],
+  "createdAt": "2026-07-17T16:28:59.676Z",
+  "updatedAt": "2026-07-17T16:28:59.676Z",
+  "metadata": {
+    "inferred": true,
+    "reconciled": true
+  }
+}

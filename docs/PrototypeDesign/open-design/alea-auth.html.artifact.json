@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "kind": "html",
+  "title": "alea-auth.html",
+  "entry": "alea-auth.html",
+  "renderer": "html",
+  "status": "complete",
+  "exports": [
+    "html",
+    "pdf",
+    "zip"
+  ],
+  "createdAt": "2026-07-17T16:29:59.916Z",
+  "updatedAt": "2026-07-17T16:29:59.916Z",
+  "metadata": {
+    "inferred": true,
+    "reconciled": true
+  }
+}

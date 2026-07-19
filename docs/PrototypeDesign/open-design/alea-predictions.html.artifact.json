@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "kind": "html",
+  "title": "alea-predictions.html",
+  "entry": "alea-predictions.html",
+  "renderer": "html",
+  "status": "complete",
+  "exports": [
+    "html",
+    "pdf",
+    "zip"
+  ],
+  "createdAt": "2026-07-18T04:47:09.200Z",
+  "updatedAt": "2026-07-18T04:47:09.200Z",
+  "metadata": {
+    "inferred": true,
+    "reconciled": true
+  }
+}

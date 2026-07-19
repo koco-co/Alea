@@ -1,0 +1,676 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <link rel="icon" href="assets/brand/alea-mark-export.png" type="image/png">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="Alea 产品设计系统：统一产品壳、导航、状态、交互与无障碍规则。">
+  <title>Alea · 产品设计系统</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="alea.css">
+  <script defer src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
+  <style>
+    .ds-page{min-height:100vh;background:var(--bg);color:var(--fg)}
+    .sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+    .ds-header{position:sticky;top:0;z-index:20;border-bottom:1px solid var(--border-soft);background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(16px)}
+    .ds-header-inner{width:min(1180px,calc(100% - 32px));min-height:64px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:24px}
+    .ds-brand{display:flex;align-items:center;gap:12px;min-width:max-content}
+    .ds-brand-mark{display:block;width:32px;height:32px;object-fit:contain}
+    .ds-brand-copy strong{display:block;font-family:var(--font-display);font-weight:500;font-size:18px}
+    .ds-brand-copy span{display:block;margin-top:1px;color:var(--meta);font-size:11px;letter-spacing:.06em}
+    .ds-nav{display:flex;align-items:center;gap:4px;overflow-x:auto;scrollbar-width:none}
+    .ds-nav::-webkit-scrollbar{display:none}
+    .ds-nav button{min-height:44px;padding:0 12px;border:0;border-radius:10px;background:transparent;color:var(--muted);font:inherit;white-space:nowrap;cursor:pointer}
+    .ds-nav button:hover,.ds-nav button[aria-current="true"]{background:var(--surface-warm);color:var(--fg)}
+    .ds-main{width:min(1180px,calc(100% - 32px));margin:0 auto;padding:64px 0 96px}
+    .ds-hero{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(280px,.65fr);gap:48px;align-items:end;padding-bottom:56px;border-bottom:1px solid var(--border-soft)}
+    .ds-kicker{margin:0 0 12px;color:var(--accent);font-size:12px;font-weight:650;letter-spacing:.12em;text-transform:uppercase}
+    .ds-hero h1{max-width:760px;margin:0;font-family:var(--font-display);font-size:clamp(42px,6vw,72px);font-weight:500;line-height:1.02;letter-spacing:-.025em}
+    .ds-hero p{max-width:720px;margin:24px 0 0;color:var(--muted);font-size:18px;line-height:1.7}
+    .ds-meta-card{padding:24px;border:1px solid var(--border-soft);border-radius:16px;background:var(--surface);box-shadow:var(--elev-raised)}
+    .ds-meta-row{display:flex;justify-content:space-between;gap:20px;padding:11px 0;border-bottom:1px solid var(--border)}
+    .ds-meta-row:last-child{border-bottom:0}
+    .ds-meta-row span{color:var(--meta);font-size:13px}
+    .ds-meta-row strong{font-size:13px;font-weight:650;text-align:right}
+    .ds-section{padding:72px 0;border-bottom:1px solid var(--border-soft);scroll-margin-top:88px}
+    .ds-section:last-child{border-bottom:0}
+    .ds-section-head{display:grid;grid-template-columns:minmax(220px,.42fr) minmax(0,.58fr);gap:40px;margin-bottom:32px}
+    .ds-section h2{margin:0;font-family:var(--font-display);font-size:clamp(30px,4vw,46px);font-weight:500;line-height:1.08}
+    .ds-section-intro{margin:2px 0 0;color:var(--muted);font-size:16px;line-height:1.7}
+    .ds-grid{display:grid;gap:16px}
+    .ds-grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .ds-grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+    .ds-grid-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+    .ds-card{min-width:0;padding:24px;border:1px solid var(--border-soft);border-radius:16px;background:var(--surface);box-shadow:var(--elev-ring)}
+    .ds-card h3{margin:0 0 8px;font-family:var(--font-display);font-size:22px;font-weight:500;line-height:1.2}
+    .ds-card p{margin:0;color:var(--muted);line-height:1.6}
+    .ds-token{min-height:154px;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden}
+    .ds-swatch{height:72px;margin:-24px -24px 20px;border-bottom:1px solid var(--border-soft)}
+    .ds-swatch-bg{background:var(--bg)}
+    .ds-swatch-surface{background:var(--surface)}
+    .ds-swatch-fg{background:var(--fg)}
+    .ds-swatch-muted{background:var(--muted)}
+    .ds-swatch-border{background:var(--border-soft)}
+    .ds-swatch-accent{background:var(--accent)}
+    .ds-token code,.ds-spec code{font-family:var(--font-mono);font-size:13px;color:var(--fg)}
+    .ds-token small{display:block;margin-top:6px;color:var(--meta);font-size:12px}
+    .ds-type-sample{display:grid;gap:12px}
+    .ds-type-display{font-family:var(--font-display);font-size:36px;font-weight:500;line-height:1.1}
+    .ds-type-body{font-family:var(--font-body);font-size:16px;line-height:1.7}
+    .ds-type-mono{font-family:var(--font-mono);font-size:20px;line-height:1.5;font-variant-numeric:tabular-nums}
+    .ds-type-label{font-family:var(--font-body);font-size:12px;font-weight:650;line-height:1.45;letter-spacing:.04em;text-transform:uppercase}
+    .ds-type-meta{font-family:var(--font-body);font-size:12px;line-height:1.5;color:var(--meta)}
+    .ds-spec{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;align-items:end}
+    .ds-space{padding:16px;border:1px solid var(--border-soft);border-radius:12px;background:var(--surface)}
+    .ds-space-bar{height:12px;margin-bottom:12px;border-radius:4px;background:var(--fg)}
+    .ds-space:nth-child(1) .ds-space-bar{width:4px}
+    .ds-space:nth-child(2) .ds-space-bar{width:8px}
+    .ds-space:nth-child(3) .ds-space-bar{width:12px}
+    .ds-space:nth-child(4) .ds-space-bar{width:16px}
+    .ds-space:nth-child(5) .ds-space-bar{width:24px}
+    .ds-space:nth-child(6) .ds-space-bar{width:32px}
+    .ds-radius-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:8px}
+    .ds-radius{min-height:88px;padding:14px;border:1px solid var(--border-soft);background:var(--surface);display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+    .ds-radius:nth-child(1){border-radius:8px}
+    .ds-radius:nth-child(2){border-radius:12px}
+    .ds-radius:nth-child(3){border-radius:16px}
+    .ds-radius:nth-child(4){border-radius:9999px}
+    .ds-radius span{color:var(--meta);font-size:11px}
+    .ds-state-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+    .ds-state{min-height:92px;padding:16px;border:1px solid var(--border-soft);border-radius:12px;background:var(--surface);display:flex;align-items:flex-start;gap:12px}
+    .ds-state-icon,.ds-icon-box{width:36px;height:36px;flex:0 0 36px;border-radius:10px;display:grid;place-items:center;background:var(--surface-warm);color:var(--fg)}
+    .ds-state-icon svg,.ds-icon-box svg,.ds-btn svg,.ds-icon-btn svg{width:18px;height:18px;stroke-width:1.8}
+    .ds-state strong{display:block;font-size:14px}
+    .ds-state span{display:block;margin-top:4px;color:var(--muted);font-size:12px;line-height:1.45}
+    .ds-state[data-tone="success"] .ds-state-icon{background:color-mix(in srgb,var(--success) 12%,var(--surface));color:var(--success)}
+    .ds-state[data-tone="warn"] .ds-state-icon{background:color-mix(in srgb,var(--warn) 15%,var(--surface));color:color-mix(in srgb,var(--warn) 70%,var(--fg))}
+    .ds-state[data-tone="danger"] .ds-state-icon{background:color-mix(in srgb,var(--danger) 11%,var(--surface));color:var(--danger)}
+    .ds-state[data-tone="accent"] .ds-state-icon{background:color-mix(in srgb,var(--accent) 12%,var(--surface));color:var(--accent)}
+    .ds-page-state-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+    .ds-page-state{min-height:196px;display:flex;flex-direction:column;gap:14px}
+    .ds-page-state-head{display:flex;align-items:center;gap:10px}
+    .ds-page-state-head svg{width:18px;height:18px;color:var(--accent)}
+    .ds-page-state-head strong{font-size:14px}
+    .ds-state-preview{min-height:100px;padding:14px;border:1px solid var(--border-soft);border-radius:12px;background:var(--bg);display:grid;align-content:center;gap:9px}
+    .ds-skeleton-line{height:10px;border-radius:999px;background:var(--surface-warm)}
+    .ds-skeleton-line:nth-child(2){width:72%}
+    .ds-skeleton-line:nth-child(3){width:48%}
+    .ds-sync-row{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:12px}
+    .ds-sync-row svg{width:18px;height:18px;color:var(--accent)}
+    .ds-preview-title{color:var(--fg);font-weight:650}
+    .ds-exception-controls{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:16px}
+    .ds-exception-stage{overflow:hidden;border:1px solid var(--border-soft);border-radius:16px;background:var(--surface);box-shadow:var(--elev-raised)}
+    .ds-global-banner{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:13px 18px;background:color-mix(in srgb,var(--danger) 12%,var(--surface));color:var(--danger);font-size:13px;font-weight:650}
+    .ds-global-banner[hidden],.ds-ai-banner[hidden]{display:none}
+    .ds-exception-body{padding:20px}
+    .ds-exception-toolbar{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-bottom:16px;border-bottom:1px solid var(--border-soft)}
+    .ds-exception-actions{display:flex;flex-wrap:wrap;gap:8px}
+    .ds-ai-banner{margin-top:16px;padding:13px 15px;border:1px solid color-mix(in srgb,var(--warn) 42%,var(--border-soft));border-radius:12px;background:color-mix(in srgb,var(--warn) 10%,var(--surface));color:color-mix(in srgb,var(--warn) 70%,var(--fg));font-size:13px;font-weight:650}
+    .ds-history-card{margin-top:16px;padding:18px;border:1px solid var(--border-soft);border-radius:12px;background:var(--bg)}
+    .ds-history-card h3{margin-top:7px}
+    .ds-history-meta{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px;color:var(--meta);font-family:var(--font-mono);font-size:11px}
+    .ds-shell-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+    .ds-shell{overflow:hidden;border:1px solid var(--border-soft);border-radius:16px;background:var(--surface);box-shadow:var(--elev-ring)}
+    .ds-shell-topbar{display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid var(--border-soft)}
+    .ds-shell-brand{display:flex;align-items:center;gap:8px;font-family:var(--font-display);font-size:18px}
+    .ds-shell-brand .ds-brand-mark{width:28px;height:28px}
+    .ds-shell-nav{display:flex;align-items:center;gap:3px;margin-left:auto}
+    .ds-shell-nav span{padding:7px 8px;border-radius:8px;color:var(--muted);font-size:11px}
+    .ds-admin-entry{margin-left:6px!important;border:1px solid var(--accent);color:var(--accent)!important}
+    .ds-shell-body{min-height:176px;padding:20px;background:var(--bg)}
+    .ds-shell-body h3{font-size:24px}
+    .ds-shell-body p{margin-top:8px;color:var(--muted);font-size:13px;line-height:1.6}
+    .ds-component-stack{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+    .ds-btn,.ds-icon-btn{min-height:44px;border-radius:10px;font:inherit;font-weight:650;cursor:pointer;transition:background var(--motion-fast),color var(--motion-fast),transform var(--motion-fast)}
+    .ds-btn{padding:0 16px;display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--border-soft);background:var(--surface);color:var(--fg)}
+    .ds-btn-primary{border-color:var(--accent);background:var(--accent);color:var(--accent-on);box-shadow:0 0 0 1px var(--accent)}
+    .ds-btn:hover{background:var(--surface-warm)}
+    .ds-btn-primary:hover{background:var(--accent-hover)}
+    .ds-btn:active{transform:translateY(1px)}
+    .ds-btn:disabled,.ds-btn[aria-disabled="true"]{cursor:not-allowed;opacity:.48;transform:none}
+    .ds-icon-btn{width:44px;padding:0;border:1px solid var(--border-soft);display:grid;place-items:center;background:var(--surface);color:var(--fg)}
+    .ds-field{display:grid;gap:8px;min-width:min(100%,280px)}
+    .ds-field label{font-size:13px;font-weight:650}
+    .ds-field input,.ds-field select{width:100%;min-height:44px;padding:0 12px;border:1px solid var(--border-soft);border-radius:10px;background:var(--surface);color:var(--fg);font:inherit}
+    .ds-field small{color:var(--meta);font-size:12px}
+    .ds-focus-demo{display:flex;flex-wrap:wrap;gap:12px;padding:20px;border:1px dashed var(--border-soft);border-radius:12px;background:var(--bg)}
+    .ds-ai-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+    .ds-ai{display:flex;align-items:center;gap:14px}
+    .ds-ai img{width:44px;height:44px;object-fit:contain;padding:8px;border:1px solid var(--border-soft);border-radius:12px;background:var(--surface)}
+    .ds-ai strong{display:block}
+    .ds-ai span{display:block;margin-top:3px;color:var(--meta);font-family:var(--font-mono);font-size:11px}
+    .ds-ai .ds-icon-box{display:grid;margin:0;color:var(--fg);font-family:var(--font-body);font-size:inherit}
+    .ds-identity-flow{display:grid;grid-template-columns:1fr auto 1fr;gap:16px;align-items:stretch;margin-top:16px}
+    .ds-identity-step{padding:20px;border:1px solid var(--border-soft);border-radius:14px;background:var(--surface)}
+    .ds-identity-step .ds-ai{margin-top:14px}
+    .ds-identity-separator{align-self:center;color:var(--meta);font-family:var(--font-mono);font-size:12px}
+    .ds-demo{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(280px,.8fr);gap:16px}
+    .ds-match{padding:28px;border:1px solid var(--border-soft);border-radius:16px;background:var(--surface);box-shadow:var(--elev-raised)}
+    .ds-match-top{display:flex;align-items:center;justify-content:space-between;gap:16px;color:var(--meta);font-family:var(--font-mono);font-size:12px}
+    .ds-teams{display:grid;grid-template-columns:1fr auto 1fr;gap:18px;align-items:center;margin:28px 0}
+    .ds-team{display:grid;justify-items:center;gap:10px;text-align:center}
+    .ds-team img{width:64px;height:64px;object-fit:contain}
+    .ds-team strong{font-family:var(--font-display);font-size:21px;font-weight:500}
+    .ds-score{text-align:center}
+    .ds-score strong{display:block;font-family:var(--font-mono);font-size:34px;font-weight:650;line-height:1}
+    .ds-score span{display:block;margin-top:7px;color:var(--meta);font-family:var(--font-mono);font-size:11px}
+    .ds-odds{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+    .ds-odd{padding:12px;border:1px solid var(--border-soft);border-radius:10px;text-align:center;background:var(--bg)}
+    .ds-odd span{display:block;color:var(--meta);font-size:11px}
+    .ds-odd strong{display:block;margin-top:3px;font-family:var(--font-mono);font-size:16px}
+    .ds-demo-side{display:grid;gap:16px}
+    .ds-tabs{display:flex;gap:4px;padding:4px;border-radius:12px;background:var(--surface-warm)}
+    .ds-tabs button{flex:1;min-height:40px;padding:0 10px;border:0;border-radius:9px;background:transparent;color:var(--muted);font:inherit;font-size:13px;cursor:pointer}
+    .ds-tabs button[aria-selected="true"]{background:var(--surface);color:var(--fg);box-shadow:var(--elev-ring)}
+    .ds-tab-panel{margin-top:16px}
+    .ds-tab-panel[hidden]{display:none}
+    .ds-prediction-score{margin:12px 0;font-family:var(--font-mono);font-size:28px;font-weight:650}
+    .ds-callout{padding:16px;border:1px solid var(--border-soft);border-radius:12px;background:var(--bg);color:var(--muted);font-size:13px;line-height:1.6}
+    .ds-a11y-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+    .ds-checklist{list-style:none;margin:16px 0 0;padding:0;display:grid;gap:12px}
+    .ds-checklist li{display:flex;gap:10px;align-items:flex-start;color:var(--muted);line-height:1.55}
+    .ds-checklist svg{width:18px;height:18px;flex:0 0 18px;margin-top:3px;color:var(--success)}
+    .ds-motion-demo{height:92px;margin-top:18px;border-radius:12px;position:relative;overflow:hidden;background:var(--surface-warm)}
+    .ds-motion-dot{position:absolute;top:28px;left:20px;width:36px;height:36px;border-radius:50%;background:var(--accent);animation:ds-travel 2.4s var(--ease-standard) infinite alternate}
+    @keyframes ds-travel{to{transform:translateX(220px)}}
+    .ds-motion-demo[data-paused="true"] .ds-motion-dot{animation-play-state:paused}
+    .ds-icon-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}
+    .ds-icon-sample{min-height:96px;padding:14px;border:1px solid var(--border-soft);border-radius:12px;background:var(--surface);display:grid;place-items:center;gap:8px;text-align:center}
+    .ds-icon-sample svg{width:22px;height:22px;stroke-width:1.8}
+    .ds-icon-sample span{color:var(--muted);font-family:var(--font-mono);font-size:11px}
+    .ds-footer{padding:32px 0 0;display:flex;justify-content:space-between;gap:20px;color:var(--meta);font-size:12px}
+    @media(max-width:900px){
+      .ds-header-inner{width:min(100% - 24px,1180px)}
+      .ds-brand-copy span{display:none}
+      .ds-nav{max-width:64vw}
+      .ds-main{width:min(100% - 24px,1180px);padding-top:40px}
+      .ds-hero,.ds-section-head,.ds-demo{grid-template-columns:1fr}
+      .ds-grid-4,.ds-ai-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .ds-grid-3,.ds-state-list,.ds-page-state-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .ds-spec{grid-template-columns:repeat(3,minmax(0,1fr))}
+      .ds-radius-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .ds-icon-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+    }
+    @media(max-width:600px){
+      .ds-header-inner{align-items:flex-start;flex-direction:column;padding:10px 0}
+      .ds-nav{width:100%;max-width:none}
+      .ds-main{padding-top:32px}
+      .ds-hero{gap:28px;padding-bottom:40px}
+      .ds-section{padding:48px 0}
+      .ds-grid-2,.ds-grid-3,.ds-grid-4,.ds-ai-grid,.ds-a11y-grid,.ds-state-list,.ds-page-state-grid,.ds-shell-grid{grid-template-columns:1fr}
+      .ds-spec{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .ds-identity-flow{grid-template-columns:1fr}
+      .ds-identity-separator{text-align:center}
+      .ds-icon-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .ds-teams{gap:8px}
+      .ds-team img{width:52px;height:52px}
+      .ds-team strong{font-size:17px}
+      .ds-exception-toolbar{align-items:flex-start;flex-direction:column}
+      .ds-shell-nav span:nth-child(n+4){display:none}
+      .ds-footer{flex-direction:column}
+    }
+    @media(prefers-reduced-motion:reduce){
+      .ds-page *,.ds-page *::before,.ds-page *::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+      .ds-motion-dot{animation:none;transform:translateX(110px)}
+    }
+  </style>
+</head>
+<body class="ds-page">
+  <header class="ds-header" data-od-id="design-system-header">
+    <div class="ds-header-inner">
+      <div class="ds-brand" aria-label="Alea 设计系统">
+        <img class="ds-brand-mark" src="assets/brand/alea-mark.png" alt="">
+        <span class="ds-brand-copy"><strong>Alea</strong><span>产品设计系统</span></span>
+      </div>
+      <nav class="ds-nav" aria-label="设计系统章节" data-od-id="design-system-section-nav">
+        <button type="button" data-section-target="tokens" aria-controls="tokens" aria-current="true">Token</button>
+        <button type="button" data-section-target="typography" aria-controls="typography">字体与数据</button>
+        <button type="button" data-section-target="states" aria-controls="states">徽章</button>
+        <button type="button" data-section-target="page-states" aria-controls="page-states">页面状态</button>
+        <button type="button" data-section-target="exceptions" aria-controls="exceptions">异常</button>
+        <button type="button" data-section-target="shells" aria-controls="shells">壳层</button>
+        <button type="button" data-section-target="components" aria-controls="components">组件</button>
+        <button type="button" data-section-target="ai-identity" aria-controls="ai-identity">AI 身份</button>
+        <button type="button" data-section-target="accessibility" aria-controls="accessibility">无障碍</button>
+        <button type="button" data-section-target="icons" aria-controls="icons">图标</button>
+      </nav>
+    </div>
+    <p id="section-navigation-status" class="sr-only" aria-live="polite"></p>
+  </header>
+
+  <main class="ds-main">
+    <section class="ds-hero" data-od-id="design-system-intro">
+      <div>
+        <p class="ds-kicker">Alea · 产品界面基线</p>
+        <h1>让每一次预测，都能被清晰理解与追溯。</h1>
+        <p>统一颜色、字体、数字、状态、AI 身份、交互与无障碍规则。所有事实数据同时标明来源和同步时间；预测研究与购彩行为保持清晰边界。</p>
+      </div>
+      <aside class="ds-meta-card" aria-label="设计系统元数据">
+        <div class="ds-meta-row"><span>规范状态</span><strong>当前生效</strong></div>
+        <div class="ds-meta-row"><span>主样式</span><strong class="mono">alea.css</strong></div>
+        <div class="ds-meta-row"><span>界面语言</span><strong>简体中文</strong></div>
+        <div class="ds-meta-row"><span>无障碍目标</span><strong>WCAG AA</strong></div>
+      </aside>
+    </section>
+
+    <section class="ds-section" id="tokens" tabindex="-1" data-od-id="tokens-section">
+      <div class="ds-section-head">
+        <h2>颜色 Token</h2>
+        <p class="ds-section-intro">暖纸色画布、温和中性色与单一陶土色强调共同构成 。语义色只负责结果和风险，不取代文字与图标。</p>
+      </div>
+      <div class="ds-grid ds-grid-3">
+        <article class="ds-card ds-token" data-od-id="token-bg"><div class="ds-swatch ds-swatch-bg"></div><div><code>--bg</code><small>页面画布</small></div></article>
+        <article class="ds-card ds-token" data-od-id="token-surface"><div class="ds-swatch ds-swatch-surface"></div><div><code>--surface</code><small>卡片与浮层</small></div></article>
+        <article class="ds-card ds-token" data-od-id="token-fg"><div class="ds-swatch ds-swatch-fg"></div><div><code>--fg</code><small>主要文字</small></div></article>
+        <article class="ds-card ds-token" data-od-id="token-muted"><div class="ds-swatch ds-swatch-muted"></div><div><code>--muted</code><small>辅助文字</small></div></article>
+        <article class="ds-card ds-token" data-od-id="token-border"><div class="ds-swatch ds-swatch-border"></div><div><code>--border-soft</code><small>结构分隔</small></div></article>
+        <article class="ds-card ds-token" data-od-id="token-accent"><div class="ds-swatch ds-swatch-accent"></div><div><code>--accent</code><small>主要操作与焦点</small></div></article>
+      </div>
+    </section>
+
+    <section class="ds-section" id="typography" tabindex="-1" data-od-id="typography-section">
+      <div class="ds-section-head">
+        <h2>字体、数据与间距</h2>
+        <p class="ds-section-intro">品牌与大比分使用衬线体，正文和控件使用无衬线体，比分、赔率、金额、时间与编号统一使用等宽体和表格数字。</p>
+      </div>
+      <div class="ds-grid ds-grid-3">
+        <article class="ds-card ds-type-sample"><span class="ds-kicker">Brand</span><div class="ds-type-display">Alea</div><p>品牌名称使用衬线体，保持克制而明确。</p></article>
+        <article class="ds-card ds-type-sample"><span class="ds-kicker">Display</span><div class="ds-type-display">预测结论</div><p>页面标题、章节标题与大比分。</p></article>
+        <article class="ds-card ds-type-sample"><span class="ds-kicker">Body</span><div class="ds-type-body">多个 AI 独立预测、匿名辩论并投票收敛。</div><p>正文、说明、按钮与表单控件。</p></article>
+        <article class="ds-card ds-type-sample"><span class="ds-kicker">Label</span><div class="ds-type-label">在售 · 已同步 · 可采纳</div><p>短标签必须清楚表达状态与操作边界。</p></article>
+        <article class="ds-card ds-type-sample"><span class="ds-kicker">Mono</span><div class="ds-type-mono">2 : 1 · 7.20 · ¥128.00</div><p>比分 · 赔率 · 金额；缺失值统一显示“—”。</p></article>
+        <article class="ds-card ds-type-sample"><span class="ds-kicker">元数据</span><div class="ds-type-meta">来源：官方赛程 · 同步于 北京时间 14:32</div><p>事实信息的来源、新鲜度、编号与注释。</p></article>
+      </div>
+      <h3 style="margin:28px 0 12px;font-family:var(--font-display);font-weight:500">间距 · 圆角</h3>
+      <div class="ds-spec" aria-label="间距标尺">
+        <div class="ds-space"><div class="ds-space-bar"></div><code>4</code></div>
+        <div class="ds-space"><div class="ds-space-bar"></div><code>8</code></div>
+        <div class="ds-space"><div class="ds-space-bar"></div><code>12</code></div>
+        <div class="ds-space"><div class="ds-space-bar"></div><code>16</code></div>
+        <div class="ds-space"><div class="ds-space-bar"></div><code>24</code></div>
+        <div class="ds-space"><div class="ds-space-bar"></div><code>32</code></div>
+      </div>
+      <div class="ds-radius-grid" aria-label="圆角标尺">
+        <div class="ds-radius"><code>8px</code><span>标准</span></div>
+        <div class="ds-radius"><code>12px</code><span>控件</span></div>
+        <div class="ds-radius"><code>16px</code><span>重点卡片</span></div>
+        <div class="ds-radius"><code>pill</code><span>状态标签</span></div>
+      </div>
+    </section>
+
+    <section class="ds-section" id="states" tabindex="-1" data-od-id="states-section">
+      <div class="ds-section-head">
+        <h2>11 种产品状态</h2>
+        <p class="ds-section-intro">状态必须同时通过图标、文字和颜色表达；异常状态保留上下文并解释限制，禁止只显示空白或只依赖颜色。</p>
+      </div>
+      <div class="ds-state-list">
+        <article class="ds-state" data-tone="accent"><span class="ds-state-icon"><i data-lucide="radio"></i></span><div><strong>在售</strong><span>可采纳，展示停售倒计时。</span></div></article>
+        <article class="ds-state" data-tone="warn"><span class="ds-state-icon"><i data-lucide="lock-keyhole"></i></span><div><strong>已停售</strong><span>保留预测内容，禁止采纳。</span></div></article>
+        <article class="ds-state"><span class="ds-state-icon"><i data-lucide="clock-3"></i></span><div><strong>待开奖</strong><span>保留预测内容，等待赛果确认。</span></div></article>
+        <article class="ds-state" data-tone="danger"><span class="ds-state-icon"><i data-lucide="triangle-alert"></i></span><div><strong>赛果冲突</strong><span>多源赛果不一致，等待管理员裁定。</span></div></article>
+        <article class="ds-state"><span class="ds-state-icon"><i data-lucide="ban"></i></span><div><strong>已撤回</strong><span>展示撤回原因并允许查看原文。</span></div></article>
+        <article class="ds-state" data-tone="warn"><span class="ds-state-icon"><i data-lucide="flask-conical"></i></span><div><strong>样本不足</strong><span>样本量不足，不展示误导性结论。</span></div></article>
+        <article class="ds-state" data-tone="warn"><span class="ds-state-icon"><i data-lucide="split"></i></span><div><strong>弱共识</strong><span>明确列出并列比分与票数。</span></div></article>
+        <article class="ds-state" data-tone="accent"><span class="ds-state-icon"><i data-lucide="loader-circle"></i></span><div><strong>校验中</strong><span>事实声明正在可信数据源中核查。</span></div></article>
+        <article class="ds-state" data-tone="danger"><span class="ds-state-icon"><i data-lucide="shield-alert"></i></span><div><strong>未经证实</strong><span>不得广播给其他 AI，也不得作为终投理由。</span></div></article>
+        <article class="ds-state" data-tone="success"><span class="ds-state-icon"><i data-lucide="check-check"></i></span><div><strong>已注入</strong><span>教训已写入后续预测上下文。</span></div></article>
+        <article class="ds-state"><span class="ds-state-icon"><i data-lucide="archive"></i></span><div><strong>已归档</strong><span>保留历史记录，不再注入上下文。</span></div></article>
+      </div>
+    </section>
+
+    <section class="ds-section" id="page-states" tabindex="-1" data-od-id="page-states-section">
+      <div class="ds-section-head">
+        <h2>六类页面状态</h2>
+        <p class="ds-section-intro">每个数据页面都必须覆盖同一组加载与异常边界。缺失信息明确写“暂缺”，禁止用空白或推测值填补。</p>
+      </div>
+      <div class="ds-page-state-grid">
+        <article class="ds-card ds-page-state">
+          <div class="ds-page-state-head"><i data-lucide="loader-circle"></i><strong>加载骨架屏</strong></div>
+          <div class="ds-state-preview" aria-label="加载骨架屏示例"><span class="ds-skeleton-line"></span><span class="ds-skeleton-line"></span><span class="ds-skeleton-line"></span></div>
+          <p>首屏结构先出现，避免内容跳动。</p>
+        </article>
+        <article class="ds-card ds-page-state">
+          <div class="ds-page-state-head"><i data-lucide="inbox"></i><strong>空数据</strong></div>
+          <div class="ds-state-preview"><span class="ds-preview-title">今天暂无在售比赛</span><span class="muted">切换日期或清除筛选条件。</span></div>
+          <p>说明为什么为空，并给出下一步动作。</p>
+        </article>
+        <article class="ds-card ds-page-state">
+          <div class="ds-page-state-head"><i data-lucide="refresh-cw"></i><strong>同步中</strong></div>
+          <div class="ds-state-preview"><div class="ds-sync-row"><i data-lucide="refresh-cw"></i><span>正在同步官方赛程与赔率…</span></div><span class="mono">最近成功：北京时间 14:32</span></div>
+          <p>保留上次成功数据，同时显示同步进度。</p>
+        </article>
+        <article class="ds-card ds-page-state">
+          <div class="ds-page-state-head"><i data-lucide="database-zap"></i><strong>数据过期</strong></div>
+          <div class="ds-state-preview"><span class="ds-preview-title" style="color:var(--danger)">数据更新时间超过 24 小时</span><span class="muted">采纳、生成、复制和下载已禁用。</span></div>
+          <p>风险信息不可被忽略或关闭。</p>
+        </article>
+        <article class="ds-card ds-page-state">
+          <div class="ds-page-state-head"><i data-lucide="triangle-alert"></i><strong>部分失败</strong></div>
+          <div class="ds-state-preview"><span class="ds-preview-title">伤停情报</span><span class="muted">暂缺 · 来源未同步</span><span class="mono">其他赛程与赔率内容仍可查看</span></div>
+          <p>保留已加载模块，不编造缺失事实。</p>
+        </article>
+        <article class="ds-card ds-page-state">
+          <div class="ds-page-state-head"><i data-lucide="shield-x"></i><strong>无权限</strong></div>
+          <div class="ds-state-preview"><span class="ds-preview-title">此页面仅管理员可访问</span><span class="muted">返回预测页，或切换到具备权限的账户。</span></div>
+          <p>用户态不渲染管理员入口，直达时才显示此边界。</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="ds-section" id="exceptions" tabindex="-1" data-od-id="exceptions-section">
+      <div class="ds-section-head">
+        <h2>全局异常降级</h2>
+        <p class="ds-section-intro">下面两个开关可独立切换，也可同时开启。所有异常都保留已加载内容，并把受限操作与原因放在同一视图中。</p>
+      </div>
+      <div class="ds-exception-controls" aria-label="异常状态演示开关">
+        <button class="ds-btn" id="backend-toggle" type="button" aria-pressed="false"><i data-lucide="server-off"></i><span>模拟后端不可用</span></button>
+        <button class="ds-btn" id="ai-toggle" type="button" aria-pressed="false"><i data-lucide="bot-off"></i><span>模拟全部 AI 不可用</span></button>
+      </div>
+      <div class="ds-exception-stage" data-od-id="exception-playground">
+        <div class="ds-global-banner" id="backend-banner" role="alert" hidden>
+          <span><i data-lucide="triangle-alert"></i> 服务暂时不可用，请稍后刷新</span>
+          <small>已加载内容保持可见</small>
+        </div>
+        <div class="ds-exception-body">
+          <div class="ds-exception-toolbar">
+            <div>
+              <p class="ds-kicker">预测控制台 · 历史内容</p>
+              <strong>圆桌与预测服务</strong>
+            </div>
+            <div class="ds-exception-actions">
+              <button class="ds-btn" id="exception-refresh" type="button"><i data-lucide="refresh-cw"></i>刷新数据</button>
+              <button class="ds-btn ds-btn-primary" id="exception-start" type="button"><i data-lucide="sparkles"></i>开始圆桌</button>
+            </div>
+          </div>
+          <div class="ds-ai-banner" id="ai-unavailable-banner" role="status" hidden>新预测暂停产出 · AI 服务当前不可用</div>
+          <article class="ds-history-card" aria-label="已加载的历史预测卡">
+            <p class="ds-kicker">历史预测 · 已公证</p>
+            <h3>海嘉 2 : 1 北京</h3>
+            <p>历史卡片在后端或全部 AI 不可用时仍然完整保留。</p>
+            <div class="ds-history-meta"><span>AUDIT-R7F2-18</span><span>公证 N8C4-02</span></div>
+          </article>
+          <p id="exception-status" class="ds-callout" role="status" aria-live="polite" style="margin-top:16px">当前：所有服务正常。</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="ds-section" id="shells" tabindex="-1" data-od-id="shells-section">
+      <div class="ds-section-head">
+        <h2>控制台框架</h2>
+        <p class="ds-section-intro">用户态与管理员态共用同一信息架构。系统管理入口只在管理员态渲染；用户态不是置灰，而是完全不存在。</p>
+      </div>
+      <div class="ds-shell-grid">
+        <article class="ds-shell">
+          <div class="ds-shell-topbar">
+            <div class="ds-shell-brand"><img class="ds-brand-mark" src="assets/brand/alea-mark.png" alt=""><span>Alea</span></div>
+            <nav class="ds-shell-nav" aria-label="Alea 用户导航预览"><span>每日总览</span><span>竞猜赛程</span><span>太玄问机</span><span>预测排行</span><span>盈亏账本</span><span>赛后复盘</span><span>竞彩方案</span><span>赛事资料</span></nav>
+            <button class="ds-icon-btn" type="button" aria-label="通知"><i data-lucide="bell"></i></button>
+          </div>
+          <div class="ds-shell-body"><p class="ds-kicker">用户态</p><h3>研究与追溯</h3><p>导航中不渲染系统管理入口。用户只能访问公开研究、历史、公证、排行与模拟盘。</p></div>
+        </article>
+        <article class="ds-shell">
+          <div class="ds-shell-topbar">
+            <div class="ds-shell-brand"><img class="ds-brand-mark" src="assets/brand/alea-mark.png" alt=""><span>Alea</span></div>
+            <nav class="ds-shell-nav" aria-label="Alea 管理员导航预览"><span>每日总览</span><span>竞猜赛程</span><span>太玄问机</span><span>预测排行</span><span>盈亏账本</span><span>赛后复盘</span><span>竞彩方案</span><span>赛事资料</span><span class="ds-admin-entry">系统管理·仅管理员</span></nav>
+            <button class="ds-icon-btn" type="button" aria-label="管理员通知"><i data-lucide="bell"></i></button>
+          </div>
+          <div class="ds-shell-body"><p class="ds-kicker">管理员态</p><h3>审核、同步与圆桌</h3><p>系统管理入口使用陶土色描边，并与普通导航分隔；其余页面保持与用户态一致。</p></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="ds-section" id="components" tabindex="-1" data-od-id="components-section">
+      <div class="ds-section-head">
+        <h2>基础组件</h2>
+        <p class="ds-section-intro">所有交互目标至少 44 像素；主操作使用陶土色，次操作保持温和中性。禁用状态必须配套原因，不以降低透明度作为唯一提示。</p>
+      </div>
+      <div class="ds-grid ds-grid-2">
+        <article class="ds-card">
+          <h3>按钮与操作</h3>
+          <div class="ds-component-stack" style="margin-top:18px">
+            <button class="ds-btn ds-btn-primary" type="button"><i data-lucide="sparkles"></i>开始圆桌</button>
+            <button class="ds-btn" type="button"><i data-lucide="calculator"></i>采纳到计算器</button>
+            <button class="ds-icon-btn" type="button" aria-label="打开通知"><i data-lucide="bell"></i></button>
+            <button class="ds-btn" type="button" disabled aria-describedby="disabled-reason">生成方案</button>
+          </div>
+          <p id="disabled-reason" style="margin-top:12px">数据超过 24 小时，完成同步后才能生成方案。</p>
+        </article>
+        <article class="ds-card">
+          <h3>表单与帮助文本</h3>
+          <div class="ds-component-stack" style="margin-top:18px;align-items:flex-start">
+            <div class="ds-field"><label for="league">联赛</label><select id="league"><option>全部联赛</option><option>中国超级联赛</option><option>英格兰超级联赛</option></select><small>筛选只影响当前列表。</small></div>
+            <div class="ds-field"><label for="team-search">搜索球队</label><input id="team-search" type="search" placeholder="输入球队名称"><small>支持主队与客队名称。</small></div>
+          </div>
+        </article>
+        <article class="ds-card">
+          <h3>键盘焦点</h3>
+          <p>使用 Tab 键依次访问下列控件，焦点环在浅色与深色表面上均清晰可见。</p>
+          <div class="ds-focus-demo" style="margin-top:18px">
+            <button class="ds-btn" type="button">上一日</button>
+            <button class="ds-btn ds-btn-primary" type="button">今天</button>
+            <button class="ds-btn" type="button">下一日</button>
+          </div>
+        </article>
+        <article class="ds-card">
+          <h3>事实新鲜度</h3>
+          <div class="ds-callout" style="margin-top:18px"><strong style="color:var(--fg)">数据来源：官方赛程与欧赔聚合</strong><br>最近同步：<span class="mono">2026-07-18 北京时间 14:32</span><br>事实信息必须显示来源、同步时间和过期限制。</div>
+        </article>
+      </div>
+    </section>
+
+    <section class="ds-section" id="ai-identity" tabindex="-1" data-od-id="ai-identity-section">
+      <div class="ds-section-head">
+        <h2>AI 身份系统</h2>
+        <p class="ds-section-intro">供应商标识用于溯源，实例编号用于区分同模型独立意见。圆桌阶段默认匿名，只在审计与复盘中揭示供应商。</p>
+      </div>
+      <div class="ds-ai-grid">
+        <article class="ds-card ds-ai"><img src="assets/vendors/deepseek.svg" alt="DeepSeek 标识"><div><strong>DeepSeek</strong><span>实例 01 · 已验证</span></div></article>
+        <article class="ds-card ds-ai"><img src="assets/vendors/anthropic.svg" alt="Anthropic 标识"><div><strong>Anthropic</strong><span>实例 02 · 已验证</span></div></article>
+        <article class="ds-card ds-ai"><img src="assets/vendors/openai.svg" alt="OpenAI 标识"><div><strong>OpenAI</strong><span>实例 03 · 已验证</span></div></article>
+        <article class="ds-card ds-ai"><img src="assets/vendors/gemini.svg" alt="Gemini 标识"><div><strong>Gemini</strong><span>实例 03 · 已验证</span></div></article>
+        <article class="ds-card ds-ai"><img src="assets/vendors/qwen.svg" alt="阿里云标识"><div><strong>Qwen</strong><span>实例 04 · 已验证</span></div></article>
+        <article class="ds-card ds-ai"><img src="assets/vendors/kimi.png" alt="Kimi 标识"><div><strong>Kimi</strong><span>实例 06 · 已验证</span></div></article>
+      </div>
+      <div class="ds-identity-flow" aria-label="AI 匿名与揭示规则">
+        <article class="ds-identity-step">
+          <p class="ds-kicker">圆桌阶段 · 匿名</p>
+          <h3>只显示 AI 编号</h3>
+          <div class="ds-ai"><span class="ds-icon-box"><i data-lucide="bot"></i></span><div><strong>AI 01</strong><span>独立意见 · 身份隐藏</span></div></div>
+          <p style="margin-top:14px">匿名辩论降低供应商品牌对投票的影响。</p>
+        </article>
+        <div class="ds-identity-separator" aria-hidden="true">审计后揭示</div>
+        <article class="ds-identity-step">
+          <p class="ds-kicker">审计阶段 · 可追溯</p>
+          <h3>供应商与实例并列</h3>
+          <div class="ds-ai"><img src="assets/vendors/deepseek.svg" alt="DeepSeek 标识"><div><strong>DeepSeek · AI 01</strong><span>实例 01 · 已验证</span></div></div>
+          <p style="margin-top:14px">复盘与审计中揭示模型供应商、实例和证据来源。</p>
+        </article>
+      </div>
+      <div class="ds-demo" style="margin-top:16px">
+        <article class="ds-match" data-od-id="match-component-demo">
+          <div class="ds-match-top"><span>中超 · 第 19 轮</span><span>同步于 14:32</span></div>
+          <div class="ds-teams">
+            <div class="ds-team"><img src="assets/crest-haijia.png" alt="海嘉队徽"><strong>海嘉</strong></div>
+            <div class="ds-score"><strong>2 : 1</strong><span>半场 1 : 0</span></div>
+            <div class="ds-team"><img src="assets/crest-beijing.png" alt="北京队徽"><strong>北京</strong></div>
+          </div>
+          <div class="ds-odds" aria-label="胜平负赔率">
+            <div class="ds-odd"><span>胜</span><strong>2.18</strong></div>
+            <div class="ds-odd"><span>平</span><strong>3.20</strong></div>
+            <div class="ds-odd"><span>负</span><strong>3.05</strong></div>
+          </div>
+        </article>
+        <div class="ds-demo-side">
+          <article class="ds-card" data-od-id="prediction-component-demo">
+            <div class="ds-tabs" role="tablist" aria-label="预测卡演示标签">
+              <button type="button" role="tab" aria-selected="true" aria-controls="panel-consensus" id="tab-consensus" data-demo-tab="consensus">共识</button>
+              <button type="button" role="tab" aria-selected="false" aria-controls="panel-evidence" id="tab-evidence" data-demo-tab="evidence">依据</button>
+            </div>
+            <div class="ds-tab-panel" id="panel-consensus" role="tabpanel" aria-labelledby="tab-consensus" data-demo-panel="consensus">
+              <p class="ds-kicker">4 个 AI · 3 票收敛</p>
+              <h3>主队小胜</h3>
+              <div class="ds-prediction-score">2 : 1</div>
+              <p>阵地战效率与近五场主场表现形成一致支持。</p>
+            </div>
+            <div class="ds-tab-panel" id="panel-evidence" role="tabpanel" aria-labelledby="tab-evidence" data-demo-panel="evidence" hidden>
+              <p class="ds-kicker">事实依据</p>
+              <h3>可追溯证据</h3>
+              <p>近期状态、交锋、积分排名与伤停信息分别标注来源和同步时间。</p>
+            </div>
+          </article>
+          <button class="ds-btn ds-btn-primary" type="button" style="width:100%"><i data-lucide="calculator"></i>采纳到计算器</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="ds-section" id="accessibility" tabindex="-1" data-od-id="accessibility-section">
+      <div class="ds-section-head">
+        <h2>无障碍与动效</h2>
+        <p class="ds-section-intro">以 WCAG AA 为交付目标。交互必须兼容键盘、焦点与点按；系统设置减少动态效果时，动画和过渡自动降级。</p>
+      </div>
+      <div class="ds-a11y-grid">
+        <article class="ds-card">
+          <h3>双通道表达</h3>
+          <ul class="ds-checklist">
+            <li><i data-lucide="circle-check"></i><span>命中、未命中、风险与异常均包含图标、文字和颜色。</span></li>
+            <li><i data-lucide="circle-check"></i><span>悬浮信息同时支持键盘焦点与点按展开。</span></li>
+            <li><i data-lucide="circle-check"></i><span>服务异常时保留已有内容，并解释受限操作。</span></li>
+            <li><i data-lucide="circle-check"></i><span>按钮、输入框与标签关联明确，触控目标不小于 44 像素。</span></li>
+          </ul>
+        </article>
+        <article class="ds-card">
+          <h3>prefers-reduced-motion</h3>
+          <p>此演示遵循系统偏好；也可暂停以验证无动态状态仍能传达相同信息。</p>
+          <div class="ds-motion-demo" id="motion-demo" aria-label="动效降级演示"><div class="ds-motion-dot"></div></div>
+          <button class="ds-btn" type="button" id="motion-toggle" aria-pressed="false" style="margin-top:14px"><i data-lucide="pause"></i><span>暂停演示</span></button>
+          <p id="motion-status" aria-live="polite" style="margin-top:10px">当前：遵循系统动态效果偏好。</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="ds-section" id="icons" tabindex="-1" data-od-id="icons-section">
+      <div class="ds-section-head">
+        <h2>Lucide 图标</h2>
+        <p class="ds-section-intro">通过固定版本 CDN 加载 Lucide。图标只辅助语义，关键操作始终配文字或无障碍名称；禁止 emoji、自制 SVG 与 CSS 绘制的假图标。</p>
+      </div>
+      <div class="ds-icon-grid" aria-label="Lucide 图标样例">
+        <div class="ds-icon-sample"><i data-lucide="calendar-days"></i><span>calendar-days</span></div>
+        <div class="ds-icon-sample"><i data-lucide="search"></i><span>search</span></div>
+        <div class="ds-icon-sample"><i data-lucide="brain-circuit"></i><span>brain-circuit</span></div>
+        <div class="ds-icon-sample"><i data-lucide="chart-no-axes-combined"></i><span>chart</span></div>
+        <div class="ds-icon-sample"><i data-lucide="shield-check"></i><span>shield-check</span></div>
+        <div class="ds-icon-sample"><i data-lucide="refresh-cw"></i><span>refresh-cw</span></div>
+      </div>
+      <p id="icon-runtime-status" class="ds-callout" role="status" style="margin-top:16px">正在检查 Lucide CDN。</p>
+      <footer class="ds-footer"><span>Alea 只提供预测研究，不提供购彩服务。</span><span class="mono">Alea · 设计系统</span></footer>
+    </section>
+  </main>
+
+  <script>
+    (function () {
+      function renderIcons() {
+        if (window.lucide && typeof window.lucide.createIcons === 'function') {
+          window.lucide.createIcons({ attrs: { 'aria-hidden': 'true' } });
+          var readyStatus = document.getElementById('icon-runtime-status');
+          if (readyStatus) readyStatus.textContent = 'Lucide CDN 已加载；所有关键操作同时保留文字或无障碍名称。';
+          return true;
+        }
+        var failedStatus = document.getElementById('icon-runtime-status');
+        if (failedStatus) failedStatus.textContent = 'Lucide CDN 未加载；文字标签与操作语义仍保持完整。';
+        return false;
+      }
+
+      document.querySelectorAll('[data-section-target]').forEach(function (button) {
+        button.addEventListener('click', function () {
+          var target = document.getElementById(button.dataset.sectionTarget);
+          if (!target) return;
+          document.querySelectorAll('[data-section-target]').forEach(function (item) {
+            if (item === button) item.setAttribute('aria-current', 'true');
+            else item.removeAttribute('aria-current');
+          });
+          target.focus({ preventScroll: true });
+          var header = document.querySelector('.ds-header');
+          var headerOffset = header ? header.getBoundingClientRect().height + 16 : 80;
+          var targetTop = target.getBoundingClientRect().top + window.scrollY - headerOffset;
+          var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          window.scrollTo({
+            top: Math.max(0, targetTop),
+            left: 0,
+            behavior: reduceMotion ? 'auto' : 'smooth'
+          });
+          window.history.replaceState(null, '', '#' + target.id);
+          var navigationStatus = document.getElementById('section-navigation-status');
+          if (navigationStatus) navigationStatus.textContent = '已定位到' + button.textContent + '章节。';
+        });
+      });
+
+      document.querySelectorAll('[data-demo-tab]').forEach(function (button) {
+        button.addEventListener('click', function () {
+          var tab = button.dataset.demoTab;
+          document.querySelectorAll('[data-demo-tab]').forEach(function (item) {
+            item.setAttribute('aria-selected', String(item === button));
+          });
+          document.querySelectorAll('[data-demo-panel]').forEach(function (panel) {
+            panel.hidden = panel.dataset.demoPanel !== tab;
+          });
+        });
+      });
+
+      var backendToggle = document.getElementById('backend-toggle');
+      var aiToggle = document.getElementById('ai-toggle');
+      var backendBanner = document.getElementById('backend-banner');
+      var aiUnavailableBanner = document.getElementById('ai-unavailable-banner');
+      var exceptionRefresh = document.getElementById('exception-refresh');
+      var exceptionStart = document.getElementById('exception-start');
+      var exceptionStatus = document.getElementById('exception-status');
+      var backendUnavailable = false;
+      var aiUnavailable = false;
+
+      function updateExceptionDemo() {
+        backendBanner.hidden = !backendUnavailable;
+        aiUnavailableBanner.hidden = !aiUnavailable;
+        exceptionRefresh.disabled = backendUnavailable;
+        exceptionStart.disabled = aiUnavailable;
+        backendToggle.setAttribute('aria-pressed', String(backendUnavailable));
+        aiToggle.setAttribute('aria-pressed', String(aiUnavailable));
+        backendToggle.querySelector('span').textContent = backendUnavailable ? '恢复后端服务' : '模拟后端不可用';
+        aiToggle.querySelector('span').textContent = aiUnavailable ? '恢复 AI 服务' : '模拟全部 AI 不可用';
+
+        var messages = [];
+        if (backendUnavailable) messages.push('后端不可用：已加载内容保留，刷新已禁用');
+        if (aiUnavailable) messages.push('全部 AI 不可用：历史预测保留，开始圆桌已禁用');
+        exceptionStatus.textContent = messages.length ? '当前：' + messages.join('；') + '。' : '当前：所有服务正常。';
+      }
+
+      backendToggle.addEventListener('click', function () {
+        backendUnavailable = !backendUnavailable;
+        updateExceptionDemo();
+      });
+      aiToggle.addEventListener('click', function () {
+        aiUnavailable = !aiUnavailable;
+        updateExceptionDemo();
+      });
+
+      var motionDemo = document.getElementById('motion-demo');
+      var motionToggle = document.getElementById('motion-toggle');
+      var motionStatus = document.getElementById('motion-status');
+      motionToggle.addEventListener('click', function () {
+        var paused = motionToggle.getAttribute('aria-pressed') !== 'true';
+        motionToggle.setAttribute('aria-pressed', String(paused));
+        motionDemo.dataset.paused = String(paused);
+        motionToggle.querySelector('span').textContent = paused ? '继续演示' : '暂停演示';
+        motionStatus.textContent = paused ? '当前：演示已暂停，信息保持完整。' : '当前：遵循系统动态效果偏好。';
+        var icon = motionToggle.querySelector('svg');
+        if (icon) icon.remove();
+        motionToggle.insertAdjacentHTML('afterbegin', '<i data-lucide="' + (paused ? 'play' : 'pause') + '"></i>');
+        renderIcons();
+      });
+
+      if (document.readyState === 'complete') renderIcons();
+      else window.addEventListener('load', renderIcons, { once: true });
+    }());
+  </script>
+</body>
+</html>
