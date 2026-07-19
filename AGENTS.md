@@ -10,12 +10,12 @@ These rules apply to every task in this repository.
 
 ## Product sources of truth
 
-- `docs/PRD.md` is the product-behavior and information-architecture source of truth.
+- `docs/产品需求文档.md` is the product-behavior and information-architecture source of truth.
 - `DESIGN.md` is the visual-system source of truth.
 - The OpenDesign prototype is an executable representation of those documents, not an independent source of product requirements.
 - Before changing a product flow, role, permission, route, state, field, label, rule, or interaction, identify the corresponding PRD section.
 - Any user-requested product change must be synchronized in the same task:
-  - update `docs/PRD.md`;
+  - update `docs/产品需求文档.md`;
   - update every affected OpenDesign prototype screen and state;
   - update `DESIGN.md` when tokens, typography, layout rules, components, imagery, or motion conventions change;
   - update any route/coverage/evidence ledger maintained for the prototype.
@@ -35,7 +35,7 @@ These rules apply to every task in this repository.
 
 ## Production-grade prototype bar
 
-- The prototype must cover every in-scope route and state declared by `docs/PRD.md`; missing pages must be listed explicitly and block a “production-ready” claim.
+- The prototype must cover every in-scope route and state declared by `docs/产品需求文档.md`; missing pages must be listed explicitly and block a “production-ready” claim.
 - Primary navigation and cross-module transitions must work from the rendered prototype, preserve the active state, and land on the correct content.
 - No screen may be an empty shell, a title-only placeholder, or a dead control.
 - Check hierarchy, alignment, spacing rhythm, typography, line height, wrapping, truncation, grid balance, density, card proportions, borders, radii, shadows, icon alignment, hover/focus/pressed/disabled states, overflow, sticky elements, and responsive reflow.
@@ -58,6 +58,7 @@ These rules apply to every task in this repository.
 
 - Use OpenDesign as an iterative design partner, not as an automatic completion oracle.
 - Before sending any OpenDesign prompt, inspect the current run state and queue. Keep at most one OpenDesign task active: if a run is executing, wait for it to finish, inspect its actual file changes and rendered result, and clear any accidental queued messages before sending the next prompt.
+- When controlling OpenDesign programmatically, never pass a multiline prompt to an input method that interprets newline as Send. Use one physical line, refresh the accessibility tree after filling, verify the complete input value, then locate the fresh Send control. After clicking, verify that the intended text became the active user message and that the queue remains empty; if either check fails, remove every queued item before continuing.
 - Use the Design Toolbox shortcuts when relevant, including:
   - `智能匹配下一步`
   - `找图 / 找参考图`

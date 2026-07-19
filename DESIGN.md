@@ -173,6 +173,12 @@ components:
     textColor: "{colors.ink}"
     rounded: "{rounded.full}"
     size: 36px
+  button-icon-compact:
+    backgroundColor: "{colors.canvas}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.md}"
+    size: 36px
+    iconSize: 18px
   text-link:
     backgroundColor: transparent
     textColor: "{colors.primary}"
@@ -470,6 +476,8 @@ When photography is used (rare — mostly testimonials), avatars crop to perfect
 
 **`button-icon-circular`** — 36px circular icon button. Background `{colors.canvas}`, hairline border, ink-color icon. Used for carousel arrows, share, "view more".
 
+**`button-icon-compact`** — 36px rounded-square icon button with an 18px icon. Use it for utility actions such as copy and download. The visible control contains only the familiar icon; preserve an explicit accessible name, keyboard focus, tooltip, and disabled-state explanation. Do not expand copy/download into large text buttons.
+
 **`text-link`** — Inline body links in `{colors.primary}` (the coral). Underlined on press; the coral inline link is one of the system's most distinctive small details.
 
 ### Cards & Containers
@@ -554,6 +562,7 @@ When photography is used (rare — mostly testimonials), avatars crop to perfect
 ### Touch Targets
 - `{component.button-primary}` at minimum 40 × 40px.
 - `{component.button-icon-circular}` at exactly 36 × 36 — slightly under WCAG 44 but visually centered.
+- `{component.button-icon-compact}` has a 36 × 36 visual box and a minimum 44 × 44 touch hit area.
 - `{component.text-input}` height is 40px.
 - Connector tile entire card area is tappable; effective tap area >> 44px.
 

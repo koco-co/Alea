@@ -6,9 +6,10 @@
 
 ### 产品与架构
 
-- `docs/PRD.md` 是产品行为与信息架构真源；`DESIGN.md` 是视觉真源。
+- `docs/产品需求文档.md` 是产品行为与信息架构真源；`DESIGN.md` 是视觉真源。
+- 仓库真源 `docs/产品需求文档.md` 当前为 **v1.6（2026-07-19）**；OpenDesign 项目内 `PRD.md` 仍为 **v1.4（2026-07-17）**。所有新实现必须以仓库 v1.6 为准，项目副本必须在后续独立串行任务中同步，不能让旧副本反向覆盖真源。
 - 当前仓库没有可运行应用；用户现有 Next.js 文件删除状态不在本任务修复范围。实际高保真交付面是 OpenDesign 项目 `d99abbfa-a8d0-440e-a1aa-2b18b9926643`。
-- `docs/TECH.md` 明确当前未获得可用于生产再分发的体彩数据授权。原型可以使用固定 fixtures，但不得把虚构体彩编号、赔率、停售、赛果或伤停标成实时业务事实。
+- `docs/技术架构设计文档.md` 明确当前未获得可用于生产再分发的体彩数据授权。原型可以使用固定 fixtures，但不得把虚构体彩编号、赔率、停售、赛果或伤停标成实时业务事实。
 - 当前 OpenDesign 后台文件只有圆桌发起、直播、发布和终止片段，缺 AI 阵容、数据同步和系统设置。
 
 ### 2026 世界杯决赛
@@ -93,6 +94,22 @@ Alea 改造边界：
 - 许可：Apache-2.0。
 - 已检查的状态/模式：稳定的管理侧栏、用户列表与详情、权限边界、保存反馈、错误恢复。
 - Alea 改造：用于系统设置和用户管理的信息架构；不复制身份域、Realm 或客户端等 Keycloak 产品语义。
+
+### Qwen 厂商身份与标识边界
+
+- 官方组织：https://github.com/QwenLM
+- 官方组织说明：Alibaba Cloud 的通用 AI 模型团队；组织主页链接到 `https://qwen.ai/`。
+- 官方组织头像候选：https://avatars.githubusercontent.com/u/141221163?s=200&v=4
+- 当前原型问题：`assets/vendors/qwen.svg` 缺少来源元数据，不能仅因图形相似就认定为官方可复用标识；`alibaba-cloud.svg` 也不能直接改名为 Qwen。
+- Alea 改造边界：厂商语义可确认是 Qwen，但在商标复用许可或官方品牌包未确认前，资产台账保持未通过；产品页使用明确中性缺失态，不以文字首字母或阿里云图标冒充。
+
+### Anthropic 官方品牌来源
+
+- 官方 Newsroom：https://www.anthropic.com/news
+- 官方媒体资产入口：Newsroom 的 `Download press kit`。
+- 官方品牌指南源码：https://github.com/anthropics/skills/blob/main/skills/brand-guidelines/SKILL.md
+- 已确认视觉 token：Dark `#141413`、Light `#faf9f5`、Mid Gray `#b0aea5`、Light Gray `#e8e6dc`、Orange `#d97757`、Blue `#6a9bcc`、Green `#788c5d`。
+- 当前原型问题：`assets/vendors/anthropic.svg` 虽使用 `#d97757`，但没有来源元数据；颜色相同不能证明文件是官方 press kit 资产，仍需下载并逐图比对符号/字标、留白、基线和背景适配。
 
 本轮未直接复用以上项目代码，因此没有新增第三方运行时依赖或归属文件。
 
