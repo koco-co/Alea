@@ -11,13 +11,15 @@ from psycopg.errors import InsufficientPrivilege
 
 from pathlib import Path
 
-MIGRATION = Path(__file__).parents[2] / "supabase" / "migrations" / "00001_gate0_minimal.sql"
+MIGRATION = (
+    Path(__file__).parents[2] / "supabase" / "migrations" / "20260720043401_gate0_minimal.sql"
+)
 
 
 def test_gate0_migration_declares_all_runtime_roles_and_denies_public_by_default() -> None:
     sql_text = MIGRATION.read_text(encoding="utf-8")
     for role in ("alea_api", "alea_worker", "alea_dispatcher", "alea_scheduler"):
-        assert f"create role {role} nologin nosuperuser" in sql_text
+        assert f"create role {role} login nosuperuser" in sql_text
     assert "revoke all on all tables in schema public from public, anon, authenticated" in sql_text
     assert "grant execute on function notarize_roundtable(uuid) to alea_worker" in sql_text
     assert "grant update (status, lease_owner, lease_until, attempt, broker_message_id" in sql_text
@@ -39,7 +41,9 @@ def set_role(connection: Connection[tuple[object, ...]], role: str) -> None:
         cursor.execute(sql.SQL("set local role {}").format(sql.Identifier(role)))
 
 
-@pytest.mark.parametrize("role", ["anon", "authenticated", "alea_api", "alea_dispatcher", "alea_scheduler"])
+@pytest.mark.parametrize(
+    "role", ["anon", "authenticated", "alea_api", "alea_dispatcher", "alea_scheduler"]
+)
 def test_non_worker_cannot_insert_notarized_prediction(
     database: Connection[tuple[object, ...]], role: str
 ) -> None:
@@ -51,7 +55,9 @@ def test_non_worker_cannot_insert_notarized_prediction(
         )
 
 
-@pytest.mark.parametrize("role", ["anon", "authenticated", "alea_api", "alea_worker", "alea_scheduler"])
+@pytest.mark.parametrize(
+    "role", ["anon", "authenticated", "alea_api", "alea_worker", "alea_scheduler"]
+)
 def test_non_dispatcher_cannot_update_outbox_delivery_state(
     database: Connection[tuple[object, ...]], role: str
 ) -> None:
@@ -60,13 +66,17 @@ def test_non_dispatcher_cannot_update_outbox_delivery_state(
         cursor.execute("update outbox_events set status = 'published'")
 
 
-def test_anon_cannot_read_registered_user_projection(database: Connection[tuple[object, ...]]) -> None:
+def test_anon_cannot_read_registered_user_projection(
+    database: Connection[tuple[object, ...]],
+) -> None:
     set_role(database, "anon")
     with database.cursor() as cursor, pytest.raises(InsufficientPrivilege):
         cursor.execute("select * from public_notarized_predictions")
 
 
-def test_authenticated_can_read_only_public_projection(database: Connection[tuple[object, ...]]) -> None:
+def test_authenticated_can_read_only_public_projection(
+    database: Connection[tuple[object, ...]],
+) -> None:
     set_role(database, "authenticated")
     with database.cursor() as cursor:
         cursor.execute("select * from public_notarized_predictions")

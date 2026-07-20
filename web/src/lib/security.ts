@@ -34,14 +34,17 @@ export function sanitizeHtml(value: string): string {
       continue;
     }
     const href = element.tagName === "A" ? element.getAttribute("href") : null;
-    for (const attribute of [...element.attributes]) element.removeAttribute(attribute.name);
+    for (const attribute of [...element.attributes])
+      element.removeAttribute(attribute.name);
     if (element.tagName === "A") {
       try {
         const url = new URL(href ?? "", window.location.origin);
-        if (!SAFE_PROTOCOLS.has(url.protocol)) throw new Error("unsafe protocol");
+        if (!SAFE_PROTOCOLS.has(url.protocol))
+          throw new Error("unsafe protocol");
         element.setAttribute("href", url.href);
         element.setAttribute("rel", "nofollow noopener");
-        if (url.origin !== window.location.origin) element.setAttribute("target", "_blank");
+        if (url.origin !== window.location.origin)
+          element.setAttribute("target", "_blank");
       } catch {
         element.replaceWith(document.createTextNode(element.textContent ?? ""));
       }
@@ -52,16 +55,20 @@ export function sanitizeHtml(value: string): string {
 
 export function sanitizeMarkdown(value: string): string {
   const escaped = escapeHtml(value);
-  const links = escaped.replace(/\[([^\]]+)]\(([^)]+)\)/g, (_match, label, href) => {
-    try {
-      const url = new URL(href, "https://alea.invalid");
-      if (!SAFE_PROTOCOLS.has(url.protocol)) return label;
-      const target = url.origin === "https://alea.invalid" ? url.pathname : url.href;
-      return `<a href="${escapeHtml(target)}" rel="nofollow noopener">${label}</a>`;
-    } catch {
-      return label;
-    }
-  });
+  const links = escaped.replace(
+    /\[([^\]]+)]\(([^)]+)\)/g,
+    (_match, label, href) => {
+      try {
+        const url = new URL(href, "https://alea.invalid");
+        if (!SAFE_PROTOCOLS.has(url.protocol)) return label;
+        const target =
+          url.origin === "https://alea.invalid" ? url.pathname : url.href;
+        return `<a href="${escapeHtml(target)}" rel="nofollow noopener">${label}</a>`;
+      } catch {
+        return label;
+      }
+    },
+  );
   return links
     .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
     .replace(/\n/g, "<br>");
@@ -89,7 +96,8 @@ export function contentSecurityPolicy(nonce: string): string {
   ].join("; ");
 }
 
-const SENSITIVE_KEYS = /authorization|cookie|api[-_]?key|secret|token|password|provider.*body/i;
+const SENSITIVE_KEYS =
+  /authorization|cookie|api[-_]?key|secret|token|password|provider.*body/i;
 
 export function redactSensitive(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(redactSensitive);

@@ -134,14 +134,12 @@ def build_safe_peer_context(
         verified = [
             _public_claim(claims_by_id[claim_id])
             for claim_id in referenced
-            if claim_id in claims_by_id
-            and claims_by_id[claim_id].state == FactClaimState.VERIFIED
+            if claim_id in claims_by_id and claims_by_id[claim_id].state == FactClaimState.VERIFIED
         ]
         audit = [
             {"claim_id": claim_id, "status": claims_by_id[claim_id].state.value}
             for claim_id in referenced
-            if claim_id in claims_by_id
-            and claims_by_id[claim_id].state != FactClaimState.VERIFIED
+            if claim_id in claims_by_id and claims_by_id[claim_id].state != FactClaimState.VERIFIED
         ]
         public_message = {
             key: _deep_copy(value)
@@ -155,9 +153,7 @@ def build_safe_peer_context(
 
 
 def verified_claim_ids(claims: Iterable[FactClaim]) -> frozenset[str]:
-    return frozenset(
-        claim.claim_id for claim in claims if claim.state == FactClaimState.VERIFIED
-    )
+    return frozenset(claim.claim_id for claim in claims if claim.state == FactClaimState.VERIFIED)
 
 
 def _public_claim(claim: FactClaim) -> dict[str, Any]:
@@ -171,7 +167,9 @@ def _public_claim(claim: FactClaim) -> dict[str, Any]:
 
 def _normalize_claim(text: str) -> str:
     normalized = unicodedata.normalize("NFKC", text)
-    normalized = "".join(character for character in normalized if unicodedata.category(character) != "Cc")
+    normalized = "".join(
+        character for character in normalized if unicodedata.category(character) != "Cc"
+    )
     return re.sub(r"\s+", " ", normalized).strip().casefold()
 
 
@@ -194,4 +192,3 @@ def _utc(value: datetime | None) -> datetime:
     if timestamp.tzinfo is None:
         raise FactVerificationError("timestamps must be timezone-aware")
     return timestamp.astimezone(UTC)
-

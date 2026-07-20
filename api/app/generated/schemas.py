@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import json
 from datetime import datetime
-from typing import Annotated, Any, Literal, Never, Self, TypeVar
+from typing import Annotated, Any, Literal, Self, TypeVar
 from uuid import UUID
 
 from pydantic import (
@@ -39,9 +39,10 @@ def _ensure_unique(items: list[UniqueValue]) -> list[UniqueValue]:
 class SchemaModel(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
+
 class BetPhaseOutputPlan(SchemaModel):
     name: Annotated[str, Field(min_length=1, max_length=100)]
-    type: Literal['single', 'parlay']
+    type: Literal["single", "parlay"]
     legs: Annotated[list[BetPhaseOutputPlanLegsItem], Field(min_length=1)]
     pass_types: Annotated[list[str], Field(min_length=1), AfterValidator(_ensure_unique)]
     multiplier: Annotated[int, Field(ge=1)]
@@ -49,13 +50,15 @@ class BetPhaseOutputPlan(SchemaModel):
     reasoning: Annotated[str, Field(min_length=1, max_length=1500)]
     verified_fact_claim_ids: Annotated[list[str], AfterValidator(_ensure_unique)]
 
+
 class BetPhaseOutputPlanLegsItem(SchemaModel):
     match_id: Annotated[str, Field(min_length=1)]
-    play: Literal['had', 'hhad', 'crs', 'ttg', 'hafu']
+    play: Literal["had", "hhad", "crs", "ttg", "hafu"]
     offer_option_ids: Annotated[list[str], Field(min_length=1), AfterValidator(_ensure_unique)]
 
+
 class BetProposal(SchemaModel):
-    decision: Literal['bet', 'no_bet']
+    decision: Literal["bet", "no_bet"]
     plan_confidence: Annotated[int, Field(ge=0, le=100)]
     plan: BetPhaseOutputPlan | None
     no_bet_reason: Annotated[str | None, Field(min_length=1, max_length=500)]
@@ -68,8 +71,9 @@ class BetProposal(SchemaModel):
             raise ValueError("no_bet requires null plan and a reason")
         return self
 
+
 class BetDebate(SchemaModel):
-    decision: Literal['bet', 'no_bet']
+    decision: Literal["bet", "no_bet"]
     plan_confidence: Annotated[int, Field(ge=0, le=100)]
     plan: BetPhaseOutputPlan | None
     no_bet_reason: Annotated[str | None, Field(min_length=1, max_length=500)]
@@ -83,27 +87,42 @@ class BetDebate(SchemaModel):
             raise ValueError("no_bet requires null plan and a reason")
         return self
 
+
 class BetVote(SchemaModel):
     candidate_id: Annotated[str, Field(min_length=1)]
-    decision: Literal['bet', 'no_bet']
+    decision: Literal["bet", "no_bet"]
     plan_confidence: Annotated[int, Field(ge=0, le=100)]
     reason: Annotated[str, Field(min_length=1, max_length=500)]
     verified_fact_claim_ids: Annotated[list[str], AfterValidator(_ensure_unique)]
+
 
 class DebateOutputScore(SchemaModel):
     home: Annotated[int, Field(ge=0, le=20)]
     away: Annotated[int, Field(ge=0, le=20)]
 
+
 class DebateOutputFactClaim(SchemaModel):
     claim_id: Annotated[str, Field(min_length=1)]
     text: Annotated[str, Field(min_length=1, max_length=500)]
-    fact_type: Literal['odds', 'form', 'standing', 'injury', 'lineup', 'h2h', 'weather', 'competition_state', 'other']
+    fact_type: Literal[
+        "odds",
+        "form",
+        "standing",
+        "injury",
+        "lineup",
+        "h2h",
+        "weather",
+        "competition_state",
+        "other",
+    ]
     source_record_ids: Annotated[list[str], AfterValidator(_ensure_unique)]
+
 
 class DebateOutputArgument(SchemaModel):
     argument_id: Annotated[str, Field(min_length=1)]
     text: Annotated[str, Field(min_length=1, max_length=1000)]
     fact_claim_ids: Annotated[list[str], AfterValidator(_ensure_unique)]
+
 
 class ScoreDebate(SchemaModel):
     responses: list[ScoreDebateResponsesItem]
@@ -113,19 +132,22 @@ class ScoreDebate(SchemaModel):
     arguments: list[DebateOutputArgument]
     fact_claims: list[DebateOutputFactClaim]
 
+
 class ScoreDebateResponsesItem(SchemaModel):
     target_codename: Annotated[str, Field(min_length=1)]
-    stance: Literal['hold', 'change', 'question', 'supplement']
+    stance: Literal["hold", "change", "question", "supplement"]
     argument_ids: Annotated[list[str], Field(min_length=1)]
+
 
 class ScoreVote(SchemaModel):
     match_id: Annotated[str, Field(min_length=1)]
     full_time_score: DebateOutputScore
     half_time_score: DebateOutputScore
-    direction: Literal['home', 'draw', 'away']
+    direction: Literal["home", "draw", "away"]
     direction_confidence: Annotated[int, Field(ge=0, le=100)]
     reason: Annotated[str, Field(min_length=1, max_length=500)]
     verified_fact_claim_ids: Annotated[list[str], AfterValidator(_ensure_unique)]
+
 
 class MatchSnapshotView(SchemaModel):
     input_snapshot_id: UUID
@@ -153,17 +175,20 @@ class MatchSnapshotView(SchemaModel):
     missing_fields: Annotated[list[str], AfterValidator(_ensure_unique)]
     frozen_at: datetime
 
+
 class MatchSnapshotViewScore(SchemaModel):
     home: Annotated[int, Field(ge=0, le=20)]
     away: Annotated[int, Field(ge=0, le=20)]
+
 
 class MatchSnapshotViewTeam(SchemaModel):
     id: UUID
     name: Annotated[str, Field(min_length=1)]
 
+
 class MatchSnapshotViewOffer(SchemaModel):
     offer_option_id: Annotated[str, Field(min_length=1)]
-    play: Literal['had', 'hhad', 'crs', 'ttg', 'hafu']
+    play: Literal["had", "hhad", "crs", "ttg", "hafu"]
     selection: Annotated[str, Field(min_length=1)]
     fixed_odds: Annotated[float, Field(gt=1)]
     single_available: bool
@@ -172,6 +197,7 @@ class MatchSnapshotViewOffer(SchemaModel):
     valid_from: datetime | None
     expires_at: datetime | None
     confidence: Annotated[float, Field(ge=0, le=1)]
+
 
 class MatchSnapshotViewSourcedFact(SchemaModel):
     field: Annotated[str, Field(min_length=1)]
@@ -183,12 +209,13 @@ class MatchSnapshotViewSourcedFact(SchemaModel):
     confidence: Annotated[float, Field(ge=0, le=1)]
     missing_fields: Annotated[list[str], AfterValidator(_ensure_unique)]
 
+
 class MethodologyReview(SchemaModel):
     proposal_understanding: Annotated[str, Field(min_length=1, max_length=500)]
     evidence_assessment: Annotated[str, Field(min_length=1, max_length=1500)]
     backtest_assessment: Annotated[str, Field(min_length=1, max_length=1500)]
     risks: Annotated[list[str], Field(min_length=1, max_length=8)]
-    decision: Literal['support', 'oppose', 'revise_and_review']
+    decision: Literal["support", "oppose", "revise_and_review"]
     reason: Annotated[str, Field(min_length=1, max_length=1000)]
     evidence_record_ids: Annotated[list[str], Field(min_length=1), AfterValidator(_ensure_unique)]
     proposed_revision: Annotated[str | None, Field(max_length=2000)]
@@ -201,47 +228,71 @@ class MethodologyReview(SchemaModel):
             raise ValueError("support and oppose require null proposed_revision")
         return self
 
+
 class ScorePrediction(SchemaModel):
     match_id: Annotated[str, Field(min_length=1)]
     full_time_score: ScorePredictionScore
     half_time_score: ScorePredictionScore
     alternative_scores: Annotated[list[ScorePredictionScore], Field(min_length=1, max_length=2)]
-    direction: Literal['home', 'draw', 'away']
+    direction: Literal["home", "draw", "away"]
     direction_confidence: Annotated[int, Field(ge=0, le=100)]
-    opponent_type: Literal['A', 'B', 'C', 'U']
-    motivation_type: Literal['1', '2', '3', '4', '5', '6', '7', 'U']
+    opponent_type: Literal["A", "B", "C", "U"]
+    motivation_type: Literal["1", "2", "3", "4", "5", "6", "7", "U"]
     interaction_summary: Annotated[str, Field(min_length=1, max_length=1000)]
     risk_signals: Annotated[list[str], Field(min_length=2, max_length=3)]
     arguments: list[ScorePredictionArgument]
     fact_claims: list[ScorePredictionFactClaim]
     missing_fields: Annotated[list[str], AfterValidator(_ensure_unique)]
 
+
 class ScorePredictionScore(SchemaModel):
     home: Annotated[int, Field(ge=0, le=20)]
     away: Annotated[int, Field(ge=0, le=20)]
 
+
 class ScorePredictionFactClaim(SchemaModel):
     claim_id: Annotated[str, Field(min_length=1)]
     text: Annotated[str, Field(min_length=1, max_length=500)]
-    fact_type: Literal['odds', 'form', 'standing', 'injury', 'lineup', 'h2h', 'weather', 'competition_state', 'other']
+    fact_type: Literal[
+        "odds",
+        "form",
+        "standing",
+        "injury",
+        "lineup",
+        "h2h",
+        "weather",
+        "competition_state",
+        "other",
+    ]
     source_record_ids: Annotated[list[str], AfterValidator(_ensure_unique)]
+
 
 class ScorePredictionArgument(SchemaModel):
     argument_id: Annotated[str, Field(min_length=1)]
     text: Annotated[str, Field(min_length=1, max_length=1000)]
     fact_claim_ids: Annotated[list[str], AfterValidator(_ensure_unique)]
 
+
 class ReviewAndLessons(SchemaModel):
     prediction_assessment: Annotated[str, Field(min_length=1, max_length=2000)]
     root_causes: Annotated[list[str], Field(max_length=8)]
     lesson_candidates: Annotated[list[ReviewAndLessonsLessonCandidatesItem], Field(max_length=8)]
 
+
 class ReviewAndLessonsLessonCandidatesItem(SchemaModel):
     rule: Annotated[str, Field(min_length=1, max_length=500)]
     evidence: Annotated[str, Field(min_length=1, max_length=1000)]
-    category: Literal['opponent_type', 'motivation', 'style_interaction', 'data_completeness', 'odds_reasoning', 'position_management']
-    severity: Literal['high', 'medium', 'low']
+    category: Literal[
+        "opponent_type",
+        "motivation",
+        "style_interaction",
+        "data_completeness",
+        "odds_reasoning",
+        "position_management",
+    ]
+    severity: Literal["high", "medium", "low"]
     evidence_record_ids: Annotated[list[str], Field(min_length=1), AfterValidator(_ensure_unique)]
+
 
 class ProviderRequest(SchemaModel):
     request_id: UUID
@@ -263,16 +314,29 @@ class ProviderRequest(SchemaModel):
     timeout_seconds: Annotated[int, Field(ge=1, le=900)]
     max_output_tokens: Annotated[int, Field(ge=1)]
 
+
 class ProviderUsage(SchemaModel):
     input_tokens: Annotated[int | None, Field(ge=0)]
     output_tokens: Annotated[int | None, Field(ge=0)]
     total_tokens: Annotated[int | None, Field(ge=0)]
 
+
 class ProviderError(SchemaModel):
-    category: Literal['authentication', 'permission', 'rate_limit', 'timeout', 'refusal', 'invalid_response', 'schema_violation', 'upstream_unavailable', 'unknown']
+    category: Literal[
+        "authentication",
+        "permission",
+        "rate_limit",
+        "timeout",
+        "refusal",
+        "invalid_response",
+        "schema_violation",
+        "upstream_unavailable",
+        "unknown",
+    ]
     code: str | None
     message_redacted: Annotated[str, Field(min_length=1)]
     retryable: bool
+
 
 class ProviderResult(SchemaModel):
     request_id: UUID
@@ -285,96 +349,128 @@ class ProviderResult(SchemaModel):
     retry_count: Annotated[int, Field(ge=0)]
     error: ProviderError | None
 
+
 class SelectionPhaseOutputFactClaim(SchemaModel):
     claim_id: Annotated[str, Field(min_length=1)]
     text: Annotated[str, Field(min_length=1, max_length=500)]
-    fact_type: Literal['odds', 'form', 'standing', 'injury', 'lineup', 'h2h', 'weather', 'competition_state', 'other']
+    fact_type: Literal[
+        "odds",
+        "form",
+        "standing",
+        "injury",
+        "lineup",
+        "h2h",
+        "weather",
+        "competition_state",
+        "other",
+    ]
     source_record_ids: Annotated[list[str], AfterValidator(_ensure_unique)]
+
 
 class SelectionPhaseOutputArgument(SchemaModel):
     argument_id: Annotated[str, Field(min_length=1)]
     text: Annotated[str, Field(min_length=1, max_length=1000)]
     fact_claim_ids: Annotated[list[str], AfterValidator(_ensure_unique)]
 
+
 class SelectionNomination(SchemaModel):
     nominations: list[SelectionNominationNominationsItem]
     arguments: list[SelectionPhaseOutputArgument]
     fact_claims: list[SelectionPhaseOutputFactClaim]
 
+
 class SelectionNominationNominationsItem(SchemaModel):
     match_id: Annotated[str, Field(min_length=1)]
-    direction: Literal['home', 'draw', 'away']
+    direction: Literal["home", "draw", "away"]
     direction_confidence: Annotated[int, Field(ge=0, le=100)]
     argument_ids: Annotated[list[str], AfterValidator(_ensure_unique)]
     missing_fields: Annotated[list[str], AfterValidator(_ensure_unique)]
+
 
 class SelectionDebate(SchemaModel):
     responses: list[SelectionDebateResponsesItem]
     arguments: list[SelectionPhaseOutputArgument]
     fact_claims: list[SelectionPhaseOutputFactClaim]
 
+
 class SelectionDebateResponsesItem(SchemaModel):
     target_codename: Annotated[str, Field(min_length=1)]
     match_id: Annotated[str, Field(min_length=1)]
-    stance: Literal['support', 'oppose', 'supplement']
+    stance: Literal["support", "oppose", "supplement"]
     argument_ids: Annotated[list[str], Field(min_length=1)]
+
 
 class SelectionVote(SchemaModel):
     votes: list[SelectionVoteVotesItem]
 
+
 class SelectionVoteVotesItem(SchemaModel):
     match_id: Annotated[str, Field(min_length=1)]
-    decision: Literal['yes', 'no']
+    decision: Literal["yes", "no"]
     direction_confidence: Annotated[int, Field(ge=0, le=100)]
     reason: Annotated[str, Field(min_length=1, max_length=500)]
     verified_fact_claim_ids: Annotated[list[str], AfterValidator(_ensure_unique)]
 
+
 class ListSelectionCandidatesCall(SchemaModel):
-    name: Literal['list_selection_candidates']
+    name: Literal["list_selection_candidates"]
     arguments: ListSelectionCandidatesCallArguments
+
 
 class ListSelectionCandidatesCallArguments(SchemaModel):
     selection_scope_snapshot_id: UUID
     page_cursor: str | None
 
+
 class GetMatchDataCall(SchemaModel):
-    name: Literal['get_match_data']
+    name: Literal["get_match_data"]
     arguments: GetMatchDataCallArguments
+
 
 class GetMatchDataCallArguments(SchemaModel):
     input_snapshot_id: UUID
     match_id: UUID
 
+
 class GetTeamCurrentSeasonStatsCall(SchemaModel):
-    name: Literal['get_team_current_season_stats']
+    name: Literal["get_team_current_season_stats"]
     arguments: GetTeamCurrentSeasonStatsCallArguments
+
 
 class GetTeamCurrentSeasonStatsCallArguments(SchemaModel):
     input_snapshot_id: UUID
     team_id: UUID
 
+
 class CheckWeatherCall(SchemaModel):
-    name: Literal['check_weather']
+    name: Literal["check_weather"]
     arguments: CheckWeatherCallArguments
+
 
 class CheckWeatherCallArguments(SchemaModel):
     input_snapshot_id: UUID
     match_id: UUID
 
+
 class CalculateTicketCall(SchemaModel):
-    name: Literal['calculate_ticket']
+    name: Literal["calculate_ticket"]
     arguments: CalculateTicketCallArguments
+
 
 class CalculateTicketCallArguments(SchemaModel):
     bet_context_snapshot_id: UUID
-    selections: Annotated[list[AleaToolCallTicketSelection], Field(min_length=1), AfterValidator(_ensure_unique)]
+    selections: Annotated[
+        list[AleaToolCallTicketSelection], Field(min_length=1), AfterValidator(_ensure_unique)
+    ]
     pass_types: Annotated[list[str], Field(min_length=1), AfterValidator(_ensure_unique)]
     multiplier: Annotated[int, Field(ge=1, le=50)]
 
+
 class AleaToolCallTicketSelection(SchemaModel):
     match_id: UUID
-    play: Literal['had', 'hhad', 'crs', 'ttg', 'hafu']
+    play: Literal["had", "hhad", "crs", "ttg", "hafu"]
     offer_option_ids: Annotated[list[str], Field(min_length=1), AfterValidator(_ensure_unique)]
+
 
 class AleaToolCallSourceMetadata(SchemaModel):
     source_record_ids: Annotated[list[str], Field(min_length=1), AfterValidator(_ensure_unique)]
@@ -384,10 +480,12 @@ class AleaToolCallSourceMetadata(SchemaModel):
     confidence: Annotated[float, Field(ge=0, le=1)]
     missing_fields: Annotated[list[str], AfterValidator(_ensure_unique)]
 
+
 class AleaToolCallSelectionCandidatePage(SchemaModel):
     selection_scope_snapshot_id: UUID
     candidates: list[AleaToolCallSelectionCandidate]
     next_page_cursor: str | None
+
 
 class AleaToolCallSelectionCandidate(SchemaModel):
     match_id: UUID
@@ -408,8 +506,10 @@ class AleaToolCallSelectionCandidate(SchemaModel):
     confidence: Annotated[float, Field(ge=0, le=1)]
     missing_fields: Annotated[list[str], AfterValidator(_ensure_unique)]
 
+
 class AleaToolCallSelectionCandidateOfferSummary(SchemaModel):
     model_config = ConfigDict(extra="allow")
+
 
 class AleaToolCallSourcedTeamStats(SchemaModel):
     input_snapshot_id: UUID
@@ -423,8 +523,10 @@ class AleaToolCallSourcedTeamStats(SchemaModel):
     confidence: Annotated[float, Field(ge=0, le=1)]
     missing_fields: Annotated[list[str], AfterValidator(_ensure_unique)]
 
+
 class AleaToolCallSourcedTeamStatsStats(SchemaModel):
     model_config = ConfigDict(extra="allow")
+
 
 class AleaToolCallSourcedWeather(SchemaModel):
     input_snapshot_id: UUID
@@ -437,8 +539,10 @@ class AleaToolCallSourcedWeather(SchemaModel):
     confidence: Annotated[float, Field(ge=0, le=1)]
     missing_fields: Annotated[list[str], AfterValidator(_ensure_unique)]
 
+
 class AleaToolCallSourcedWeatherWeather(SchemaModel):
     model_config = ConfigDict(extra="allow")
+
 
 class AleaToolCallTicketCalculation(SchemaModel):
     bet_context_snapshot_id: UUID
@@ -449,48 +553,87 @@ class AleaToolCallTicketCalculation(SchemaModel):
     resolved_offer_option_ids: Annotated[list[str], AfterValidator(_ensure_unique)]
     validation_errors: list[AleaToolCallTicketCalculationValidationErrorsItem]
 
+
 class AleaToolCallTicketCalculationValidationErrorsItem(SchemaModel):
     code: Annotated[str, Field(min_length=1)]
     message: Annotated[str, Field(min_length=1)]
 
+
 class BetPhaseOutput(RootModel[BetProposal | BetDebate | BetVote]):
     pass
+
 
 class BetProposalPlan(RootModel[BetPhaseOutputPlan | None]):
     pass
 
+
 class BetDebatePlan(RootModel[BetPhaseOutputPlan | None]):
     pass
+
 
 class DebateOutput(RootModel[ScoreDebate | ScoreVote]):
     pass
 
+
 class ScoreDebateRevisedFullTimeScore(RootModel[DebateOutputScore | None]):
     pass
+
 
 class ScoreDebateRevisedHalfTimeScore(RootModel[DebateOutputScore | None]):
     pass
 
+
 class MatchSnapshotViewFirstLegScore(RootModel[MatchSnapshotViewScore | None]):
     pass
+
 
 class MatchSnapshotViewAggregateScore(RootModel[MatchSnapshotViewScore | None]):
     pass
 
-class RoundtableContract(RootModel[SelectionNomination | SelectionDebate | SelectionVote | ScorePrediction | ScoreDebate | ScoreVote | BetProposal | BetDebate | BetVote | ReviewAndLessons | MethodologyReview]):
+
+class RoundtableContract(
+    RootModel[
+        SelectionNomination
+        | SelectionDebate
+        | SelectionVote
+        | ScorePrediction
+        | ScoreDebate
+        | ScoreVote
+        | BetProposal
+        | BetDebate
+        | BetVote
+        | ReviewAndLessons
+        | MethodologyReview
+    ]
+):
     pass
+
 
 class ProviderResultError(RootModel[ProviderError | None]):
     pass
 
+
 class SelectionPhaseOutput(RootModel[SelectionNomination | SelectionDebate | SelectionVote]):
     pass
 
-class AleaToolCall(RootModel[ListSelectionCandidatesCall | GetMatchDataCall | GetTeamCurrentSeasonStatsCall | CheckWeatherCall | CalculateTicketCall]):
+
+class AleaToolCall(
+    RootModel[
+        ListSelectionCandidatesCall
+        | GetMatchDataCall
+        | GetTeamCurrentSeasonStatsCall
+        | CheckWeatherCall
+        | CalculateTicketCall
+    ]
+):
     pass
 
-class AleaToolCallMatchTools(RootModel[GetMatchDataCall | GetTeamCurrentSeasonStatsCall | CheckWeatherCall]):
+
+class AleaToolCallMatchTools(
+    RootModel[GetMatchDataCall | GetTeamCurrentSeasonStatsCall | CheckWeatherCall]
+):
     pass
+
 
 for _model in [
     BetPhaseOutput,

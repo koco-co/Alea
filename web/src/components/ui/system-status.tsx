@@ -8,7 +8,10 @@ export type GlobalDegradation =
   | "data_expired"
   | "data_source_partial";
 
-const STATUS_COPY: Record<GlobalDegradation, { title: string; detail: string; href: string }> = {
+const STATUS_COPY: Record<
+  GlobalDegradation,
+  { title: string; detail: string; href: string }
+> = {
   backend_unavailable: {
     title: "服务暂时不可用",
     detail: "已加载内容仍可查看，刷新操作暂时停用。",
@@ -35,7 +38,9 @@ export function GlobalStatusBanner({ status }: { status: GlobalDegradation }) {
   const copy = STATUS_COPY[status];
   return (
     <div className={`global-banner ${status}`} role="status">
-      <p><strong>{copy.title}</strong> {copy.detail}</p>
+      <p>
+        <strong>{copy.title}</strong> {copy.detail}
+      </p>
       <Link href={copy.href}>查看状态</Link>
     </div>
   );
@@ -66,7 +71,10 @@ export function FreshnessIndicator({
   return (
     <div className={`freshness ${level}`}>
       <span className="pulse" aria-hidden="true" />
-      <div><strong>{label}</strong><small>北京时间</small></div>
+      <div>
+        <strong>{label}</strong>
+        <small>北京时间</small>
+      </div>
       {isAdmin ? <Link href="/console/admin/sync">同步设置</Link> : null}
     </div>
   );

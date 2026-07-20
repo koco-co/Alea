@@ -1,0 +1,22 @@
+revoke all on function broadcast_roundtable_event() from public, anon, authenticated, service_role;
+revoke all on function can_read_roundtable_topic(text) from public, anon, authenticated, service_role;
+revoke all on function claim_schedule_run(uuid, date, timestamptz, text, integer) from public, anon, authenticated, service_role;
+revoke all on function enqueue_scheduled_command(uuid) from public, anon, authenticated, service_role;
+revoke all on function handle_new_auth_user() from public, anon, authenticated, service_role;
+revoke all on function is_admin() from public, anon, authenticated, service_role;
+revoke all on function notarize_roundtable(uuid) from public, anon, authenticated, service_role;
+revoke all on function protect_profile_privileges() from public, anon, authenticated, service_role;
+revoke all on function record_current_user_consent(boolean, boolean, text, text, text) from public, anon, authenticated, service_role;
+revoke all on function record_user_consent_from_signup(uuid, text, text, text) from public, anon, authenticated, service_role;
+revoke all on function refresh_public_roundtable_projections(uuid) from public, anon, authenticated, service_role;
+revoke all on function reject_current_user_consent() from public, anon, authenticated, service_role;
+
+grant execute on function can_read_roundtable_topic(text) to authenticated;
+grant execute on function is_admin() to authenticated;
+grant execute on function record_current_user_consent(boolean, boolean, text, text, text) to authenticated;
+grant execute on function reject_current_user_consent() to authenticated;
+grant execute on function record_user_consent_from_signup(uuid, text, text, text) to service_role;
+grant execute on function notarize_roundtable(uuid) to alea_worker;
+grant execute on function refresh_public_roundtable_projections(uuid) to alea_worker;
+grant execute on function claim_schedule_run(uuid, date, timestamptz, text, integer) to alea_scheduler;
+grant execute on function enqueue_scheduled_command(uuid) to alea_scheduler;

@@ -50,11 +50,41 @@ FIXTURES: dict[str, dict[str, Any]] = {
         "reason": "基于冻结输入的测试终投。",
         "verified_fact_claim_ids": [],
     },
-    "form_bet": {"decision": "no_bet", "plan_confidence": 90, "plan": None, "no_bet_reason": "缺少可核验竞彩销售数据。"},
-    "debate_bet": {"decision": "no_bet", "plan_confidence": 90, "plan": None, "no_bet_reason": "缺少可核验竞彩销售数据。", "target_candidate_ids": ["candidate-no-bet"]},
-    "vote_bet": {"candidate_id": "candidate-no-bet", "decision": "no_bet", "plan_confidence": 90, "reason": "保持空仓。", "verified_fact_claim_ids": []},
-    "review_prediction": {"prediction_assessment": "测试复盘。", "root_causes": [], "lesson_candidates": []},
-    "review_methodology": {"proposal_understanding": "测试提议。", "evidence_assessment": "证据仅用于合同测试。", "backtest_assessment": "未提供生产回测。", "risks": ["样本不足"], "decision": "oppose", "reason": "默认保持方法论不变。", "evidence_record_ids": ["fixture-evidence"], "proposed_revision": None},
+    "form_bet": {
+        "decision": "no_bet",
+        "plan_confidence": 90,
+        "plan": None,
+        "no_bet_reason": "缺少可核验竞彩销售数据。",
+    },
+    "debate_bet": {
+        "decision": "no_bet",
+        "plan_confidence": 90,
+        "plan": None,
+        "no_bet_reason": "缺少可核验竞彩销售数据。",
+        "target_candidate_ids": ["candidate-no-bet"],
+    },
+    "vote_bet": {
+        "candidate_id": "candidate-no-bet",
+        "decision": "no_bet",
+        "plan_confidence": 90,
+        "reason": "保持空仓。",
+        "verified_fact_claim_ids": [],
+    },
+    "review_prediction": {
+        "prediction_assessment": "测试复盘。",
+        "root_causes": [],
+        "lesson_candidates": [],
+    },
+    "review_methodology": {
+        "proposal_understanding": "测试提议。",
+        "evidence_assessment": "证据仅用于合同测试。",
+        "backtest_assessment": "未提供生产回测。",
+        "risks": ["样本不足"],
+        "decision": "oppose",
+        "reason": "默认保持方法论不变。",
+        "evidence_record_ids": ["fixture-evidence"],
+        "proposed_revision": None,
+    },
 }
 
 
@@ -81,14 +111,57 @@ class FakeProvider:
             latency_ms=1,
         )
 
-    async def nominate_matches(self, ctx: dict[str, Any], req: ProviderRequest) -> ProviderResult[dict[str, Any]]: return await self._call("nominate_matches", req)
-    async def selection_debate(self, ctx: dict[str, Any], req: ProviderRequest) -> ProviderResult[dict[str, Any]]: return await self._call("selection_debate", req)
-    async def vote_matches(self, ctx: dict[str, Any], req: ProviderRequest) -> ProviderResult[dict[str, Any]]: return await self._call("vote_matches", req)
-    async def predict_score(self, ctx: dict[str, Any], req: ProviderRequest) -> ProviderResult[dict[str, Any]]: return await self._call("predict_score", req)
-    async def debate_response(self, ctx: dict[str, Any], req: ProviderRequest) -> ProviderResult[dict[str, Any]]: return await self._call("debate_response", req)
-    async def vote_score(self, ctx: dict[str, Any], req: ProviderRequest) -> ProviderResult[dict[str, Any]]: return await self._call("vote_score", req)
-    async def form_bet(self, ctx: dict[str, Any], req: ProviderRequest) -> ProviderResult[dict[str, Any]]: return await self._call("form_bet", req)
-    async def debate_bet(self, ctx: dict[str, Any], req: ProviderRequest) -> ProviderResult[dict[str, Any]]: return await self._call("debate_bet", req)
-    async def vote_bet(self, ctx: dict[str, Any], req: ProviderRequest) -> ProviderResult[dict[str, Any]]: return await self._call("vote_bet", req)
-    async def review_prediction(self, ctx: dict[str, Any], req: ProviderRequest) -> ProviderResult[dict[str, Any]]: return await self._call("review_prediction", req)
-    async def review_methodology(self, ctx: dict[str, Any], req: ProviderRequest) -> ProviderResult[dict[str, Any]]: return await self._call("review_methodology", req)
+    async def nominate_matches(
+        self, ctx: dict[str, Any], req: ProviderRequest
+    ) -> ProviderResult[dict[str, Any]]:
+        return await self._call("nominate_matches", req)
+
+    async def selection_debate(
+        self, ctx: dict[str, Any], req: ProviderRequest
+    ) -> ProviderResult[dict[str, Any]]:
+        return await self._call("selection_debate", req)
+
+    async def vote_matches(
+        self, ctx: dict[str, Any], req: ProviderRequest
+    ) -> ProviderResult[dict[str, Any]]:
+        return await self._call("vote_matches", req)
+
+    async def predict_score(
+        self, ctx: dict[str, Any], req: ProviderRequest
+    ) -> ProviderResult[dict[str, Any]]:
+        return await self._call("predict_score", req)
+
+    async def debate_response(
+        self, ctx: dict[str, Any], req: ProviderRequest
+    ) -> ProviderResult[dict[str, Any]]:
+        return await self._call("debate_response", req)
+
+    async def vote_score(
+        self, ctx: dict[str, Any], req: ProviderRequest
+    ) -> ProviderResult[dict[str, Any]]:
+        return await self._call("vote_score", req)
+
+    async def form_bet(
+        self, ctx: dict[str, Any], req: ProviderRequest
+    ) -> ProviderResult[dict[str, Any]]:
+        return await self._call("form_bet", req)
+
+    async def debate_bet(
+        self, ctx: dict[str, Any], req: ProviderRequest
+    ) -> ProviderResult[dict[str, Any]]:
+        return await self._call("debate_bet", req)
+
+    async def vote_bet(
+        self, ctx: dict[str, Any], req: ProviderRequest
+    ) -> ProviderResult[dict[str, Any]]:
+        return await self._call("vote_bet", req)
+
+    async def review_prediction(
+        self, ctx: dict[str, Any], req: ProviderRequest
+    ) -> ProviderResult[dict[str, Any]]:
+        return await self._call("review_prediction", req)
+
+    async def review_methodology(
+        self, ctx: dict[str, Any], req: ProviderRequest
+    ) -> ProviderResult[dict[str, Any]]:
+        return await self._call("review_methodology", req)

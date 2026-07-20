@@ -619,6 +619,13 @@ Until the real result is confirmed, the shared prototype prediction is:
 
 These values are content fixtures for cross-screen consistency, not claims about the final result or actual AI performance.
 
+## Provider Execution Settings
+
+- `/console/admin/lineup` uses a two-option segmented control: `CLI 运行时` and `API 密钥`. The selected mode is always visible above connection fields and does not reuse Local CLI/BYOK product wording from the Open Design reference.
+- CLI mode shows runtime identity, availability, operator-configured model source, rescan, model, reasoning level, connection test, and 1–3 instance controls. It never renders an API URL or secret field.
+- API mode shows HTTPS endpoint, allowlisted domain, masked secret tail, replace/clear states, model search/custom ID, connection test, and 1–3 instance controls.
+- Loading, saved, dirty, failed, disabled, missing-secret, runner-unavailable and no-quorum states use existing neutral/warning/danger status tokens. Errors remain adjacent to the affected section on desktop and mobile; the sticky save bar never obscures the last control.
+
 ## Iteration Guide
 
 1. Focus on ONE component at a time. Reference its YAML key (`{component.feature-card}`, `{component.code-window-card}`).

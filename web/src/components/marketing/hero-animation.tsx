@@ -17,13 +17,20 @@ export function HeroAnimation() {
   useEffect(() => {
     const stage = stageRef.current;
     if (!stage) return;
-    const observer = new IntersectionObserver(([entry]) => setVisible(entry.isIntersecting), { threshold: 0.2 });
+    const observer = new IntersectionObserver(
+      ([entry]) => setVisible(entry.isIntersecting),
+      { threshold: 0.2 },
+    );
     observer.observe(stage);
     return () => observer.disconnect();
   }, []);
 
   return (
-    <div className={`hero-animation ${visible ? "is-playing" : "is-paused"}`} ref={stageRef} aria-label="七个 AI 独立预测后通过圆桌投票收敛为 2 比 1 的动画演示">
+    <div
+      className={`hero-animation ${visible ? "is-playing" : "is-paused"}`}
+      ref={stageRef}
+      aria-label="七个 AI 独立预测后通过圆桌投票收敛为 2 比 1 的动画演示"
+    >
       <div className="animation-topline">
         <div>
           <span>2026 FIFA 世界杯 · 决赛</span>
@@ -34,9 +41,14 @@ export function HeroAnimation() {
 
       <div className="agent-orbit" aria-hidden="true">
         {agents.map((agent, index) => (
-          <div className={`agent-node agent-node-${index + 1}`} key={agent.name}>
+          <div
+            className={`agent-node agent-node-${index + 1}`}
+            key={agent.name}
+          >
             <span className="agent-score">{agent.score}</span>
-            <span className="agent-logo"><img src={agent.logo} alt="" /></span>
+            <span className="agent-logo">
+              <img src={agent.logo} alt="" />
+            </span>
           </div>
         ))}
         <div className="final-card">
@@ -55,7 +67,10 @@ export function HeroAnimation() {
         <span>“事实边界已核验”</span>
         <span>“我把 2:0 改为 2:1”</span>
       </div>
-      <div className="consensus-track"><span /><strong>71%</strong></div>
+      <div className="consensus-track">
+        <span />
+        <strong>71%</strong>
+      </div>
       <p>5 / 7 原始票 · 3 位改票 · 待赛果确认</p>
     </div>
   );

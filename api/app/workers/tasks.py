@@ -100,7 +100,10 @@ class PhaseExecutor:
 
     async def execute(self, command: PhaseCommand, *, celery_task_id: str | None) -> dict[str, Any]:
         if not await self.store.claim(command, celery_task_id=celery_task_id):
-            return {"status": "duplicate", "business_idempotency_key": command.business_idempotency_key}
+            return {
+                "status": "duplicate",
+                "business_idempotency_key": command.business_idempotency_key,
+            }
         try:
             outcome = await self.handler(command)
             await self.store.commit_success(command, outcome)
@@ -191,8 +194,11 @@ def _run_awaitable(awaitable: Awaitable[dict[str, Any]]) -> dict[str, Any]:
     try:
         asyncio.get_running_loop()
     except RuntimeError:
-        return asyncio.run(awaitable)
+
+        async def wait_for_result() -> dict[str, Any]:
+            return await awaitable
+
+        return asyncio.run(wait_for_result())
     if inspect.iscoroutine(awaitable):
         awaitable.close()
     raise RuntimeError("Celery phase tasks must run outside an active asyncio event loop")
-

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, cast
 
 from pydantic import BaseModel
 
@@ -86,9 +86,7 @@ def validate_provider_result(
 class ResultValidator:
     context: ResultValidationContext
 
-    def validate(
-        self, payload: Mapping[str, Any] | BaseModel, *, phase: str
-    ) -> dict[str, Any]:
+    def validate(self, payload: Mapping[str, Any] | BaseModel, *, phase: str) -> dict[str, Any]:
         return validate_provider_result(payload, phase=phase, context=self.context)
 
 
@@ -120,7 +118,9 @@ def _validate_alternative_scores(data: Mapping[str, Any], issues: list[Validatio
     if alternatives is None:
         return
     if not _is_sequence(alternatives):
-        issues.append(ValidationIssue("invalid_alternatives", "alternative_scores", "must be an array"))
+        issues.append(
+            ValidationIssue("invalid_alternatives", "alternative_scores", "must be an array")
+        )
         return
     primary = _score_key(data.get("full_time_score"))
     seen: set[tuple[int, int]] = set()
@@ -130,9 +130,15 @@ def _validate_alternative_scores(data: Mapping[str, Any], issues: list[Validatio
         if key is None:
             issues.append(ValidationIssue("invalid_score", path, "must contain integer home/away"))
         elif key == primary:
-            issues.append(ValidationIssue("duplicate_primary_score", path, "duplicates full_time_score"))
+            issues.append(
+                ValidationIssue("duplicate_primary_score", path, "duplicates full_time_score")
+            )
         elif key in seen:
-            issues.append(ValidationIssue("duplicate_alternative_score", path, "duplicates another alternative"))
+            issues.append(
+                ValidationIssue(
+                    "duplicate_alternative_score", path, "duplicates another alternative"
+                )
+            )
         else:
             seen.add(key)
 
@@ -144,7 +150,11 @@ def _validate_match_ownership(
         return
     for path, match_id in _values_for_key(data, "match_id"):
         if isinstance(match_id, str) and match_id not in context.frozen_match_ids:
-            issues.append(ValidationIssue("match_outside_snapshot", path, "match is not in the frozen candidate pool"))
+            issues.append(
+                ValidationIssue(
+                    "match_outside_snapshot", path, "match is not in the frozen candidate pool"
+                )
+            )
 
 
 def _validate_reference_ownership(
@@ -245,7 +255,7 @@ def _validate_bet(
         issues.append(ValidationIssue("invalid_bet", "plan.legs", "must be an array"))
         return
     matches: set[str] = set()
-    for index, leg in enumerate(legs):
+    for index, leg in enumerate(cast(Sequence[Any], legs)):
         if not isinstance(leg, Mapping):
             continue
         match_id = leg.get("match_id")
@@ -327,7 +337,11 @@ def _validate_id_arrays(
             continue
         for item in value:
             if isinstance(item, str) and item not in allowed:
-                issues.append(ValidationIssue(code, path, f"reference {item!r} does not belong to the frozen snapshot"))
+                issues.append(
+                    ValidationIssue(
+                        code, path, f"reference {item!r} does not belong to the frozen snapshot"
+                    )
+                )
 
 
 def _values_for_key(value: Any, key: str, path: str = "") -> Iterable[tuple[str, Any]]:

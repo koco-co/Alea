@@ -8,14 +8,17 @@ import pytest
 
 from pathlib import Path
 
-MIGRATION = Path(__file__).parents[2] / "supabase" / "migrations" / "00003_realtime_triggers.sql"
+MIGRATION = (
+    Path(__file__).parents[2] / "supabase" / "migrations" / "20260720043525_realtime_triggers.sql"
+)
 
 
-def test_realtime_migration_is_private_and_has_no_client_insert_policy() -> None:
+def test_realtime_migration_records_platform_owned_policy_block() -> None:
     sql_text = MIGRATION.read_text(encoding="utf-8")
     assert "after insert on roundtable_events" in sql_text
-    assert "to authenticated\nusing (can_read_roundtable_topic(realtime.topic()))" in sql_text
-    assert "revoke insert on realtime.messages from anon, authenticated" in sql_text
+    assert "supabase_realtime_admin" in sql_text
+    assert "private-channel read policy must therefore be installed" in sql_text
+    assert "grant execute on function can_read_roundtable_topic(text) to authenticated" in sql_text
     assert "for insert\nto authenticated" not in sql_text.casefold()
 
 
@@ -67,7 +70,5 @@ def test_realtime_trigger_and_client_insert_denial_are_applied() -> None:
             "select count(*) from pg_trigger where tgname = 'roundtable_events_broadcast' and not tgisinternal"
         )
         assert cursor.fetchone()[0] == 1
-        cursor.execute(
-            "select has_table_privilege('authenticated', 'realtime.messages', 'insert')"
-        )
+        cursor.execute("select has_table_privilege('authenticated', 'realtime.messages', 'insert')")
         assert cursor.fetchone()[0] is False

@@ -101,7 +101,9 @@ def redact_sensitive(value: Any) -> Any:
                 (key, "[REDACTED]" if SENSITIVE_KEY.search(key) else item)
                 for key, item in parse_qsl(parsed.query, keep_blank_values=True)
             ]
-            return urlunsplit((parsed.scheme, parsed.netloc, parsed.path, urlencode(query), parsed.fragment))
+            return urlunsplit(
+                (parsed.scheme, parsed.netloc, parsed.path, urlencode(query), parsed.fragment)
+            )
         return sanitized
     return value
 

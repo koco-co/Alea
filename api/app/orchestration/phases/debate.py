@@ -58,9 +58,9 @@ def anonymize_and_shuffle_messages(
         else:
             public["speaker_codename"] = "self"
         safe.append(public)
-    random.Random(
-        _seed_int(shuffle_seed, match_id, str(round_number), own_instance_id)
-    ).shuffle(safe)
+    random.Random(_seed_int(shuffle_seed, match_id, str(round_number), own_instance_id)).shuffle(
+        safe
+    )
     return tuple(safe)
 
 

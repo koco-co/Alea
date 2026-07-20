@@ -27,7 +27,7 @@ export interface SportteryRules {
   readonly payoutCaps: readonly PayoutCap[];
   readonly rounding: {
     readonly decimals: 2;
-    readonly mode: "half_up";
+    readonly mode: "half_even";
     readonly scope: "each_expanded_winning_bet";
   };
   readonly invalidMatch: {
@@ -114,7 +114,7 @@ export const SPORTTERY_RULES_V1: SportteryRules = {
   ],
   rounding: {
     decimals: 2,
-    mode: "half_up",
+    mode: "half_even",
     scope: "each_expanded_winning_bet",
   },
   invalidMatch: {
@@ -126,7 +126,8 @@ export const SPORTTERY_RULES_V1: SportteryRules = {
     sportteryOfficialResult: "recalculate_and_append_revision",
     competitionOrganizerResult: "keep_original_sporttery_result",
   },
-  verificationStatus: "official_materials_transcribed_pending_human_verification",
+  verificationStatus:
+    "official_materials_transcribed_pending_human_verification",
 };
 
 export const DEFAULT_SPORTTERY_RULES = SPORTTERY_RULES_V1;

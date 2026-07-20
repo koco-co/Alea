@@ -30,7 +30,7 @@
         <div class="header-popover" id="notificationPanel" role="dialog" aria-labelledby="notificationTitle" data-od-id="notification-panel" hidden>
           <div class="popover-head"><h2 id="notificationTitle">站内通知</h2><button class="popover-link" id="markAllRead" type="button">全部已读</button></div>
           <div class="notice-list">
-            <article class="notice-item"><span class="notice-dot" aria-hidden="true"></span><div><strong>决赛推演已更新</strong><p>西班牙 vs 阿根廷 · AI 推演数据 · 公证示例 N8C4-02</p></div></article>
+            <article class="notice-item"><span class="notice-dot" aria-hidden="true"></span><div><strong>决赛圆桌未达法定人数</strong><p>西班牙 vs 阿根廷 · 当前 1 个真实 Provider · 未生成公证记录</p></div></article>
             <article class="notice-item"><span class="notice-dot" aria-hidden="true"></span><div><strong>竞彩销售数据仍待确认</strong><p>场次编号、固定奖金和停售时间尚未接入，采纳与结算保持禁用。</p></div></article>
           </div>
         </div>
@@ -49,7 +49,7 @@
   </header>
   <main class="container console-main" id="content">
     <section class="console-head" data-od-id="predictions-title-region">
-      <div><p class="eyebrow">太玄问机 · 今日推演</p><h1>决赛推演，先把事实与模型判断分开。</h1><p>比赛身份与开球时间来自 FIFA；比分、投票和辩论均为固定 AI 原型输出，不是赛果。</p></div>
+      <div><p class="eyebrow">太玄问机 · 今日推演</p><h1>决赛推演，先把事实与模型判断分开。</h1><p>比赛身份与开球时间来自 FIFA；当前只有一个真实 Provider，圆桌尚未执行。</p></div>
       <div class="sync-meta"><span class="status status-warn">AI 推演数据</span><span class="tag mono">来源：FIFA · 采集 2026-07-19</span></div>
     </section>
 
@@ -65,13 +65,13 @@
           <section class="fixture-layer" aria-label="比赛信息" data-od-id="prediction-fixture-summary">
             <div class="fixture-row"><div class="history-crests" aria-label="西班牙与阿根廷国旗"><img src="assets/flag-spain.png" alt="西班牙国旗"><img src="assets/flag-argentina.png" alt="阿根廷国旗"></div><div class="fixture-meta"><p class="eyebrow">2026 FIFA 世界杯 · 第 104 场 · 决赛</p><strong>西班牙 vs 阿根廷</strong><span>北京时间 7 月 20 日 03:00 · New York New Jersey Stadium</span></div><span class="status status-warn stop-sale">待竞彩销售数据确认</span><button class="icon-button follow-button" type="button" aria-pressed="false" aria-label="关注西班牙对阿根廷">关注</button></div>
           </section>
-          <section class="consensus-layer" aria-label="共识结论" data-od-id="prediction-consensus-summary">
+          <section class="consensus-layer" aria-label="圆桌法定人数不足" data-od-id="prediction-consensus-summary">
             <div class="consensus-grid">
-              <div class="score-lockup"><div class="score-main">2 : 1</div><div class="score-half">半场 1 : 0</div><div style="margin-top:10px"><span class="status status-good">共识 71% · 5/7</span></div></div>
-              <div class="market-pick"><p class="eyebrow">固定 AI 原型输出</p><div class="market-line"><strong>西班牙 2:1 阿根廷</strong><span class="mono">半场 1:0</span></div><div class="reference-markets"><span>竞彩场次编号：待确认</span><span>固定奖金与赔率：待确认</span><span>最终赛果：待官方确认</span></div></div>
+              <div class="score-lockup"><div class="score-main">— : —</div><div class="score-half">尚未执行</div><div style="margin-top:10px"><span class="status status-warn">NO-QUORUM</span></div></div>
+              <div class="market-pick"><p class="eyebrow">执行阻断</p><div class="market-line"><strong>真实 Provider 不足，圆桌已阻断</strong><span class="mono">当前 1 个 · 最低要求 2 个</span></div><div class="reference-markets"><span>不生成比分或投票</span><span>不生成公证记录</span><span>不使用静态厂商配置冒充法定人数</span></div></div>
             </div>
           </section>
-          <section class="vote-layer" aria-label="AI 投票分组" data-od-id="prediction-vote-summary">
+          <section class="vote-layer" aria-label="AI 投票分组" data-od-id="prediction-vote-summary" hidden>
             <div class="vote-header"><div><p class="eyebrow">终投分布</p><strong>匿名票权冻结后揭示身份</strong></div><span class="tag">3 位改票</span></div>
             <div class="vote-list">
               <div class="vote-row"><span class="vote-score">2 : 1</span><div class="avatar-stack" aria-label="支持 2 比 1 的 AI：Claude-1、GPT-1、DeepSeek-1、Gemini-1、Qwen-1"><button class="ai-avatar vote-avatar high-accuracy" type="button" data-instance="1" data-vote-name="Claude-1" data-vote-score="原型统计待接入" data-vote-quality="AI 推演数据" data-vote-reason="西班牙的控球与前场压迫更稳定，但阿根廷仍有制造进球的转换能力。" aria-label="Claude-1，查看 AI 推演依据" aria-expanded="false" aria-controls="voteDetailPanel"><img class="ai-mark" src="assets/vendors/anthropic.svg" alt=""></button><button class="ai-avatar vote-avatar high-accuracy" type="button" data-instance="1" data-vote-name="GPT-1" data-vote-score="原型统计待接入" data-vote-quality="AI 推演数据" data-vote-reason="模型倾向西班牙在常规时间占优，同时避免把零封当作确定事实。" aria-label="GPT-1，查看 AI 推演依据" aria-expanded="false" aria-controls="voteDetailPanel"><img class="ai-mark" src="assets/vendors/openai.svg" alt=""></button><button class="ai-avatar vote-avatar" type="button" data-instance="1" data-vote-name="DeepSeek-1" data-vote-score="原型统计待接入" data-vote-quality="AI 推演数据" data-vote-reason="接受阿根廷反击风险质疑，由 2:0 改票为 2:1。" aria-label="DeepSeek-1，查看 AI 推演依据" aria-expanded="false" aria-controls="voteDetailPanel"><img class="ai-mark" src="assets/vendors/deepseek.svg" alt=""></button><button class="ai-avatar vote-avatar" type="button" data-instance="1" data-vote-name="Gemini-1" data-vote-score="原型统计待接入" data-vote-quality="AI 推演数据" data-vote-reason="在不引入未核验首发或伤停的前提下，支持西班牙 2:1。" aria-label="Gemini-1，查看 AI 推演依据" aria-expanded="false" aria-controls="voteDetailPanel"><img class="ai-mark" src="assets/vendors/gemini.svg" alt=""></button><button class="ai-avatar vote-avatar" type="button" data-instance="1" data-vote-name="Qwen-1" data-vote-score="原型统计待接入" data-vote-quality="AI 推演数据" data-vote-reason="固定原型终投支持西班牙 2:1 阿根廷。" aria-label="Qwen-1，查看 AI 推演依据" aria-expanded="false" aria-controls="voteDetailPanel"><img class="ai-mark" src="assets/vendors/qwen.svg" alt=""></button></div><span class="vote-count">5 票</span></div>
@@ -80,7 +80,7 @@
             </div>
             <div class="vote-detail" id="voteDetailPanel" role="region" aria-label="AI 投票详情" aria-live="off" data-od-id="vote-evidence-panel" hidden><div class="vote-detail-head"><strong id="voteDetailName">选择一个 AI 查看投票依据</strong><span class="status status-neutral" id="voteDetailQuality">等待选择</span></div><dl><dt>综合准确分</dt><dd class="mono" id="voteDetailScore">—</dd><dt>投票理由</dt><dd id="voteDetailReason">通过悬停、键盘焦点或点按头像查看。</dd></dl></div>
           </section>
-          <section class="action-layer" aria-label="预测操作" data-od-id="prediction-actions"><span class="snapshot">公证示例 N8C4-02 · AI 推演数据 · 最终赛果待确认</span><button class="btn btn-secondary" id="replayToggle" aria-expanded="false" aria-controls="debateReplay">展开辩论回放</button><button class="btn btn-primary" type="button" disabled title="待竞彩销售数据确认">采纳 AI 方案</button><button class="btn btn-secondary" type="button" disabled title="待竞彩销售数据确认">按共识比分配置</button></section>
+          <section class="action-layer" aria-label="预测操作" data-od-id="prediction-actions"><span class="snapshot">未生成公证记录 · no-quorum</span><button class="btn btn-secondary" id="replayToggle" type="button" disabled>圆桌未执行</button><button class="btn btn-primary" type="button" disabled title="真实 Provider 不足">采纳 AI 方案</button><button class="btn btn-secondary" type="button" disabled title="没有可配置的共识">无共识可配置</button></section>
         </article>
 
         <section class="hub-placeholder" data-od-id="accumulator-data-gap"><strong>暂无可核验的串关组合</strong><p>当前原型只掌握这场决赛的 FIFA 已确认事实；未接入其他有来源的淘汰赛场次与竞彩销售数据前，不生成第二场比赛、组合赔率或串关方案。</p></section>
@@ -103,7 +103,7 @@
       </div>
 
       <aside class="evidence-rail" aria-label="公证与版本证据">
-        <section class="card evidence-card" data-od-id="notary-record"><p class="eyebrow">公证账本</p><div class="notary-code">N8C4-02</div><p class="muted" style="font-size:12px">终投完成即锁定；发布或撤回不影响排行与模拟盘统计。</p><div class="version-list"><div class="version-row"><span>模型阵容</span><strong class="mono">LINEUP-7.4</strong></div><div class="version-row"><span>提示词</span><strong class="mono">PROMPT-12.2</strong></div><div class="version-row"><span>票权公式</span><strong class="mono">VOTE-3.1</strong></div><div class="version-row"><span>教训集</span><strong class="mono">LESSON-8.6</strong></div><div class="version-row"><span>竞彩规则</span><strong class="mono">2026.07</strong></div></div></section>
+        <section class="card evidence-card" data-od-id="notary-record"><p class="eyebrow">公证账本</p><div class="notary-code">未生成</div><p class="muted" style="font-size:12px">当前执行状态为 no-quorum；没有终投、票权冻结或可供回放的圆桌证据。</p><div class="visible-placeholder" style="margin-top:14px">等待第二个真实 Provider 通过全部合同测试</div></section>
         <section class="card evidence-card dark-zone" data-od-id="consensus-pnl-summary"><p class="eyebrow" style="color:color-mix(in oklab,var(--surface) 52%,transparent)">圆桌共识账户</p><h2 style="margin-top:8px;font-size:27px">模拟账户数据待接入</h2><p style="margin-top:8px;color:color-mix(in oklab,var(--surface) 62%,transparent);font-size:12px">没有真实公证账本与结算流水时，不生成净值、收益率、回撤或曲线。</p><div class="visible-placeholder" style="margin-top:14px;color:var(--surface)">净值走势：— · 资金明细：— · 结算明细：—</div></section>
       </aside>
     </div>

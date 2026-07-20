@@ -103,19 +103,15 @@ def freeze_postmatch_review_context(
     if core_methodology_version < 1:
         raise ValueError("core_methodology_version must be positive")
     input_snapshot_id = _required_id(input_snapshot, "id", "input_snapshot_id")
-    prediction_id = _required_id(
-        notarized_prediction, "id", "notarized_prediction_id"
-    )
+    prediction_id = _required_id(notarized_prediction, "id", "notarized_prediction_id")
     result_id = _required_id(result_version, "id", "result_version_id")
     if result_version.get("status") not in {"confirmed", "adjudicated"}:
         raise ValueError("review context requires an independently confirmed result version")
     event_ids = tuple(
-        _required_id(event, "id", "roundtable_event_id")
-        for event in verified_roundtable_events
+        _required_id(event, "id", "roundtable_event_id") for event in verified_roundtable_events
     )
     if any(
-        event.get("claim_status") not in {None, "verified"}
-        for event in verified_roundtable_events
+        event.get("claim_status") not in {None, "verified"} for event in verified_roundtable_events
     ):
         raise ValueError("only verified roundtable events may enter review context")
     source_ids = tuple(
@@ -255,8 +251,7 @@ def build_lesson_set_version(
         (
             lesson
             for review in published_reviews
-            if review.status is ReviewStatus.PUBLISHED
-            and review.ai_instance_id == ai_instance_id
+            if review.status is ReviewStatus.PUBLISHED and review.ai_instance_id == ai_instance_id
             for lesson in review.lessons
             if lesson.status is LessonStatus.ACTIVE
         ),

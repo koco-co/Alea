@@ -5,6 +5,8 @@
     "https://www.sporttery.cn/bzzx/20210118/3003197.html?gid=3"
   ],
   "observed_at": "2026-07-20T02:00:00+08:00",
+  "rules_version": "SPORTTERY-2026.07.20-v1",
+  "rounding": "half_even_each_expanded_winning_bet",
   "rule_evidence": {
     "regular_time": "90 minutes including stoppage time",
     "unit_stake_cny": 2,

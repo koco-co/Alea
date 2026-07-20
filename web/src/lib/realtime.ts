@@ -4,9 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { createClient } from "@/lib/supabase/client";
 
-
 const EMPTY_EVENTS: RoundtableEvent[] = [];
-
 
 export interface RoundtableEvent {
   id?: string | null;
@@ -24,11 +22,7 @@ interface EventPage {
 }
 
 export type RealtimeConnectionState =
-  | "idle"
-  | "connecting"
-  | "subscribed"
-  | "reconnecting"
-  | "error";
+  "idle" | "connecting" | "subscribed" | "reconnecting" | "error";
 
 export interface UseRoundtableEventsOptions {
   enabled?: boolean;
@@ -78,7 +72,9 @@ export function mergeRoundtableEvents(
     appended.push(event);
     cursor += 1;
   }
-  const remaining = [...buffered.values()].sort((left, right) => left.event_seq - right.event_seq);
+  const remaining = [...buffered.values()].sort(
+    (left, right) => left.event_seq - right.event_seq,
+  );
   return {
     events: [...applied, ...appended],
     pending: remaining,
@@ -100,12 +96,14 @@ export function useRoundtableEvents(
   } = options;
   const initialEvents = options.initialEvents ?? EMPTY_EVENTS;
   const initialState = useMemo(
-    () => normalizeInitialEvents(jobId, initialEvents, options.initialLastEventSeq),
+    () =>
+      normalizeInitialEvents(jobId, initialEvents, options.initialLastEventSeq),
     [initialEvents, jobId, options.initialLastEventSeq],
   );
   const [events, setEvents] = useState<RoundtableEvent[]>(initialState.events);
   const [lastEventSeq, setLastEventSeq] = useState(initialState.lastEventSeq);
-  const [connectionState, setConnectionState] = useState<RealtimeConnectionState>("idle");
+  const [connectionState, setConnectionState] =
+    useState<RealtimeConnectionState>("idle");
   const [error, setError] = useState<Error | null>(null);
   const [generation, setGeneration] = useState(0);
   const eventsRef = useRef(initialState.events);
@@ -116,12 +114,16 @@ export function useRoundtableEvents(
     eventsRef.current = initialState.events;
     pendingRef.current = initialState.pending;
     lastEventSeqRef.current = initialState.lastEventSeq;
+    // Prop changes reset the external realtime cursor and its rendered mirror.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setEvents(initialState.events);
     setLastEventSeq(initialState.lastEventSeq);
   }, [initialState, jobId]);
 
   useEffect(() => {
     if (!enabled || !jobId) {
+      // Disabled subscriptions must expose an idle external connection state.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setConnectionState("idle");
       return;
     }
@@ -168,7 +170,8 @@ export function useRoundtableEvents(
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
         signal: controller.signal,
       });
-      if (!response.ok) throw new Error(`roundtable_event_backfill_${response.status}`);
+      if (!response.ok)
+        throw new Error(`roundtable_event_backfill_${response.status}`);
       const value: unknown = await response.json();
       if (!isEventPage(value)) throw new Error("invalid_roundtable_event_page");
       return value;
@@ -189,7 +192,10 @@ export function useRoundtableEvents(
           const merged = apply(page.events);
           if (page.has_more) backfillRequested = true;
           if (merged.hasGap) backfillRequested = true;
-          if (merged.lastEventSeq === before && (merged.hasGap || page.has_more)) {
+          if (
+            merged.lastEventSeq === before &&
+            (merged.hasGap || page.has_more)
+          ) {
             stagnantGapRetries += 1;
             if (stagnantGapRetries > 2) {
               throw new Error("roundtable_event_sequence_gap");
@@ -224,10 +230,14 @@ export function useRoundtableEvents(
         if (!active) return;
         channel = supabase
           .channel(channelName, { config: { private: true } })
-          .on("broadcast", { event: "INSERT" }, ({ payload }) => {
-            requestBackfill(extractEventSequence(payload));
-          })
-          .subscribe((subscriptionStatus) => {
+          .on(
+            "broadcast",
+            { event: "INSERT" },
+            ({ payload }: { payload: unknown }) => {
+              requestBackfill(extractEventSequence(payload));
+            },
+          )
+          .subscribe((subscriptionStatus: string) => {
             if (!active) return;
             if (subscriptionStatus === "SUBSCRIBED") {
               subscribed = true;
@@ -260,7 +270,15 @@ export function useRoundtableEvents(
       controller.abort();
       if (channel) void supabase.removeChannel(channel);
     };
-  }, [accessToken, apiBaseUrl, channelName, enabled, fetcher, generation, jobId]);
+  }, [
+    accessToken,
+    apiBaseUrl,
+    channelName,
+    enabled,
+    fetcher,
+    generation,
+    jobId,
+  ]);
 
   return {
     events,
@@ -291,8 +309,12 @@ function normalizeInitialEvents(
   if (!Number.isSafeInteger(explicitLastEventSeq) || explicitLastEventSeq < 0) {
     throw new Error("initialLastEventSeq must be a non-negative safe integer");
   }
-  const applied = valid.filter((event) => event.event_seq <= explicitLastEventSeq);
-  const pending = valid.filter((event) => event.event_seq > explicitLastEventSeq);
+  const applied = valid.filter(
+    (event) => event.event_seq <= explicitLastEventSeq,
+  );
+  const pending = valid.filter(
+    (event) => event.event_seq > explicitLastEventSeq,
+  );
   return mergeRoundtableEvents(applied, pending, [], explicitLastEventSeq);
 }
 
@@ -334,5 +356,7 @@ function extractEventSequence(value: unknown): number | undefined {
 }
 
 function toError(value: unknown): Error {
-  return value instanceof Error ? value : new Error("roundtable_realtime_failed");
+  return value instanceof Error
+    ? value
+    : new Error("roundtable_realtime_failed");
 }

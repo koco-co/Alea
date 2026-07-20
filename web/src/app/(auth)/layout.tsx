@@ -1,6 +1,8 @@
 import Link from "next/link";
 
-export default function AuthLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default function AuthLayout({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
   return (
     <main className="auth-shell">
       <aside className="auth-story">

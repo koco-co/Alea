@@ -155,4 +155,3 @@ def _utc(value: datetime | None) -> datetime:
     if timestamp.tzinfo is None:
         raise ValueError("timestamps must be timezone-aware")
     return timestamp.astimezone(UTC)
-

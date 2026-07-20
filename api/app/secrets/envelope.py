@@ -223,9 +223,7 @@ class EnvelopeCipher(EnvelopeEncryption):
         else:
             encrypted = EncryptedSecret.from_record(envelope)
         aad = _connection_aad(connection_id, connection_version)
-        source_wrap_aad = (
-            aad + f"\x00kek-v{encrypted.kek_version}\x00dek-wrap".encode()
-        )
+        source_wrap_aad = aad + f"\x00kek-v{encrypted.kek_version}\x00dek-wrap".encode()
         target_wrap_aad = aad + f"\x00kek-v{target_kek_version}\x00dek-wrap".encode()
 
         try:

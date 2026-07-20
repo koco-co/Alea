@@ -1,10 +1,6 @@
 import { describe, expect, test } from "bun:test";
 
-import {
-  mergeRoundtableEvents,
-  type RoundtableEvent,
-} from "./realtime";
-
+import { mergeRoundtableEvents, type RoundtableEvent } from "./realtime";
 
 function event(sequence: number): RoundtableEvent {
   return {
@@ -16,10 +12,14 @@ function event(sequence: number): RoundtableEvent {
   };
 }
 
-
 describe("mergeRoundtableEvents", () => {
   test("deduplicates and applies only a contiguous sequence", () => {
-    const first = mergeRoundtableEvents([], [], [event(1), event(3), event(1)], 0);
+    const first = mergeRoundtableEvents(
+      [],
+      [],
+      [event(1), event(3), event(1)],
+      0,
+    );
     expect(first.events.map((item) => item.event_seq)).toEqual([1]);
     expect(first.pending.map((item) => item.event_seq)).toEqual([3]);
     expect(first.lastEventSeq).toBe(1);

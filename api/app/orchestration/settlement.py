@@ -137,10 +137,7 @@ class SettlementPosition:
         if self.decision is PositionDecisionType.NO_BET and self.stake != ZERO:
             raise SettlementError("no_bet must freeze a zero position")
         if self.owner_type is PositionOwnerType.AI_INSTANCE:
-            if (
-                not self.owner_instance_id
-                or self.plan_source_instance_id != self.owner_instance_id
-            ):
+            if not self.owner_instance_id or self.plan_source_instance_id != self.owner_instance_id:
                 raise SettlementError(
                     "an AI account can settle only that instance's own final plan"
                 )
@@ -323,9 +320,7 @@ def settle_ticket(
             raise SettlementError(
                 f"combination references unknown legs: {', '.join(sorted(missing))}"
             )
-    referenced_leg_ids = {
-        leg_id for combination in combinations for leg_id in combination.leg_ids
-    }
+    referenced_leg_ids = {leg_id for combination in combinations for leg_id in combination.leg_ids}
     unreferenced = set(by_id).difference(referenced_leg_ids)
     if unreferenced:
         raise SettlementError(
@@ -351,9 +346,7 @@ def settle_ticket(
     all_combinations_refunded = True
     for combination in combinations:
         live_legs = [
-            by_id[item]
-            for item in combination.leg_ids
-            if by_id[item].state is not LegState.VOID
+            by_id[item] for item in combination.leg_ids if by_id[item].state is not LegState.VOID
         ]
         if not live_legs:
             returns[combination.combination_id] = share
@@ -425,13 +418,10 @@ def allocate_stakes(
     for item in requests:
         constraints = [(daily_scale, "daily_limit")]
         constraints.extend(
-            (match_scales[match_id], f"per_match_limit:{match_id}")
-            for match_id in item.match_ids
+            (match_scales[match_id], f"per_match_limit:{match_id}") for match_id in item.match_ids
         )
         scale = min(value for value, _ in constraints)
-        reasons = tuple(
-            reason for value, reason in constraints if value == scale and value < ONE
-        )
+        reasons = tuple(reason for value, reason in constraints if value == scale and value < ONE)
         allocations.append(
             StakeAllocation(
                 decision_id=item.decision_id,

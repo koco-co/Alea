@@ -1,0 +1,24 @@
+[Unit]
+Description=Alea isolated Codex CLI runner
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=alea-codex
+Group=alea-codex
+WorkingDirectory=/opt/alea/api
+EnvironmentFile=/etc/alea/codex-runner.env
+Environment=CODEX_HOME=/var/lib/alea-codex/.codex
+ExecStart=/opt/alea/api/.venv/bin/uvicorn app.codex_runner:app --host 127.0.0.1 --port 8765
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/alea-codex
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+
+[Install]
+WantedBy=multi-user.target

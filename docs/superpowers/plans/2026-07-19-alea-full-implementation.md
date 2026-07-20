@@ -41,7 +41,7 @@
 **Interfaces:**
 - Produces: `make bootstrap/dev/check/test/db-push/bootstrap-admin` 命令，Docker Compose 本地开发环境（含全部 7 个服务）
 
-- [ ] **Step 1: 初始化 web/ 目录**
+- [x] **Step 1: 初始化 web/ 目录**
 
 ```bash
 mkdir -p web/src/{app,components/{ui,marketing,prediction,calculator,charts},lib/{supabase,calculator,api-client},types}
@@ -52,7 +52,7 @@ bun add @supabase/supabase-js @supabase/ssr @tanstack/react-query zod
 bun add tailwindcss @tailwindcss/postcss postcss
 ```
 
-- [ ] **Step 2: 初始化 api/ 目录**
+- [x] **Step 2: 初始化 api/ 目录**
 
 ```bash
 mkdir -p api/app/{routers,orchestration/phases,prompts,tools,providers,secrets,datasources,calculators,workers}
@@ -158,7 +158,7 @@ volumes:
   redis_data:
 ```
 
-- [ ] **Step 4: 编写完整 Makefile**
+- [x] **Step 4: 编写完整 Makefile**
 
 ```makefile
 .PHONY: bootstrap env-init dev dev-down format lint typecheck test check db-push bootstrap-admin
@@ -210,7 +210,7 @@ bootstrap-admin:
 check: format lint typecheck test
 ```
 
-- [ ] **Step 5: 验证工具链**
+- [x] **Step 5: 验证工具链**
 
 ```bash
 make bootstrap && make check
@@ -227,25 +227,25 @@ git add Makefile docker-compose.yml docker-compose.dev.yml nginx.conf .env.examp
 ### Task 0.2: Gate 0 最小数据库迁移
 
 **迁移文件清单（单调递增，无重复编号，一步一个文件）：**
-1. `00001_gate0_minimal.sql` — Gate 0 所需表+枚举+RLS+公开投影+不可变触发器（含全部 Gate 验证依赖的表：`profiles`/`user_consents`/`ai_providers`/`provider_connections`/`provider_secrets`/`ai_instances`/`roundtable_jobs`/`roundtable_match_runs`/`roundtable_participants`/`roundtable_phase_runs`/`roundtable_results`/`fact_claims`/`roundtable_events`/`execution_audits`/`outbox_events`/`notarized_predictions`/`prompt_versions`/`score_formula_versions`/`system_setting_versions`/`sporttery_rule_versions`/`admin_role_grants`/`admin_audit_logs` 以及公开投影表）
-2. `00002_gate0_seed.sql` — 首版版本记录 seed（Task 0.2b，依赖 00001 的所有表均已创建）
-3. `00003_realtime_triggers.sql` — Realtime Broadcast trigger（G2 前提）
+1. `20260720043401_gate0_minimal.sql` — Gate 0 所需表+枚举+RLS+公开投影+不可变触发器（含全部 Gate 验证依赖的表：`profiles`/`user_consents`/`ai_providers`/`provider_connections`/`provider_secrets`/`ai_instances`/`roundtable_jobs`/`roundtable_match_runs`/`roundtable_participants`/`roundtable_phase_runs`/`roundtable_results`/`fact_claims`/`roundtable_events`/`execution_audits`/`outbox_events`/`notarized_predictions`/`prompt_versions`/`score_formula_versions`/`system_setting_versions`/`sporttery_rule_versions`/`admin_role_grants`/`admin_audit_logs` 以及公开投影表）
+2. `20260720043411_gate0_seed.sql` — 首版版本记录 seed（Task 0.2b，依赖 Gate 0 最小表均已创建）
+3. `20260720043525_realtime_triggers.sql` — Realtime Broadcast trigger（G2 前提；`realtime.messages` 的 owner policy 仍需平台支持流程）
 4. **Gate 0 全部通过后（Task 1.7 完成）：**
-5. `00004_business_schema.sql` — 完整业务 ~50 张表（TECH §6.1–6.7 全部）+ 剩余 RLS + GRANT + 专用函数
+5. `<timestamp>_business_schema.sql` — 完整业务 ~50 张表（TECH §6.1–6.7 全部）+ 剩余 RLS + GRANT + 专用函数
 
 **Gate 0 执行策略**：
-1. Task 0.2 创建 `00001` 占位 → Task 0.2b 编写 `00002` 完整 seed → G2 (Task 1.2) 编写 `00003` 完整 Realtime trigger → 三个文件全部完成后一次性 `db-push`。
-2. Supabase 已应用迁移不可修改，因此所有 Gate 0 迁移（00001–00003）必须在首次推送前完成编写。
-3. 迁移推送后执行 Task 1.1–1.7（G1–G6），Task 1.2/G2 只测试已应用的 `00003`，不修改它。
-4. Gate 汇总通过后，Task 0.2c 创建并推送 `00004`。
+1. Gate 0 迁移已按远端 Supabase 历史对齐为 `20260720041522` 至 `20260720043722` 六个单调递增版本。
+2. Supabase 已应用迁移不可修改；后续修复必须追加新时间戳迁移，不得重写上述历史。
+3. 迁移推送后执行 Task 1.1–1.7（G1–G6）；Task 1.2/G2 只测试已应用的 Realtime trigger，不修改历史文件。
+4. Gate 汇总通过后，Task 0.2c 创建并推送新的 `<timestamp>_business_schema.sql`。
 
-**角色创建**：四个运行时数据库角色（`alea_api`/`alea_worker`/`alea_dispatcher`/`alea_scheduler`）需要在 G1 权限矩阵验证前存在。方案：在 `00001_gate0_minimal.sql` 迁移中通过 `CREATE ROLE` 创建角色（如果 Supabase Cloud 不允许，则在 Supabase Dashboard 或通过 SQL Editor 手动创建，并记录为 Gate 0 前置步骤）。
+**角色创建**：四个运行时数据库角色（`alea_api`/`alea_worker`/`alea_dispatcher`/`alea_scheduler`）已由 `20260720041522_bootstrap_service_roles.sql` 创建；G1 仍需使用四个独立 DSN 完成真实直连权限矩阵。
 
 **重要**：Gate 0 只创建 TECH §16 列出的最小表集：...同上...、`sporttery_rule_versions`（Gate 0 G5 规则验证依赖）、`schedules` + `schedule_runs`（G1 scheduler 权限矩阵 + G3 Beat 重叠恢复验证依赖，TECH §6.7/§5.7）。Gate 0 验证失败则回滚，不铺开完整业务结构（TECH §15/§16）。
 
-- [ ] **Step 1: 编写 Gate 0 最小迁移（00001）** — 仅以上列表，含 Gate 0 所需的枚举、表、RLS、GRANT、不可变函数和 `notarize_roundtable()` 最小实现
+- [x] **Step 1: 编写 Gate 0 最小迁移（时间戳版本）** — 仅以上列表，含 Gate 0 所需的枚举、表、RLS、GRANT、不可变函数和 `notarize_roundtable()` 最小实现
 
-- [ ] **Step 5: Gate 0 通过后运行 00004 正式业务迁移** — TECH §6.2–6.7 的完整表结构（全部约 50 张表，包含：
+- [ ] **Step 5: Gate 0 通过后运行时间戳正式业务迁移** — TECH §6.2–6.7 的完整表结构（全部约 50 张表，包含：
 - `public_execution_audits`（脱敏只读投影）
 - `public_notarized_predictions`（停售后开放的公证投影）
 - `public_roundtable_events`（对注册用户开放的回放事件投影）
@@ -283,10 +283,10 @@ make db-push ENV=local
 
 ---
 
-### Task 0.2c: Gate 0 通过后 — 正式业务迁移 00004
+### Task 0.2c: Gate 0 通过后 — 正式业务迁移
 
 **Files:**
-- Create: `supabase/migrations/00004_business_schema.sql`
+- Create: `supabase/migrations/<timestamp>_business_schema.sql`
 
 **前置条件**：Task 1.7（Gate 0 汇总）已通过。
 
@@ -297,11 +297,11 @@ make db-push ENV=local
 ### Task 0.2b: 首版版本记录初始化（首个圆桌启动前提）
 
 **Files:**
-- Modify: `supabase/migrations/00002_gate0_seed.sql`（使用 Task 0.2 已创建的迁移文件）
+- Modify: `supabase/migrations/20260720043411_gate0_seed.sql`（已应用历史不可重写；后续变更须追加迁移）
 
 **关键**：缺少以下首版记录时首个圆桌无法确定性启动（TECH §6.7 约束 + 协议 §2.2）。
 
-- [ ] **Step 1: seed `prompt_versions`** —
+- [x] **Step 1: seed `prompt_versions`** —
   - `key=identity, version=1`（协议 §2.2 `IDENTITY_PROMPT_SEED`；后台只读，迁移发布）
   - `key=core_methodology, version=1`（协议 §2.2 `CORE_METHODOLOGY_SYSTEM_PROMPT`）
   - 九阶段 `key=phase_select_nominate/debate/vote, score_predict/debate/vote, bet_propose/debate/vote, version=1`（协议 §3.1–3.7）
@@ -312,9 +312,9 @@ make db-push ENV=local
   - 复盘输出 Schema：`key=output_schema_review_prediction, version=1`（协议 §11.2 `REVIEW_AND_LESSONS_SCHEMA`）
   - 方法论评审输出 Schema：`key=output_schema_review_methodology, version=1`（协议 §11.4 `METHODOLOGY_REVIEW_SCHEMA`）
   - 合计 11 个输出 Schema（`PHASE_OUTPUT_SCHEMAS` 的 9 个预测阶段 + 复盘 Schema + 方法论评审 Schema；协议 §3.8 的 `PHASE_OUTPUT_SCHEMAS` 字典只含 9 个预测阶段，复盘和方法论评审是独立合同 §11.2/§11.4；工具合同独立版本化，不纳入输出 Schema 计数）
-- [ ] **Step 2: seed `score_formula_versions`** — 首版：先验样本数=10、冷启动先验=50、权重维度 40/30/15/15、贝叶斯平滑公式
-- [ ] **Step 3: seed `system_setting_versions`** — `key=history_context_limits`（recent_match_limit=10, lesson_limit=5）；`key=methodology_trigger`（distinct_match_threshold=3, lesson_count_threshold=5, consecutive_error_threshold=5, lookback_days=null）；`key=risk_limits`（daily=15%, per_match=5%, initial_balance=10000）
-- [ ] **Step 4: seed `sporttery_rule_versions`** — 首版竞彩规则（从体彩官网获取的过关规则/奖金上限/无效场次处理）
+- [x] **Step 2: seed `score_formula_versions`** — 首版：先验样本数=10、冷启动先验=50、权重维度 40/30/15/15、贝叶斯平滑公式
+- [x] **Step 3: seed `system_setting_versions`** — `key=history_context_limits`（recent_match_limit=10, lesson_limit=5）；`key=methodology_trigger`（distinct_match_threshold=3, lesson_count_threshold=5, consecutive_error_threshold=5, lookback_days=null）；`key=risk_limits`（daily=15%, per_match=5%, initial_balance=10000）
+- [x] **Step 4: seed `sporttery_rule_versions`** — 首版竞彩规则（从体彩官网获取的过关规则/奖金上限/无效场次处理）
 
 ---
 
@@ -366,7 +366,7 @@ make db-push ENV=local
 ### Task 1.2: G2 — Realtime/补拉验证
 
 **Files:**
-- Modify: `supabase/migrations/00003_realtime_triggers.sql`（使用 Task 0.2 已创建的迁移文件）
+- Modify: `supabase/migrations/20260720043525_realtime_triggers.sql`（已应用历史不可重写；后续变更须追加迁移）
 - Create: `api/tests/test_g2_realtime.py`
 - Create: `docs/evidence/gate-0/g2/README.md`
 
@@ -398,8 +398,8 @@ make db-push ENV=local
 - Create: `api/tests/test_g4_provider_contract.py`
 - Create: `docs/evidence/gate-0/g4/README.md`
 
-- [ ] **Step 1: Fake Provider** — 返回合法 Schema 的静态 fixture，覆盖全部 11 个方法（9 个预测阶段 + `review_prediction` + `review_methodology`）
-- [ ] **Step 2: Contract 测试** — fake server 覆盖超时、限流、无效 JSON、拒绝响应、密钥脱敏、伪造角色标签攻击、"忽略前文"指令注入攻击
+- [x] **Step 1: Fake Provider** — 返回合法 Schema 的静态 fixture，覆盖全部 11 个方法（9 个预测阶段 + `review_prediction` + `review_methodology`）
+- [x] **Step 2: Contract 测试** — fake server 覆盖超时、限流、无效 JSON、拒绝响应、密钥脱敏、伪造角色标签攻击、"忽略前文"指令注入攻击
 - [ ] **Step 3: 真实 vendor/model capability test** — 对计划启用的每个具体 vendor/model，完整运行 11 个业务合同（9 个预测阶段 + `review_prediction` + `review_methodology`），验证结构化输出合规性、usage/request-id 返回、错误分类、角色边界（指令 vs 数据分离）。形成独立 capability report。不合格模型不能启用（TECH §16 G4）
 - [ ] **Step 4: Provider 重复调用方差实验** — 对每个启用模型以相同参数重复调用同一预测合同 ≥5 次，记录输出差异与指标波动，确定方法论回测所需的正式 `attempts_per_instance`（下限 2，上限由实验确定）。实验结果写入 `system_setting_versions(key=backtest_execution_config)` 版本化配置（含 `attempts_per_instance`、`sample_size`、`evaluator_version`、`generation_parameter_versions`、`output_schema_version`、`tool_contract_version`），供 Task 7.4 回测正式使用
 
@@ -416,11 +416,11 @@ make db-push ENV=local
 
 **前置条件**：Task 0.3 已创建共享类型；G5 在 Gate 0 阶段创建最小 calculator + 解析器实现（TECH §16 允许的验证脚手架），Task 3.1/3.2 在 Gate 0 后扩展为完整实现。
 
-- [ ] **Step 1: 固定 fixtures** — 基于 2026-07-19 人工观察数据（PRD §5.3 约束）
-- [ ] **Step 2: 最小解析器 + 降级测试** — 200/403/超时/字段缺失/缓存/限频
-- [ ] **Step 3: 竞彩规则 golden test** — 最小 TS/Python 实现使用权威 golden fixtures 验证，结果严格一致（TECH §13）
+- [x] **Step 1: 固定 fixtures** — 基于 2026-07-19 人工观察数据（PRD §5.3 约束）
+- [x] **Step 2: 最小解析器 + 降级测试** — 200/403/超时/字段缺失/缓存/限频
+- [x] **Step 3: 竞彩规则 golden test** — 最小 TS/Python 实现使用权威 golden fixtures 验证，结果严格一致（TECH §13）
 - [ ] **Step 4: 数据许可核验** — 逐项验证自动访问许可及生产展示、历史保存、再分发许可记录是否存在且覆盖当前用途；未授权环境不发自动请求（TECH §16 G5）
-- [ ] **Step 5: 竞彩规则初始数据** — 从体彩官网（https://www.sporttery.cn）和公开规则文档获取五种玩法的过关规则、奖金上限、无效场次处理规则，录入为 `sporttery_rule_versions` 首版，并在 G5 中验证
+- [x] **Step 5: 竞彩规则初始数据** — 从体彩官网（https://www.sporttery.cn）和公开规则文档获取五种玩法的过关规则、奖金上限、无效场次处理规则，录入为 `sporttery_rule_versions` 首版，并在 G5 中验证
 
 ---
 
@@ -889,10 +889,10 @@ waiting
 - Create: `api/app/secrets/envelope.py`
 - Create: `api/app/routers/admin.py` (provider/lineup 部分)
 
-- [ ] **Step 1: 密钥 envelope encryption** — AES-256-GCM，DEK/nonce 绑定 connection ID + 版本，DEK 由 KEK 包裹；密文入库；密钥读取 API 永不返回明文
+- [x] **Step 1: 密钥 envelope encryption** — AES-256-GCM，DEK/nonce 绑定 connection ID + 版本，DEK 由 KEK 包裹；密文入库；密钥读取 API 永不返回明文
 - [ ] **Step 2: 模型目录代理** — FastAPI 代理厂商 API，按连接版本短期缓存，标记采集时间
 - [ ] **Step 3: 连接测试** — 只验证认证/端点/模型最小能力；返回统一错误码，不暴露上游响应正文
-- [ ] **Step 4: SSRF 防护** — `api_url` HTTPS 限制 + 厂商域名白名单 + 重定向目标校验
+- [x] **Step 4: SSRF 防护** — `api_url` HTTPS 限制 + 厂商域名白名单 + 重定向目标校验
 - [ ] **Step 5: 管理员操作日志** — 密钥新增/轮换/停用均写入 `admin_audit_logs`
 - [ ] **Step 6: 版本化阵容管理（PRD §15.4 完整合同）** —
   - 厂商 CRUD + 连接 CRUD（base URL/协议/模型/端点/密钥引用/版本号）

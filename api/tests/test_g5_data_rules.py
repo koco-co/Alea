@@ -65,7 +65,9 @@ def test_fixture_parser_cache_rate_limit_and_degraded_snapshot() -> None:
     store = SourceSnapshotStore(minimum_interval_seconds=60)
     store.authorize_request(LicenseGrant(), environment="fixture", now=now)
     with pytest.raises(SourceAccessDenied, match="rate_limit"):
-        store.authorize_request(LicenseGrant(), environment="fixture", now=now + timedelta(seconds=30))
+        store.authorize_request(
+            LicenseGrant(), environment="fixture", now=now + timedelta(seconds=30)
+        )
     parsed = SportteryFixtureParser().parse(
         {
             "match_id": "fixture-match",

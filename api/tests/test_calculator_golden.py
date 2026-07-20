@@ -114,8 +114,10 @@ def test_free_pass_banker_and_four_by_eleven_golden_results() -> None:
 
 
 def test_rounding_caps_and_void_recalculation() -> None:
-    rounded = calculate_plan(CalculationInput((leg("a", odds=("1.0025",)),), ("1x1",)))
-    assert rounded.maximum_bonus == Decimal("2.01")
+    even_tie = calculate_plan(CalculationInput((leg("a", odds=("1.0025",)),), ("1x1",)))
+    odd_tie = calculate_plan(CalculationInput((leg("a", odds=("1.0075",)),), ("1x1",)))
+    assert even_tie.maximum_bonus == Decimal("2.00")
+    assert odd_tie.maximum_bonus == Decimal("2.02")
 
     amount_overage = calculate_plan(
         CalculationInput(

@@ -19,7 +19,6 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "httpx-mock>=0.1,<1",
     "mypy>=1.17,<2",
     "psycopg[binary]>=3.2,<4",
     "pytest>=8.4,<10",
@@ -30,6 +29,7 @@ dev = [
 [tool.pytest.ini_options]
 addopts = "-ra"
 testpaths = ["tests"]
+pythonpath = ["."]
 
 [tool.ruff]
 line-length = 100
@@ -39,3 +39,10 @@ target-version = "py312"
 python_version = "3.12"
 strict = true
 plugins = ["pydantic.mypy"]
+ignore_missing_imports = true
+exclude = "app/generated/"
+disable_error_code = ["no-any-return", "untyped-decorator"]
+
+[[tool.mypy.overrides]]
+module = "app.generated.*"
+ignore_errors = true

@@ -17,9 +17,17 @@ class ModelCapability:
 
 
 REQUIRED_METHODS = (
-    "nominate_matches", "selection_debate", "vote_matches", "predict_score",
-    "debate_response", "vote_score", "form_bet", "debate_bet", "vote_bet",
-    "review_prediction", "review_methodology",
+    "nominate_matches",
+    "selection_debate",
+    "vote_matches",
+    "predict_score",
+    "debate_response",
+    "vote_score",
+    "form_bet",
+    "debate_bet",
+    "vote_bet",
+    "review_prediction",
+    "review_methodology",
 )
 
 

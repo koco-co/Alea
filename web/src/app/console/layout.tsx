@@ -3,7 +3,9 @@ import { redirect } from "next/navigation";
 import { TopNav } from "@/components/ui/top-nav";
 import { getAccessContext } from "@/lib/supabase/access";
 
-export default async function ConsoleLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function ConsoleLayout({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
   const access = await getAccessContext();
   if (!access) redirect("/login?next=/console");
   if (access.status === "pending_consent") redirect("/consent");

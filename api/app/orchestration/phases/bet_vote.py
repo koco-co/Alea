@@ -53,9 +53,7 @@ def resolve_bet_vote_phase(
         CandidateVote(
             instance_id=vote.instance_id,
             vendor_family=vendor_family_by_instance[vote.instance_id],
-            candidate=(
-                "no_bet" if vote.output.decision == "no_bet" else vote.output.candidate_id
-            ),
+            candidate=("no_bet" if vote.output.decision == "no_bet" else vote.output.candidate_id),
             confidence=Decimal(vote.output.plan_confidence),
             weight=weight_by_instance[vote.instance_id],
         )

@@ -108,11 +108,11 @@ class RankingFormula:
                 dimension_weights={
                     str(key): Decimal(str(value)) for key, value in dimensions.items()
                 },
-                minimum_settled=int(config.get("minimum_settled", 10)),
+                minimum_settled=int(str(config.get("minimum_settled", 10))),
                 minimum_coverage=Decimal(str(config.get("minimum_coverage", "0.80"))),
                 raw_weight_min=Decimal(str(config.get("raw_weight_min", "0.75"))),
                 raw_weight_max=Decimal(str(config.get("raw_weight_max", "1.25"))),
-                calibration_min_samples=int(config.get("calibration_min_samples", 5)),
+                calibration_min_samples=int(str(config.get("calibration_min_samples", 5))),
                 calibration_bias_threshold=Decimal(
                     str(config.get("calibration_bias_threshold", 10))
                 ),
@@ -353,9 +353,7 @@ def bayesian_smooth(
     denominator = Decimal(settled_matches) + prior_sample_count
     if denominator == ZERO:
         return prior_mean
-    return (
-        Decimal(settled_matches) * raw_score + prior_sample_count * prior_mean
-    ) / denominator
+    return (Decimal(settled_matches) * raw_score + prior_sample_count * prior_mean) / denominator
 
 
 def calibration_buckets(
@@ -385,8 +383,8 @@ def calibration_buckets(
         mean_confidence = sum((item.direction_confidence for item in bucket), ZERO) / Decimal(
             len(bucket)
         )
-        hit_rate = Decimal(sum(item.direction_hit for item in bucket)) * ONE_HUNDRED / Decimal(
-            len(bucket)
+        hit_rate = (
+            Decimal(sum(item.direction_hit for item in bucket)) * ONE_HUNDRED / Decimal(len(bucket))
         )
         bias = mean_confidence - hit_rate
         conclusion = None

@@ -60,9 +60,7 @@ def test_ticket_notification_is_emitted_once_after_all_legs_finish() -> None:
         payload={},
     )
     assert candidate is not None
-    preference = NotificationPreference(
-        "user-1", frozenset({NotificationKind.TICKET_SETTLED})
-    )
+    preference = NotificationPreference("user-1", frozenset({NotificationKind.TICKET_SETTLED}))
     generated = generate_notifications(
         [candidate, candidate], {"user-1": preference}, now=datetime.now(UTC)
     )
@@ -89,9 +87,7 @@ def test_review_only_injects_published_active_lessons() -> None:
             "root_causes": ["style"],
             "lesson_candidates": [
                 {
-                    "rule": (
-                        "遇到高压逼抢时，下调后场出球不稳球队的方向置信度。"
-                    ),
+                    "rule": ("遇到高压逼抢时，下调后场出球不稳球队的方向置信度。"),
                     "evidence": "赛后事件显示持续被压迫。",
                     "category": "style_interaction",
                     "severity": "high",
@@ -133,9 +129,7 @@ def test_methodology_requires_three_matches_and_twenty_backtest_samples() -> Non
 
     attempts = _backtest_attempts(match_count=19)
     with pytest.raises(ValueError, match="at least 20"):
-        evaluate_paired_backtest(
-            attempts, attempts_per_instance=2, bootstrap_iterations=100
-        )
+        evaluate_paired_backtest(attempts, attempts_per_instance=2, bootstrap_iterations=100)
 
 
 def test_methodology_support_at_sixty_percent_requires_admin_confirmation() -> None:

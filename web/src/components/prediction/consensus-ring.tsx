@@ -1,4 +1,10 @@
-export function ConsensusRing({ value, votes = "5 / 7" }: { value: number; votes?: string }) {
+export function ConsensusRing({
+  value,
+  votes = "5 / 7",
+}: {
+  value: number;
+  votes?: string;
+}) {
   return (
     <div className="consensus-ring-wrap">
       <div

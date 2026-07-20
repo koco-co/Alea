@@ -5,16 +5,16 @@ create extension if not exists pgcrypto with schema extensions;
 do $$
 begin
   if not exists (select 1 from pg_roles where rolname = 'alea_api') then
-    create role alea_api nologin nosuperuser nocreatedb nocreaterole noinherit;
+    create role alea_api login nosuperuser nocreatedb nocreaterole noinherit;
   end if;
   if not exists (select 1 from pg_roles where rolname = 'alea_worker') then
-    create role alea_worker nologin nosuperuser nocreatedb nocreaterole noinherit;
+    create role alea_worker login nosuperuser nocreatedb nocreaterole noinherit;
   end if;
   if not exists (select 1 from pg_roles where rolname = 'alea_dispatcher') then
-    create role alea_dispatcher nologin nosuperuser nocreatedb nocreaterole noinherit;
+    create role alea_dispatcher login nosuperuser nocreatedb nocreaterole noinherit;
   end if;
   if not exists (select 1 from pg_roles where rolname = 'alea_scheduler') then
-    create role alea_scheduler nologin nosuperuser nocreatedb nocreaterole noinherit;
+    create role alea_scheduler login nosuperuser nocreatedb nocreaterole noinherit;
   end if;
 end
 $$;
@@ -41,6 +41,7 @@ create type fact_claim_status as enum (
 );
 create type outbox_status as enum ('pending', 'leased', 'published', 'failed', 'dead');
 create type schedule_run_status as enum ('claimed', 'enqueued', 'running', 'succeeded', 'failed', 'skipped');
+create type provider_execution_mode as enum ('api', 'codex_cli');
 
 create table profiles (
   id uuid primary key references auth.users(id) on delete cascade,
@@ -75,15 +76,17 @@ create table ai_providers (
   enabled boolean not null default false,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
-  check (not enabled or cardinality(allowed_api_domains) > 0)
+  check (key = 'codex' or not enabled or cardinality(allowed_api_domains) > 0)
 );
 
 create table provider_connections (
   id uuid primary key default gen_random_uuid(),
   provider_id uuid not null references ai_providers(id),
   version integer not null check (version > 0),
+  execution_mode provider_execution_mode not null default 'api',
+  runtime_key text,
   protocol text not null,
-  api_url text not null check (api_url ~ '^https://'),
+  api_url text check (api_url is null or api_url ~ '^https://'),
   model_id text not null,
   capability_profile jsonb not null default '{}',
   generation_parameters jsonb not null default '{}',
@@ -94,7 +97,12 @@ create table provider_connections (
   unique (provider_id, version),
   unique (id, version),
   unique (id, provider_id),
-  check (not enabled or test_status = 'passed')
+  check (not enabled or test_status = 'passed'),
+  check (
+    (execution_mode = 'api' and api_url is not null and runtime_key is null)
+    or
+    (execution_mode = 'codex_cli' and runtime_key = 'codex' and api_url is null)
+  )
 );
 create index provider_connections_provider_id_idx on provider_connections(provider_id);
 

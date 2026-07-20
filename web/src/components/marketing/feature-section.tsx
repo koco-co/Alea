@@ -33,7 +33,11 @@ export function FeatureSection() {
   return (
     <section className="feature-story" id="product" aria-label="产品能力">
       {features.map((feature, index) => (
-        <article className={`feature-chapter ${index % 2 ? "reverse" : ""}`} id={feature.visual === "pnl" ? "proof" : undefined} key={feature.index}>
+        <article
+          className={`feature-chapter ${index % 2 ? "reverse" : ""}`}
+          id={feature.visual === "pnl" ? "proof" : undefined}
+          key={feature.index}
+        >
           <div className="feature-copy">
             <span className="chapter-number">{feature.index}</span>
             <p className="eyebrow">{feature.eyebrow}</p>
@@ -47,15 +51,99 @@ export function FeatureSection() {
   );
 }
 
-function FeatureVisual({ type }: { type: (typeof features)[number]["visual"] }) {
+function FeatureVisual({
+  type,
+}: {
+  type: (typeof features)[number]["visual"];
+}) {
   if (type === "debate") {
-    return <div className="feature-visual debate-visual"><div className="visual-bar"><span>圆桌回放</span><b>43% → 71%</b></div><div className="chat-line"><img src="/assets/vendors/anthropic.svg" alt="" /><p><strong>Claude-1 · 选手 B</strong>在事实暂缺时，不应把零封作为高置信前提。</p></div><div className="chat-line changed"><img src="/assets/vendors/deepseek.svg" alt="" /><p><strong>DeepSeek-1 · 公开改票</strong><s>2 : 0</s> → 2 : 1</p></div><span className="verified-chip">来源已核验 · FIFA</span></div>;
+    return (
+      <div className="feature-visual debate-visual">
+        <div className="visual-bar">
+          <span>圆桌回放</span>
+          <b>43% → 71%</b>
+        </div>
+        <div className="chat-line">
+          <img src="/assets/vendors/anthropic.svg" alt="" />
+          <p>
+            <strong>Claude-1 · 选手 B</strong>
+            在事实暂缺时，不应把零封作为高置信前提。
+          </p>
+        </div>
+        <div className="chat-line changed">
+          <img src="/assets/vendors/deepseek.svg" alt="" />
+          <p>
+            <strong>DeepSeek-1 · 公开改票</strong>
+            <s>2 : 0</s> → 2 : 1
+          </p>
+        </div>
+        <span className="verified-chip">来源已核验 · FIFA</span>
+      </div>
+    );
   }
   if (type === "pnl") {
-    return <div className="feature-visual pnl-visual"><div className="visual-bar"><span>模拟盘</span><b>公证账本驱动</b></div><div className="pnl-metrics"><div><span>已结算</span><strong>—</strong></div><div><span>总盈亏</span><strong>待接入</strong></div></div><div className="empty-chart"><span>真实结算数据接入后显示净值曲线</span></div><p>不使用未核验结果制造收益率。</p></div>;
+    return (
+      <div className="feature-visual pnl-visual">
+        <div className="visual-bar">
+          <span>模拟盘</span>
+          <b>公证账本驱动</b>
+        </div>
+        <div className="pnl-metrics">
+          <div>
+            <span>已结算</span>
+            <strong>—</strong>
+          </div>
+          <div>
+            <span>总盈亏</span>
+            <strong>待接入</strong>
+          </div>
+        </div>
+        <div className="empty-chart">
+          <span>真实结算数据接入后显示净值曲线</span>
+        </div>
+        <p>不使用未核验结果制造收益率。</p>
+      </div>
+    );
   }
   if (type === "lesson") {
-    return <div className="feature-visual lesson-visual"><div><span>失误原因</span><strong>信息缺失时置信度过高</strong></div><b>审核发布</b><div><span>有效教训</span><strong>降低缺失样本的确定性措辞</strong></div><b>冻结注入</b><div><span>下一次圆桌</span><strong>随历史上下文一并留痕</strong></div></div>;
+    return (
+      <div className="feature-visual lesson-visual">
+        <div>
+          <span>失误原因</span>
+          <strong>信息缺失时置信度过高</strong>
+        </div>
+        <b>审核发布</b>
+        <div>
+          <span>有效教训</span>
+          <strong>降低缺失样本的确定性措辞</strong>
+        </div>
+        <b>冻结注入</b>
+        <div>
+          <span>下一次圆桌</span>
+          <strong>随历史上下文一并留痕</strong>
+        </div>
+      </div>
+    );
   }
-  return <div className="feature-visual ticket-visual"><div className="ticket-mini-head"><strong>Alea 方案</strong><span>研究卡</span></div><h3>西班牙 vs 阿根廷</h3><p>固定 AI 推演 · 西班牙 2 : 1 阿根廷</p><dl><div><dt>竞彩场次</dt><dd>待销售数据确认</dd></div><div><dt>玩法 / 固定奖金</dt><dd>待销售数据确认</dd></div></dl><small>本图非彩票、非投注凭证，不构成投注建议。</small></div>;
+  return (
+    <div className="feature-visual ticket-visual">
+      <div className="ticket-mini-head">
+        <strong>Alea 方案</strong>
+        <span>研究卡</span>
+      </div>
+      <h3>西班牙 vs 阿根廷</h3>
+      <p>固定 AI 推演 · 西班牙 2 : 1 阿根廷</p>
+      <dl>
+        <div>
+          <dt>竞彩场次</dt>
+          <dd>待销售数据确认</dd>
+        </div>
+        <div>
+          <dt>玩法 / 固定奖金</dt>
+          <dd>待销售数据确认</dd>
+        </div>
+      </dl>
+      <small>本图非彩票、非投注凭证，不构成投注建议。</small>
+    </div>
+  );
 }

@@ -44,16 +44,27 @@ export interface TicketResult {
   readonly effectiveCombinationCount: number;
 }
 
-export type ResultCorrectionSource = "sporttery_official" | "competition_organizer";
+export type ResultCorrectionSource =
+  "sporttery_official" | "competition_organizer";
 
-const money = (value: number): number =>
-  Math.round((value + Number.EPSILON) * 100) / 100;
+const money = (value: number): number => {
+  const scaled = value * 100;
+  const lower = Math.floor(scaled);
+  const fraction = scaled - lower;
+  const tolerance = 1e-9;
+  if (fraction > 0.5 + tolerance) return (lower + 1) / 100;
+  if (fraction < 0.5 - tolerance) return lower / 100;
+  return (lower % 2 === 0 ? lower : lower + 1) / 100;
+};
 
 function combinations<T>(items: readonly T[], size: number): T[][] {
   if (size === 0) return [[]];
   if (items.length < size) return [];
   return items.flatMap((item, index) =>
-    combinations(items.slice(index + 1), size - 1).map((rest) => [item, ...rest]),
+    combinations(items.slice(index + 1), size - 1).map((rest) => [
+      item,
+      ...rest,
+    ]),
   );
 }
 
@@ -61,7 +72,10 @@ function product(values: readonly number[]): number {
   return values.reduce((total, value) => total * value, 1);
 }
 
-function parsePassType(passType: PassType): { matchCount: number; betCount: number } {
+function parsePassType(passType: PassType): {
+  matchCount: number;
+  betCount: number;
+} {
   const [matchCount, betCount] = passType.split("x").map(Number);
   return { matchCount, betCount };
 }
@@ -81,17 +95,18 @@ function expandWithBankers(
 ): TicketLeg[][] {
   const bankers = legs.filter((leg) => bankerIds.has(leg.matchId));
   const drags = legs.filter((leg) => !bankerIds.has(leg.matchId));
-  return combinations(drags, componentSize - bankers.length).map((selection) => [
-    ...bankers,
-    ...selection,
-  ]);
+  return combinations(drags, componentSize - bankers.length).map(
+    (selection) => [...bankers, ...selection],
+  );
 }
 
 function payoutCapForLegs(legCount: number, rules: SportteryRules): number {
   const band = rules.payoutCaps.find(
-    ({ minimumLegs, maximumLegs }) => legCount >= minimumLegs && legCount <= maximumLegs,
+    ({ minimumLegs, maximumLegs }) =>
+      legCount >= minimumLegs && legCount <= maximumLegs,
   );
-  if (!band) throw new Error(`no payout cap is configured for ${legCount} legs`);
+  if (!band)
+    throw new Error(`no payout cap is configured for ${legCount} legs`);
   return band.amount;
 }
 
@@ -100,24 +115,36 @@ export function validateTicket(
   rules: SportteryRules = DEFAULT_SPORTTERY_RULES,
 ): void {
   const multiplier = input.multiplier ?? 1;
-  if (!Number.isInteger(multiplier) || multiplier < 1 || multiplier > rules.maximumMultiplier) {
-    throw new Error(`multiplier must be an integer between 1 and ${rules.maximumMultiplier}`);
+  if (
+    !Number.isInteger(multiplier) ||
+    multiplier < 1 ||
+    multiplier > rules.maximumMultiplier
+  ) {
+    throw new Error(
+      `multiplier must be an integer between 1 and ${rules.maximumMultiplier}`,
+    );
   }
   if (input.legs.length === 0) throw new Error("at least one leg is required");
-  if (input.passTypes.length === 0) throw new Error("at least one pass type is required");
+  if (input.passTypes.length === 0)
+    throw new Error("at least one pass type is required");
   if (new Set(input.passTypes).size !== input.passTypes.length) {
     throw new Error("pass types must be unique");
   }
-  if (new Set(input.legs.map((leg) => leg.matchId)).size !== input.legs.length) {
+  if (
+    new Set(input.legs.map((leg) => leg.matchId)).size !== input.legs.length
+  ) {
     throw new Error("a ticket may contain at most one play per match");
   }
   for (const leg of input.legs) {
-    if (!rules.plays[leg.play]) throw new Error(`unsupported play: ${leg.play}`);
+    if (!rules.plays[leg.play])
+      throw new Error(`unsupported play: ${leg.play}`);
     if (
       leg.odds.length === 0 ||
       leg.odds.some((odd) => !Number.isFinite(odd) || odd <= 1)
     ) {
-      throw new Error("each leg requires one or more finite fixed odds greater than 1");
+      throw new Error(
+        "each leg requires one or more finite fixed odds greater than 1",
+      );
     }
   }
 
@@ -129,7 +156,11 @@ export function validateTicket(
   }
 
   const bankerIds = selectedBankers(input);
-  if ([...bankerIds].some((matchId) => !input.legs.some((leg) => leg.matchId === matchId))) {
+  if (
+    [...bankerIds].some(
+      (matchId) => !input.legs.some((leg) => leg.matchId === matchId),
+    )
+  ) {
     throw new Error("every banker must reference a selected match");
   }
 
@@ -145,7 +176,9 @@ export function validateTicket(
       throw new Error(`${passType} requires at least ${matchCount} legs`);
     }
     if (matchCount > dynamicMaximum) {
-      throw new Error(`${passType} exceeds the selected plays' ${dynamicMaximum}-leg limit`);
+      throw new Error(
+        `${passType} exceeds the selected plays' ${dynamicMaximum}-leg limit`,
+      );
     }
     minimumComponentSize = Math.min(minimumComponentSize, ...componentSizes);
   }
@@ -167,14 +200,20 @@ export function calculateTicket(
 
   for (const passType of input.passTypes) {
     for (const componentSize of rules.passTypes[passType]) {
-      for (const combo of expandWithBankers(input.legs, componentSize, bankerIds)) {
+      for (const combo of expandWithBankers(
+        input.legs,
+        componentSize,
+        bankerIds,
+      )) {
         expandedCombinationCount += 1;
         const originalBetCount = product(combo.map((leg) => leg.odds.length));
         betCount += originalBetCount;
 
         const voidLegs = combo.filter((leg) => leg.isVoid);
         const effectiveLegs = combo.filter((leg) => !leg.isVoid);
-        const voidDuplicateCount = product(voidLegs.map((leg) => leg.odds.length));
+        const voidDuplicateCount = product(
+          voidLegs.map((leg) => leg.odds.length),
+        );
         const linePayout =
           effectiveLegs.length === 0
             ? rules.unitStake * multiplier * originalBetCount
@@ -206,7 +245,9 @@ export function calculateTicket(
   };
 }
 
-export function requiresResultRecalculation(source: ResultCorrectionSource): boolean {
+export function requiresResultRecalculation(
+  source: ResultCorrectionSource,
+): boolean {
   return source === "sporttery_official";
 }
 

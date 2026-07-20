@@ -11,26 +11,35 @@ function safeNext(value: string | null, fallback: string): string {
   return value?.startsWith("/") && !value.startsWith("//") ? value : fallback;
 }
 
-export async function updateSession(request: NextRequest): Promise<NextResponse> {
+export async function updateSession(
+  request: NextRequest,
+): Promise<NextResponse> {
   const nonce = crypto.randomUUID().replaceAll("-", "");
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-nonce", nonce);
   let response = NextResponse.next({ request: { headers: requestHeaders } });
   const config = getSupabasePublicConfig();
   const demoRole =
-    process.env.NODE_ENV !== "production" ? process.env.ALEA_DEMO_ROLE : undefined;
+    process.env.NODE_ENV !== "production"
+      ? process.env.ALEA_DEMO_ROLE
+      : undefined;
   let user: { id: string } | null =
     demoRole === "user" || demoRole === "admin" ? { id: "local-demo" } : null;
   let role: "user" | "admin" = demoRole === "admin" ? "admin" : "user";
-  let status: "active" | "pending_consent" | "disabled" = user ? "active" : "pending_consent";
+  let status: "active" | "pending_consent" | "disabled" = user
+    ? "active"
+    : "pending_consent";
 
-  if (config) {
+  if (config && !user) {
     const supabase = createServerClient(config.url, config.publishableKey, {
       cookies: {
         getAll: () => request.cookies.getAll(),
         setAll: (cookiesToSet) => {
-          for (const { name, value } of cookiesToSet) request.cookies.set(name, value);
-          response = NextResponse.next({ request: { headers: requestHeaders } });
+          for (const { name, value } of cookiesToSet)
+            request.cookies.set(name, value);
+          response = NextResponse.next({
+            request: { headers: requestHeaders },
+          });
           for (const { name, value, options } of cookiesToSet) {
             response.cookies.set(name, value, options);
           }
@@ -60,7 +69,11 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
     return secureRedirect(loginUrl, nonce, response);
   }
   if (!user && path === "/consent") {
-    return secureRedirect(new URL("/login?next=/consent", request.url), nonce, response);
+    return secureRedirect(
+      new URL("/login?next=/consent", request.url),
+      nonce,
+      response,
+    );
   }
   if (
     user &&
@@ -71,7 +84,11 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
     return secureRedirect(new URL("/consent", request.url), nonce, response);
   }
   if (user && status === "disabled" && path.startsWith("/console")) {
-    return secureRedirect(new URL("/login?error=account_disabled", request.url), nonce, response);
+    return secureRedirect(
+      new URL("/login?error=account_disabled", request.url),
+      nonce,
+      response,
+    );
   }
   if (
     user &&
@@ -79,12 +96,19 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
     role !== "admin" &&
     path.startsWith("/console/admin")
   ) {
-    return secureRedirect(new URL("/console?error=forbidden", request.url), nonce, response);
+    return secureRedirect(
+      new URL("/console?error=forbidden", request.url),
+      nonce,
+      response,
+    );
   }
   if (user && status === "active" && AUTH_ROUTES.has(path)) {
     return secureRedirect(
       new URL(
-        safeNext(request.nextUrl.searchParams.get("next"), "/console/predictions"),
+        safeNext(
+          request.nextUrl.searchParams.get("next"),
+          "/console/predictions",
+        ),
         request.url,
       ),
       nonce,
@@ -95,9 +119,14 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
   return response;
 }
 
-function secureRedirect(url: URL, nonce: string, source?: NextResponse): NextResponse {
+function secureRedirect(
+  url: URL,
+  nonce: string,
+  source?: NextResponse,
+): NextResponse {
   const response = NextResponse.redirect(url);
-  for (const cookie of source?.cookies.getAll() ?? []) response.cookies.set(cookie);
+  for (const cookie of source?.cookies.getAll() ?? [])
+    response.cookies.set(cookie);
   applySecurityHeaders(response, nonce);
   return response;
 }
@@ -107,5 +136,8 @@ function applySecurityHeaders(response: NextResponse, nonce: string): void {
   response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
   response.headers.set("X-Content-Type-Options", "nosniff");
   response.headers.set("X-Frame-Options", "DENY");
-  response.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+  response.headers.set(
+    "Permissions-Policy",
+    "camera=(), microphone=(), geolocation=()",
+  );
 }

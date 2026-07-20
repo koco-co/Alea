@@ -61,14 +61,19 @@ class AnthropicProvider(HTTPProvider):
 
             raise ProviderFailure("empty_response", "provider returned no content", retryable=False)
         block = _mapping(content[0], "content[0]")
-        output = _object_output(block.get("input") if block.get("type") == "tool_use" else block.get("text"))
+        output = _object_output(
+            block.get("input") if block.get("type") == "tool_use" else block.get("text")
+        )
         usage = _mapping(body.get("usage", {}), "usage")
         input_tokens = _optional_int(usage.get("input_tokens"))
         output_tokens = _optional_int(usage.get("output_tokens"))
-        total = None if input_tokens is None or output_tokens is None else input_tokens + output_tokens
+        total = (
+            None if input_tokens is None or output_tokens is None else input_tokens + output_tokens
+        )
         return ProviderResult(
             request_id=req.request_id,
-            provider_request_id=response.headers.get("request-id") or _optional_string(body.get("id")),
+            provider_request_id=response.headers.get("request-id")
+            or _optional_string(body.get("id")),
             model_id=str(body.get("model") or req.model_id),
             output=output,
             usage=Usage(input_tokens=input_tokens, output_tokens=output_tokens, total_tokens=total),

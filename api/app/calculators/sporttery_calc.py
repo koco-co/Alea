@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from decimal import ROUND_HALF_UP, Decimal
+from decimal import ROUND_HALF_EVEN, Decimal
 from itertools import combinations
 from math import prod
 from typing import Literal, overload
@@ -136,7 +136,7 @@ class TicketResult:
 
 
 def _money(value: Decimal) -> Decimal:
-    return value.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    return value.quantize(Decimal("0.01"), rounding=ROUND_HALF_EVEN)
 
 
 def _parse_pass_type(pass_type: str) -> tuple[int, int]:

@@ -50,12 +50,15 @@ class MethodologyTriggerSettings:
     version: int = 1
 
     def __post_init__(self) -> None:
-        if min(
-            self.distinct_match_threshold,
-            self.lesson_count_threshold,
-            self.consecutive_error_threshold,
-            self.version,
-        ) < 1:
+        if (
+            min(
+                self.distinct_match_threshold,
+                self.lesson_count_threshold,
+                self.consecutive_error_threshold,
+                self.version,
+            )
+            < 1
+        ):
             raise ValueError("methodology trigger values must be positive")
         if self.lookback_days is not None and self.lookback_days < 1:
             raise ValueError("lookback_days must be positive or null")
@@ -271,9 +274,7 @@ def validate_backtest_samples(
         raise ValueError("backtest sample IDs must be unique")
     for sample in samples:
         if not sample.input_snapshot_id or not sample.result_version_id:
-            raise ValueError(
-                "backtest samples require frozen input and independent result refs"
-            )
+            raise ValueError("backtest samples require frozen input and independent result refs")
 
 
 def evaluate_paired_backtest(
@@ -293,9 +294,9 @@ def evaluate_paired_backtest(
     for attempt in attempts:
         if attempt.variant not in {"OLD", "NEW"}:
             raise ValueError("backtest variant must be OLD or NEW")
-        grouped.setdefault(
-            (attempt.sample_id, attempt.instance_id, attempt.attempt_index), {}
-        )[attempt.variant] = attempt
+        grouped.setdefault((attempt.sample_id, attempt.instance_id, attempt.attempt_index), {})[
+            attempt.variant
+        ] = attempt
     pairs = [pair for pair in grouped.values() if set(pair) == {"OLD", "NEW"}]
     if not pairs:
         raise ValueError("no complete OLD/NEW pairs")
@@ -438,8 +439,7 @@ def _bootstrap_interval(
         return values[0], values[0]
     generator = random.Random(seed)
     means = sorted(
-        _mean([values[generator.randrange(len(values))] for _ in values])
-        for _ in range(iterations)
+        _mean([values[generator.randrange(len(values))] for _ in values]) for _ in range(iterations)
     )
     lower = means[max(0, math.floor(iterations * 0.025) - 1)]
     upper = means[min(iterations - 1, math.ceil(iterations * 0.975) - 1)]

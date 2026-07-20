@@ -17,7 +17,13 @@ const modules = [
   ["赛事资料", "资料档案", "/console/wiki"],
 ] as const;
 
-export function TopNav({ role, email }: { role: AppRole; email: string | null }) {
+export function TopNav({
+  role,
+  email,
+}: {
+  role: AppRole;
+  email: string | null;
+}) {
   const path = usePathname();
   return <TopNavView role={role} email={email} path={path} />;
 }
@@ -34,19 +40,43 @@ export function TopNavView({
   return (
     <header className="topbar">
       <div className="topbar-main">
-        <Link className="brand compact" href="/console" aria-label="Alea 每日总览">
+        <Link
+          className="brand compact"
+          href="/console"
+          aria-label="Alea 每日总览"
+        >
           <img src="/assets/brand/alea-lockup.png" alt="Alea" />
         </Link>
         <nav className="module-nav" aria-label="控制台主导航">
           {modules.map(([label, subtitle, href]) => {
-            const active = href === "/console" ? path === href : path.startsWith(href);
-            return <Link key={href} href={href} className={active ? "nav-link active" : "nav-link"}><span>{label}</span><small>{subtitle}</small></Link>;
+            const active =
+              href === "/console" ? path === href : path.startsWith(href);
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={active ? "nav-link active" : "nav-link"}
+              >
+                <span>{label}</span>
+                <small>{subtitle}</small>
+              </Link>
+            );
           })}
         </nav>
         <div className="account-nav">
-          {role === "admin" ? <Link className="admin-link" href="/console/admin/lineup">系统管理</Link> : null}
+          {role === "admin" ? (
+            <Link className="admin-link" href="/console/admin/lineup">
+              系统管理
+            </Link>
+          ) : null}
           <NotificationCenter role={role} />
-          <Link className="avatar-button" href="/console/settings" aria-label={`账户设置 ${email ?? "用户"}`}><img src="/assets/icons/user-round.svg" alt="" /></Link>
+          <Link
+            className="avatar-button"
+            href="/console/settings"
+            aria-label={`账户设置 ${email ?? "用户"}`}
+          >
+            <img src="/assets/icons/user-round.svg" alt="" />
+          </Link>
         </div>
       </div>
     </header>

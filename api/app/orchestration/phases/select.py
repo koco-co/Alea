@@ -56,9 +56,7 @@ async def run_selection_debate_phase(
 ) -> SelectionPhaseResult:
     result = await provider.selection_debate(dict(context), request)
     output = SelectionDebate.model_validate(result.output)
-    validated = validate_provider_result(
-        output, phase="select_debate", context=validation_context
-    )
+    validated = validate_provider_result(output, phase="select_debate", context=validation_context)
     return _result(instance_id, "select_debate", output, result.provider_request_id, validated)
 
 
@@ -97,10 +95,7 @@ def build_rest_announcement_draft(
         job_id=job_id,
         business_date=business_date,
         title="今日休战",
-        body=(
-            "本轮选场终投没有比赛获得超过 50% 的加权赞成票，"
-            "平台今日不发布预测方案。"
-        ),
+        body=("本轮选场终投没有比赛获得超过 50% 的加权赞成票，平台今日不发布预测方案。"),
         audit_reason="selection_completed_with_zero_eligible_matches",
     )
 

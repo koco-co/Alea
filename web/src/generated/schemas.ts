@@ -10,175 +10,2262 @@ function requireUniqueItems(items: unknown[], context: z.RefinementCtx): void {
   }
 }
 
-function requireBetDecisionShape(value: unknown, context: z.RefinementCtx): void {
+function requireBetDecisionShape(
+  value: unknown,
+  context: z.RefinementCtx,
+): void {
   if (typeof value !== "object" || value === null) return;
   const data = value as Record<string, unknown>;
-  const invalidBet = data.decision === "bet" && (data.plan == null || data.no_bet_reason !== null);
-  const invalidNoBet = data.decision === "no_bet" && (data.plan !== null || typeof data.no_bet_reason !== "string");
+  const invalidBet =
+    data.decision === "bet" &&
+    (data.plan == null || data.no_bet_reason !== null);
+  const invalidNoBet =
+    data.decision === "no_bet" &&
+    (data.plan !== null || typeof data.no_bet_reason !== "string");
   if (invalidBet || invalidNoBet) {
-    context.addIssue({ code: "custom", message: "decision, plan, and no_bet_reason are inconsistent" });
+    context.addIssue({
+      code: "custom",
+      message: "decision, plan, and no_bet_reason are inconsistent",
+    });
   }
 }
 
-function requireMethodologyDecisionShape(value: unknown, context: z.RefinementCtx): void {
+function requireMethodologyDecisionShape(
+  value: unknown,
+  context: z.RefinementCtx,
+): void {
   if (typeof value !== "object" || value === null) return;
   const data = value as Record<string, unknown>;
-  const invalidRevision = data.decision === "revise_and_review" && !(typeof data.proposed_revision === "string" && data.proposed_revision.length > 0);
-  const invalidFinal = (data.decision === "support" || data.decision === "oppose") && data.proposed_revision !== null;
+  const invalidRevision =
+    data.decision === "revise_and_review" &&
+    !(
+      typeof data.proposed_revision === "string" &&
+      data.proposed_revision.length > 0
+    );
+  const invalidFinal =
+    (data.decision === "support" || data.decision === "oppose") &&
+    data.proposed_revision !== null;
   if (invalidRevision || invalidFinal) {
-    context.addIssue({ code: "custom", message: "decision and proposed_revision are inconsistent" });
+    context.addIssue({
+      code: "custom",
+      message: "decision and proposed_revision are inconsistent",
+    });
   }
 }
 
-export const BetPhaseOutputSchema = z.union([z.object({"decision": z.union([z.literal("bet"), z.literal("no_bet")]), "plan_confidence": z.number().int().min(0).max(100), "plan": z.union([z.object({"name": z.string().min(1).max(100), "type": z.union([z.literal("single"), z.literal("parlay")]), "legs": z.array(z.object({"match_id": z.string().min(1), "play": z.union([z.literal("had"), z.literal("hhad"), z.literal("crs"), z.literal("ttg"), z.literal("hafu")]), "offer_option_ids": z.array(z.string().min(1)).min(1).superRefine(requireUniqueItems)}).strict()).min(1), "pass_types": z.array(z.string().min(1)).min(1).superRefine(requireUniqueItems), "multiplier": z.number().int().min(1), "stake_percent": z.number().min(1).max(5), "reasoning": z.string().min(1).max(1500), "verified_fact_claim_ids": z.array(z.string().min(1)).superRefine(requireUniqueItems)}).strict(), z.null()]), "no_bet_reason": z.string().min(1).max(500).nullable()}).strict().superRefine(requireBetDecisionShape), z.object({"decision": z.union([z.literal("bet"), z.literal("no_bet")]), "plan_confidence": z.number().int().min(0).max(100), "plan": z.union([z.object({"name": z.string().min(1).max(100), "type": z.union([z.literal("single"), z.literal("parlay")]), "legs": z.array(z.object({"match_id": z.string().min(1), "play": z.union([z.literal("had"), z.literal("hhad"), z.literal("crs"), z.literal("ttg"), z.literal("hafu")]), "offer_option_ids": z.array(z.string().min(1)).min(1).superRefine(requireUniqueItems)}).strict()).min(1), "pass_types": z.array(z.string().min(1)).min(1).superRefine(requireUniqueItems), "multiplier": z.number().int().min(1), "stake_percent": z.number().min(1).max(5), "reasoning": z.string().min(1).max(1500), "verified_fact_claim_ids": z.array(z.string().min(1)).superRefine(requireUniqueItems)}).strict(), z.null()]), "no_bet_reason": z.string().min(1).max(500).nullable(), "target_candidate_ids": z.array(z.string().min(1)).min(1).superRefine(requireUniqueItems)}).strict().superRefine(requireBetDecisionShape), z.object({"candidate_id": z.string().min(1), "decision": z.union([z.literal("bet"), z.literal("no_bet")]), "plan_confidence": z.number().int().min(0).max(100), "reason": z.string().min(1).max(500), "verified_fact_claim_ids": z.array(z.string().min(1)).superRefine(requireUniqueItems)}).strict()]);
+export const BetPhaseOutputSchema = z.union([
+  z
+    .object({
+      decision: z.union([z.literal("bet"), z.literal("no_bet")]),
+      plan_confidence: z.number().int().min(0).max(100),
+      plan: z.union([
+        z
+          .object({
+            name: z.string().min(1).max(100),
+            type: z.union([z.literal("single"), z.literal("parlay")]),
+            legs: z
+              .array(
+                z
+                  .object({
+                    match_id: z.string().min(1),
+                    play: z.union([
+                      z.literal("had"),
+                      z.literal("hhad"),
+                      z.literal("crs"),
+                      z.literal("ttg"),
+                      z.literal("hafu"),
+                    ]),
+                    offer_option_ids: z
+                      .array(z.string().min(1))
+                      .min(1)
+                      .superRefine(requireUniqueItems),
+                  })
+                  .strict(),
+              )
+              .min(1),
+            pass_types: z
+              .array(z.string().min(1))
+              .min(1)
+              .superRefine(requireUniqueItems),
+            multiplier: z.number().int().min(1),
+            stake_percent: z.number().min(1).max(5),
+            reasoning: z.string().min(1).max(1500),
+            verified_fact_claim_ids: z
+              .array(z.string().min(1))
+              .superRefine(requireUniqueItems),
+          })
+          .strict(),
+        z.null(),
+      ]),
+      no_bet_reason: z.string().min(1).max(500).nullable(),
+    })
+    .strict()
+    .superRefine(requireBetDecisionShape),
+  z
+    .object({
+      decision: z.union([z.literal("bet"), z.literal("no_bet")]),
+      plan_confidence: z.number().int().min(0).max(100),
+      plan: z.union([
+        z
+          .object({
+            name: z.string().min(1).max(100),
+            type: z.union([z.literal("single"), z.literal("parlay")]),
+            legs: z
+              .array(
+                z
+                  .object({
+                    match_id: z.string().min(1),
+                    play: z.union([
+                      z.literal("had"),
+                      z.literal("hhad"),
+                      z.literal("crs"),
+                      z.literal("ttg"),
+                      z.literal("hafu"),
+                    ]),
+                    offer_option_ids: z
+                      .array(z.string().min(1))
+                      .min(1)
+                      .superRefine(requireUniqueItems),
+                  })
+                  .strict(),
+              )
+              .min(1),
+            pass_types: z
+              .array(z.string().min(1))
+              .min(1)
+              .superRefine(requireUniqueItems),
+            multiplier: z.number().int().min(1),
+            stake_percent: z.number().min(1).max(5),
+            reasoning: z.string().min(1).max(1500),
+            verified_fact_claim_ids: z
+              .array(z.string().min(1))
+              .superRefine(requireUniqueItems),
+          })
+          .strict(),
+        z.null(),
+      ]),
+      no_bet_reason: z.string().min(1).max(500).nullable(),
+      target_candidate_ids: z
+        .array(z.string().min(1))
+        .min(1)
+        .superRefine(requireUniqueItems),
+    })
+    .strict()
+    .superRefine(requireBetDecisionShape),
+  z
+    .object({
+      candidate_id: z.string().min(1),
+      decision: z.union([z.literal("bet"), z.literal("no_bet")]),
+      plan_confidence: z.number().int().min(0).max(100),
+      reason: z.string().min(1).max(500),
+      verified_fact_claim_ids: z
+        .array(z.string().min(1))
+        .superRefine(requireUniqueItems),
+    })
+    .strict(),
+]);
 export type BetPhaseOutput = z.infer<typeof BetPhaseOutputSchema>;
 
-export const BetPlanPlanSchema = z.object({"name": z.string().min(1).max(100), "type": z.union([z.literal("single"), z.literal("parlay")]), "legs": z.array(z.object({"match_id": z.string().min(1), "play": z.union([z.literal("had"), z.literal("hhad"), z.literal("crs"), z.literal("ttg"), z.literal("hafu")]), "offer_option_ids": z.array(z.string().min(1)).min(1).superRefine(requireUniqueItems)}).strict()).min(1), "pass_types": z.array(z.string().min(1)).min(1).superRefine(requireUniqueItems), "multiplier": z.number().int().min(1), "stake_percent": z.number().min(1).max(5), "reasoning": z.string().min(1).max(1500), "verified_fact_claim_ids": z.array(z.string().min(1)).superRefine(requireUniqueItems)}).strict();
+export const BetPlanPlanSchema = z
+  .object({
+    name: z.string().min(1).max(100),
+    type: z.union([z.literal("single"), z.literal("parlay")]),
+    legs: z
+      .array(
+        z
+          .object({
+            match_id: z.string().min(1),
+            play: z.union([
+              z.literal("had"),
+              z.literal("hhad"),
+              z.literal("crs"),
+              z.literal("ttg"),
+              z.literal("hafu"),
+            ]),
+            offer_option_ids: z
+              .array(z.string().min(1))
+              .min(1)
+              .superRefine(requireUniqueItems),
+          })
+          .strict(),
+      )
+      .min(1),
+    pass_types: z
+      .array(z.string().min(1))
+      .min(1)
+      .superRefine(requireUniqueItems),
+    multiplier: z.number().int().min(1),
+    stake_percent: z.number().min(1).max(5),
+    reasoning: z.string().min(1).max(1500),
+    verified_fact_claim_ids: z
+      .array(z.string().min(1))
+      .superRefine(requireUniqueItems),
+  })
+  .strict();
 export type BetPlanPlan = z.infer<typeof BetPlanPlanSchema>;
 
-export const BetProposalSchema = z.object({"decision": z.union([z.literal("bet"), z.literal("no_bet")]), "plan_confidence": z.number().int().min(0).max(100), "plan": z.union([z.object({"name": z.string().min(1).max(100), "type": z.union([z.literal("single"), z.literal("parlay")]), "legs": z.array(z.object({"match_id": z.string().min(1), "play": z.union([z.literal("had"), z.literal("hhad"), z.literal("crs"), z.literal("ttg"), z.literal("hafu")]), "offer_option_ids": z.array(z.string().min(1)).min(1).superRefine(requireUniqueItems)}).strict()).min(1), "pass_types": z.array(z.string().min(1)).min(1).superRefine(requireUniqueItems), "multiplier": z.number().int().min(1), "stake_percent": z.number().min(1).max(5), "reasoning": z.string().min(1).max(1500), "verified_fact_claim_ids": z.array(z.string().min(1)).superRefine(requireUniqueItems)}).strict(), z.null()]), "no_bet_reason": z.string().min(1).max(500).nullable()}).strict().superRefine(requireBetDecisionShape);
+export const BetProposalSchema = z
+  .object({
+    decision: z.union([z.literal("bet"), z.literal("no_bet")]),
+    plan_confidence: z.number().int().min(0).max(100),
+    plan: z.union([
+      z
+        .object({
+          name: z.string().min(1).max(100),
+          type: z.union([z.literal("single"), z.literal("parlay")]),
+          legs: z
+            .array(
+              z
+                .object({
+                  match_id: z.string().min(1),
+                  play: z.union([
+                    z.literal("had"),
+                    z.literal("hhad"),
+                    z.literal("crs"),
+                    z.literal("ttg"),
+                    z.literal("hafu"),
+                  ]),
+                  offer_option_ids: z
+                    .array(z.string().min(1))
+                    .min(1)
+                    .superRefine(requireUniqueItems),
+                })
+                .strict(),
+            )
+            .min(1),
+          pass_types: z
+            .array(z.string().min(1))
+            .min(1)
+            .superRefine(requireUniqueItems),
+          multiplier: z.number().int().min(1),
+          stake_percent: z.number().min(1).max(5),
+          reasoning: z.string().min(1).max(1500),
+          verified_fact_claim_ids: z
+            .array(z.string().min(1))
+            .superRefine(requireUniqueItems),
+        })
+        .strict(),
+      z.null(),
+    ]),
+    no_bet_reason: z.string().min(1).max(500).nullable(),
+  })
+  .strict()
+  .superRefine(requireBetDecisionShape);
 export type BetProposal = z.infer<typeof BetProposalSchema>;
 
-export const BetDebateSchema = z.object({"decision": z.union([z.literal("bet"), z.literal("no_bet")]), "plan_confidence": z.number().int().min(0).max(100), "plan": z.union([z.object({"name": z.string().min(1).max(100), "type": z.union([z.literal("single"), z.literal("parlay")]), "legs": z.array(z.object({"match_id": z.string().min(1), "play": z.union([z.literal("had"), z.literal("hhad"), z.literal("crs"), z.literal("ttg"), z.literal("hafu")]), "offer_option_ids": z.array(z.string().min(1)).min(1).superRefine(requireUniqueItems)}).strict()).min(1), "pass_types": z.array(z.string().min(1)).min(1).superRefine(requireUniqueItems), "multiplier": z.number().int().min(1), "stake_percent": z.number().min(1).max(5), "reasoning": z.string().min(1).max(1500), "verified_fact_claim_ids": z.array(z.string().min(1)).superRefine(requireUniqueItems)}).strict(), z.null()]), "no_bet_reason": z.string().min(1).max(500).nullable(), "target_candidate_ids": z.array(z.string().min(1)).min(1).superRefine(requireUniqueItems)}).strict().superRefine(requireBetDecisionShape);
+export const BetDebateSchema = z
+  .object({
+    decision: z.union([z.literal("bet"), z.literal("no_bet")]),
+    plan_confidence: z.number().int().min(0).max(100),
+    plan: z.union([
+      z
+        .object({
+          name: z.string().min(1).max(100),
+          type: z.union([z.literal("single"), z.literal("parlay")]),
+          legs: z
+            .array(
+              z
+                .object({
+                  match_id: z.string().min(1),
+                  play: z.union([
+                    z.literal("had"),
+                    z.literal("hhad"),
+                    z.literal("crs"),
+                    z.literal("ttg"),
+                    z.literal("hafu"),
+                  ]),
+                  offer_option_ids: z
+                    .array(z.string().min(1))
+                    .min(1)
+                    .superRefine(requireUniqueItems),
+                })
+                .strict(),
+            )
+            .min(1),
+          pass_types: z
+            .array(z.string().min(1))
+            .min(1)
+            .superRefine(requireUniqueItems),
+          multiplier: z.number().int().min(1),
+          stake_percent: z.number().min(1).max(5),
+          reasoning: z.string().min(1).max(1500),
+          verified_fact_claim_ids: z
+            .array(z.string().min(1))
+            .superRefine(requireUniqueItems),
+        })
+        .strict(),
+      z.null(),
+    ]),
+    no_bet_reason: z.string().min(1).max(500).nullable(),
+    target_candidate_ids: z
+      .array(z.string().min(1))
+      .min(1)
+      .superRefine(requireUniqueItems),
+  })
+  .strict()
+  .superRefine(requireBetDecisionShape);
 export type BetDebate = z.infer<typeof BetDebateSchema>;
 
-export const BetVoteSchema = z.object({"candidate_id": z.string().min(1), "decision": z.union([z.literal("bet"), z.literal("no_bet")]), "plan_confidence": z.number().int().min(0).max(100), "reason": z.string().min(1).max(500), "verified_fact_claim_ids": z.array(z.string().min(1)).superRefine(requireUniqueItems)}).strict();
+export const BetVoteSchema = z
+  .object({
+    candidate_id: z.string().min(1),
+    decision: z.union([z.literal("bet"), z.literal("no_bet")]),
+    plan_confidence: z.number().int().min(0).max(100),
+    reason: z.string().min(1).max(500),
+    verified_fact_claim_ids: z
+      .array(z.string().min(1))
+      .superRefine(requireUniqueItems),
+  })
+  .strict();
 export type BetVote = z.infer<typeof BetVoteSchema>;
 
-export const DebateOutputSchema = z.union([z.object({"responses": z.array(z.object({"target_codename": z.string().min(1), "stance": z.union([z.literal("hold"), z.literal("change"), z.literal("question"), z.literal("supplement")]), "argument_ids": z.array(z.string().min(1)).min(1)}).strict()), "revised_full_time_score": z.union([z.object({"home": z.number().int().min(0).max(20), "away": z.number().int().min(0).max(20)}).strict(), z.null()]), "revised_half_time_score": z.union([z.object({"home": z.number().int().min(0).max(20), "away": z.number().int().min(0).max(20)}).strict(), z.null()]), "revised_direction_confidence": z.number().int().min(0).max(100).nullable(), "arguments": z.array(z.object({"argument_id": z.string().min(1), "text": z.string().min(1).max(1000), "fact_claim_ids": z.array(z.string().min(1)).superRefine(requireUniqueItems)}).strict()), "fact_claims": z.array(z.object({"claim_id": z.string().min(1), "text": z.string().min(1).max(500), "fact_type": z.union([z.literal("odds"), z.literal("form"), z.literal("standing"), z.literal("injury"), z.literal("lineup"), z.literal("h2h"), z.literal("weather"), z.literal("competition_state"), z.literal("other")]), "source_record_ids": z.array(z.string().min(1)).superRefine(requireUniqueItems)}).strict())}).strict(), z.object({"match_id": z.string().min(1), "full_time_score": z.object({"home": z.number().int().min(0).max(20), "away": z.number().int().min(0).max(20)}).strict(), "half_time_score": z.object({"home": z.number().int().min(0).max(20), "away": z.number().int().min(0).max(20)}).strict(), "direction": z.union([z.literal("home"), z.literal("draw"), z.literal("away")]), "direction_confidence": z.number().int().min(0).max(100), "reason": z.string().min(1).max(500), "verified_fact_claim_ids": z.array(z.string().min(1)).superRefine(requireUniqueItems)}).strict()]);
+export const DebateOutputSchema = z.union([
+  z
+    .object({
+      responses: z.array(
+        z
+          .object({
+            target_codename: z.string().min(1),
+            stance: z.union([
+              z.literal("hold"),
+              z.literal("change"),
+              z.literal("question"),
+              z.literal("supplement"),
+            ]),
+            argument_ids: z.array(z.string().min(1)).min(1),
+          })
+          .strict(),
+      ),
+      revised_full_time_score: z.union([
+        z
+          .object({
+            home: z.number().int().min(0).max(20),
+            away: z.number().int().min(0).max(20),
+          })
+          .strict(),
+        z.null(),
+      ]),
+      revised_half_time_score: z.union([
+        z
+          .object({
+            home: z.number().int().min(0).max(20),
+            away: z.number().int().min(0).max(20),
+          })
+          .strict(),
+        z.null(),
+      ]),
+      revised_direction_confidence: z.number().int().min(0).max(100).nullable(),
+      arguments: z.array(
+        z
+          .object({
+            argument_id: z.string().min(1),
+            text: z.string().min(1).max(1000),
+            fact_claim_ids: z
+              .array(z.string().min(1))
+              .superRefine(requireUniqueItems),
+          })
+          .strict(),
+      ),
+      fact_claims: z.array(
+        z
+          .object({
+            claim_id: z.string().min(1),
+            text: z.string().min(1).max(500),
+            fact_type: z.union([
+              z.literal("odds"),
+              z.literal("form"),
+              z.literal("standing"),
+              z.literal("injury"),
+              z.literal("lineup"),
+              z.literal("h2h"),
+              z.literal("weather"),
+              z.literal("competition_state"),
+              z.literal("other"),
+            ]),
+            source_record_ids: z
+              .array(z.string().min(1))
+              .superRefine(requireUniqueItems),
+          })
+          .strict(),
+      ),
+    })
+    .strict(),
+  z
+    .object({
+      match_id: z.string().min(1),
+      full_time_score: z
+        .object({
+          home: z.number().int().min(0).max(20),
+          away: z.number().int().min(0).max(20),
+        })
+        .strict(),
+      half_time_score: z
+        .object({
+          home: z.number().int().min(0).max(20),
+          away: z.number().int().min(0).max(20),
+        })
+        .strict(),
+      direction: z.union([
+        z.literal("home"),
+        z.literal("draw"),
+        z.literal("away"),
+      ]),
+      direction_confidence: z.number().int().min(0).max(100),
+      reason: z.string().min(1).max(500),
+      verified_fact_claim_ids: z
+        .array(z.string().min(1))
+        .superRefine(requireUniqueItems),
+    })
+    .strict(),
+]);
 export type DebateOutput = z.infer<typeof DebateOutputSchema>;
 
-export const DebateScoreSchema = z.object({"home": z.number().int().min(0).max(20), "away": z.number().int().min(0).max(20)}).strict();
+export const DebateScoreSchema = z
+  .object({
+    home: z.number().int().min(0).max(20),
+    away: z.number().int().min(0).max(20),
+  })
+  .strict();
 export type DebateScore = z.infer<typeof DebateScoreSchema>;
 
-export const DebateFactClaimSchema = z.object({"claim_id": z.string().min(1), "text": z.string().min(1).max(500), "fact_type": z.union([z.literal("odds"), z.literal("form"), z.literal("standing"), z.literal("injury"), z.literal("lineup"), z.literal("h2h"), z.literal("weather"), z.literal("competition_state"), z.literal("other")]), "source_record_ids": z.array(z.string().min(1)).superRefine(requireUniqueItems)}).strict();
+export const DebateFactClaimSchema = z
+  .object({
+    claim_id: z.string().min(1),
+    text: z.string().min(1).max(500),
+    fact_type: z.union([
+      z.literal("odds"),
+      z.literal("form"),
+      z.literal("standing"),
+      z.literal("injury"),
+      z.literal("lineup"),
+      z.literal("h2h"),
+      z.literal("weather"),
+      z.literal("competition_state"),
+      z.literal("other"),
+    ]),
+    source_record_ids: z
+      .array(z.string().min(1))
+      .superRefine(requireUniqueItems),
+  })
+  .strict();
 export type DebateFactClaim = z.infer<typeof DebateFactClaimSchema>;
 
-export const DebateArgumentSchema = z.object({"argument_id": z.string().min(1), "text": z.string().min(1).max(1000), "fact_claim_ids": z.array(z.string().min(1)).superRefine(requireUniqueItems)}).strict();
+export const DebateArgumentSchema = z
+  .object({
+    argument_id: z.string().min(1),
+    text: z.string().min(1).max(1000),
+    fact_claim_ids: z.array(z.string().min(1)).superRefine(requireUniqueItems),
+  })
+  .strict();
 export type DebateArgument = z.infer<typeof DebateArgumentSchema>;
 
-export const ScoreDebateSchema = z.object({"responses": z.array(z.object({"target_codename": z.string().min(1), "stance": z.union([z.literal("hold"), z.literal("change"), z.literal("question"), z.literal("supplement")]), "argument_ids": z.array(z.string().min(1)).min(1)}).strict()), "revised_full_time_score": z.union([z.object({"home": z.number().int().min(0).max(20), "away": z.number().int().min(0).max(20)}).strict(), z.null()]), "revised_half_time_score": z.union([z.object({"home": z.number().int().min(0).max(20), "away": z.number().int().min(0).max(20)}).strict(), z.null()]), "revised_direction_confidence": z.number().int().min(0).max(100).nullable(), "arguments": z.array(z.object({"argument_id": z.string().min(1), "text": z.string().min(1).max(1000), "fact_claim_ids": z.array(z.string().min(1)).superRefine(requireUniqueItems)}).strict()), "fact_claims": z.array(z.object({"claim_id": z.string().min(1), "text": z.string().min(1).max(500), "fact_type": z.union([z.literal("odds"), z.literal("form"), z.literal("standing"), z.literal("injury"), z.literal("lineup"), z.literal("h2h"), z.literal("weather"), z.literal("competition_state"), z.literal("other")]), "source_record_ids": z.array(z.string().min(1)).superRefine(requireUniqueItems)}).strict())}).strict();
+export const ScoreDebateSchema = z
+  .object({
+    responses: z.array(
+      z
+        .object({
+          target_codename: z.string().min(1),
+          stance: z.union([
+            z.literal("hold"),
+            z.literal("change"),
+            z.literal("question"),
+            z.literal("supplement"),
+          ]),
+          argument_ids: z.array(z.string().min(1)).min(1),
+        })
+        .strict(),
+    ),
+    revised_full_time_score: z.union([
+      z
+        .object({
+          home: z.number().int().min(0).max(20),
+          away: z.number().int().min(0).max(20),
+        })
+        .strict(),
+      z.null(),
+    ]),
+    revised_half_time_score: z.union([
+      z
+        .object({
+          home: z.number().int().min(0).max(20),
+          away: z.number().int().min(0).max(20),
+        })
+        .strict(),
+      z.null(),
+    ]),
+    revised_direction_confidence: z.number().int().min(0).max(100).nullable(),
+    arguments: z.array(
+      z
+        .object({
+          argument_id: z.string().min(1),
+          text: z.string().min(1).max(1000),
+          fact_claim_ids: z
+            .array(z.string().min(1))
+            .superRefine(requireUniqueItems),
+        })
+        .strict(),
+    ),
+    fact_claims: z.array(
+      z
+        .object({
+          claim_id: z.string().min(1),
+          text: z.string().min(1).max(500),
+          fact_type: z.union([
+            z.literal("odds"),
+            z.literal("form"),
+            z.literal("standing"),
+            z.literal("injury"),
+            z.literal("lineup"),
+            z.literal("h2h"),
+            z.literal("weather"),
+            z.literal("competition_state"),
+            z.literal("other"),
+          ]),
+          source_record_ids: z
+            .array(z.string().min(1))
+            .superRefine(requireUniqueItems),
+        })
+        .strict(),
+    ),
+  })
+  .strict();
 export type ScoreDebate = z.infer<typeof ScoreDebateSchema>;
 
-export const ScoreVoteSchema = z.object({"match_id": z.string().min(1), "full_time_score": z.object({"home": z.number().int().min(0).max(20), "away": z.number().int().min(0).max(20)}).strict(), "half_time_score": z.object({"home": z.number().int().min(0).max(20), "away": z.number().int().min(0).max(20)}).strict(), "direction": z.union([z.literal("home"), z.literal("draw"), z.literal("away")]), "direction_confidence": z.number().int().min(0).max(100), "reason": z.string().min(1).max(500), "verified_fact_claim_ids": z.array(z.string().min(1)).superRefine(requireUniqueItems)}).strict();
+export const ScoreVoteSchema = z
+  .object({
+    match_id: z.string().min(1),
+    full_time_score: z
+      .object({
+        home: z.number().int().min(0).max(20),
+        away: z.number().int().min(0).max(20),
+      })
+      .strict(),
+    half_time_score: z
+      .object({
+        home: z.number().int().min(0).max(20),
+        away: z.number().int().min(0).max(20),
+      })
+      .strict(),
+    direction: z.union([
+      z.literal("home"),
+      z.literal("draw"),
+      z.literal("away"),
+    ]),
+    direction_confidence: z.number().int().min(0).max(100),
+    reason: z.string().min(1).max(500),
+    verified_fact_claim_ids: z
+      .array(z.string().min(1))
+      .superRefine(requireUniqueItems),
+  })
+  .strict();
 export type ScoreVote = z.infer<typeof ScoreVoteSchema>;
 
-export const MatchSnapshotViewSchema = z.object({"input_snapshot_id": z.string().uuid(), "match_id": z.string().uuid(), "competition": z.string().min(1), "stage": z.string().nullable(), "round": z.string().nullable(), "kickoff_at": z.string().datetime({ offset: true }), "sales_cutoff_at": z.string().datetime({ offset: true }).nullable(), "venue": z.string().nullable(), "venue_neutral": z.boolean(), "referee": z.string().nullable(), "leg_number": z.number().int().min(1).nullable(), "first_leg_score": z.union([z.object({"home": z.number().int().min(0).max(20), "away": z.number().int().min(0).max(20)}).strict(), z.null()]), "aggregate_score": z.union([z.object({"home": z.number().int().min(0).max(20), "away": z.number().int().min(0).max(20)}).strict(), z.null()]), "home_team": z.object({"id": z.string().uuid(), "name": z.string().min(1)}).strict(), "away_team": z.object({"id": z.string().uuid(), "name": z.string().min(1)}).strict(), "offers": z.array(z.object({"offer_option_id": z.string().min(1), "play": z.union([z.literal("had"), z.literal("hhad"), z.literal("crs"), z.literal("ttg"), z.literal("hafu")]), "selection": z.string().min(1), "fixed_odds": z.number().gt(1), "single_available": z.boolean(), "source_record_id": z.string().min(1), "observed_at": z.string().datetime({ offset: true }), "valid_from": z.string().datetime({ offset: true }).nullable(), "expires_at": z.string().datetime({ offset: true }).nullable(), "confidence": z.number().min(0).max(1)}).strict()), "facts": z.array(z.object({"field": z.string().min(1), "value": z.unknown(), "source_record_ids": z.array(z.string().min(1)).min(1).superRefine(requireUniqueItems), "observed_at": z.string().datetime({ offset: true }), "valid_from": z.string().datetime({ offset: true }).nullable(), "expires_at": z.string().datetime({ offset: true }).nullable(), "confidence": z.number().min(0).max(1), "missing_fields": z.array(z.string().min(1)).superRefine(requireUniqueItems)}).strict()), "source_record_ids": z.array(z.string().min(1)).min(1).superRefine(requireUniqueItems), "observed_at": z.string().datetime({ offset: true }), "valid_from": z.string().datetime({ offset: true }).nullable(), "expires_at": z.string().datetime({ offset: true }).nullable(), "confidence": z.number().min(0).max(1), "missing_fields": z.array(z.string().min(1)).superRefine(requireUniqueItems), "frozen_at": z.string().datetime({ offset: true })}).strict();
+export const MatchSnapshotViewSchema = z
+  .object({
+    input_snapshot_id: z.string().uuid(),
+    match_id: z.string().uuid(),
+    competition: z.string().min(1),
+    stage: z.string().nullable(),
+    round: z.string().nullable(),
+    kickoff_at: z.string().datetime({ offset: true }),
+    sales_cutoff_at: z.string().datetime({ offset: true }).nullable(),
+    venue: z.string().nullable(),
+    venue_neutral: z.boolean(),
+    referee: z.string().nullable(),
+    leg_number: z.number().int().min(1).nullable(),
+    first_leg_score: z.union([
+      z
+        .object({
+          home: z.number().int().min(0).max(20),
+          away: z.number().int().min(0).max(20),
+        })
+        .strict(),
+      z.null(),
+    ]),
+    aggregate_score: z.union([
+      z
+        .object({
+          home: z.number().int().min(0).max(20),
+          away: z.number().int().min(0).max(20),
+        })
+        .strict(),
+      z.null(),
+    ]),
+    home_team: z
+      .object({ id: z.string().uuid(), name: z.string().min(1) })
+      .strict(),
+    away_team: z
+      .object({ id: z.string().uuid(), name: z.string().min(1) })
+      .strict(),
+    offers: z.array(
+      z
+        .object({
+          offer_option_id: z.string().min(1),
+          play: z.union([
+            z.literal("had"),
+            z.literal("hhad"),
+            z.literal("crs"),
+            z.literal("ttg"),
+            z.literal("hafu"),
+          ]),
+          selection: z.string().min(1),
+          fixed_odds: z.number().gt(1),
+          single_available: z.boolean(),
+          source_record_id: z.string().min(1),
+          observed_at: z.string().datetime({ offset: true }),
+          valid_from: z.string().datetime({ offset: true }).nullable(),
+          expires_at: z.string().datetime({ offset: true }).nullable(),
+          confidence: z.number().min(0).max(1),
+        })
+        .strict(),
+    ),
+    facts: z.array(
+      z
+        .object({
+          field: z.string().min(1),
+          value: z.unknown(),
+          source_record_ids: z
+            .array(z.string().min(1))
+            .min(1)
+            .superRefine(requireUniqueItems),
+          observed_at: z.string().datetime({ offset: true }),
+          valid_from: z.string().datetime({ offset: true }).nullable(),
+          expires_at: z.string().datetime({ offset: true }).nullable(),
+          confidence: z.number().min(0).max(1),
+          missing_fields: z
+            .array(z.string().min(1))
+            .superRefine(requireUniqueItems),
+        })
+        .strict(),
+    ),
+    source_record_ids: z
+      .array(z.string().min(1))
+      .min(1)
+      .superRefine(requireUniqueItems),
+    observed_at: z.string().datetime({ offset: true }),
+    valid_from: z.string().datetime({ offset: true }).nullable(),
+    expires_at: z.string().datetime({ offset: true }).nullable(),
+    confidence: z.number().min(0).max(1),
+    missing_fields: z.array(z.string().min(1)).superRefine(requireUniqueItems),
+    frozen_at: z.string().datetime({ offset: true }),
+  })
+  .strict();
 export type MatchSnapshotView = z.infer<typeof MatchSnapshotViewSchema>;
 
-export const MatchScoreSchema = z.object({"home": z.number().int().min(0).max(20), "away": z.number().int().min(0).max(20)}).strict();
+export const MatchScoreSchema = z
+  .object({
+    home: z.number().int().min(0).max(20),
+    away: z.number().int().min(0).max(20),
+  })
+  .strict();
 export type MatchScore = z.infer<typeof MatchScoreSchema>;
 
-export const MatchTeamSchema = z.object({"id": z.string().uuid(), "name": z.string().min(1)}).strict();
+export const MatchTeamSchema = z
+  .object({ id: z.string().uuid(), name: z.string().min(1) })
+  .strict();
 export type MatchTeam = z.infer<typeof MatchTeamSchema>;
 
-export const MatchOfferSchema = z.object({"offer_option_id": z.string().min(1), "play": z.union([z.literal("had"), z.literal("hhad"), z.literal("crs"), z.literal("ttg"), z.literal("hafu")]), "selection": z.string().min(1), "fixed_odds": z.number().gt(1), "single_available": z.boolean(), "source_record_id": z.string().min(1), "observed_at": z.string().datetime({ offset: true }), "valid_from": z.string().datetime({ offset: true }).nullable(), "expires_at": z.string().datetime({ offset: true }).nullable(), "confidence": z.number().min(0).max(1)}).strict();
+export const MatchOfferSchema = z
+  .object({
+    offer_option_id: z.string().min(1),
+    play: z.union([
+      z.literal("had"),
+      z.literal("hhad"),
+      z.literal("crs"),
+      z.literal("ttg"),
+      z.literal("hafu"),
+    ]),
+    selection: z.string().min(1),
+    fixed_odds: z.number().gt(1),
+    single_available: z.boolean(),
+    source_record_id: z.string().min(1),
+    observed_at: z.string().datetime({ offset: true }),
+    valid_from: z.string().datetime({ offset: true }).nullable(),
+    expires_at: z.string().datetime({ offset: true }).nullable(),
+    confidence: z.number().min(0).max(1),
+  })
+  .strict();
 export type MatchOffer = z.infer<typeof MatchOfferSchema>;
 
-export const MatchSourcedFactSchema = z.object({"field": z.string().min(1), "value": z.unknown(), "source_record_ids": z.array(z.string().min(1)).min(1).superRefine(requireUniqueItems), "observed_at": z.string().datetime({ offset: true }), "valid_from": z.string().datetime({ offset: true }).nullable(), "expires_at": z.string().datetime({ offset: true }).nullable(), "confidence": z.number().min(0).max(1), "missing_fields": z.array(z.string().min(1)).superRefine(requireUniqueItems)}).strict();
+export const MatchSourcedFactSchema = z
+  .object({
+    field: z.string().min(1),
+    value: z.unknown(),
+    source_record_ids: z
+      .array(z.string().min(1))
+      .min(1)
+      .superRefine(requireUniqueItems),
+    observed_at: z.string().datetime({ offset: true }),
+    valid_from: z.string().datetime({ offset: true }).nullable(),
+    expires_at: z.string().datetime({ offset: true }).nullable(),
+    confidence: z.number().min(0).max(1),
+    missing_fields: z.array(z.string().min(1)).superRefine(requireUniqueItems),
+  })
+  .strict();
 export type MatchSourcedFact = z.infer<typeof MatchSourcedFactSchema>;
 
-export const MethodologyReviewSchema = z.object({"proposal_understanding": z.string().min(1).max(500), "evidence_assessment": z.string().min(1).max(1500), "backtest_assessment": z.string().min(1).max(1500), "risks": z.array(z.string().min(1).max(500)).min(1).max(8), "decision": z.union([z.literal("support"), z.literal("oppose"), z.literal("revise_and_review")]), "reason": z.string().min(1).max(1000), "evidence_record_ids": z.array(z.string().min(1)).min(1).superRefine(requireUniqueItems), "proposed_revision": z.string().max(2000).nullable()}).strict().superRefine(requireMethodologyDecisionShape);
+export const MethodologyReviewSchema = z
+  .object({
+    proposal_understanding: z.string().min(1).max(500),
+    evidence_assessment: z.string().min(1).max(1500),
+    backtest_assessment: z.string().min(1).max(1500),
+    risks: z.array(z.string().min(1).max(500)).min(1).max(8),
+    decision: z.union([
+      z.literal("support"),
+      z.literal("oppose"),
+      z.literal("revise_and_review"),
+    ]),
+    reason: z.string().min(1).max(1000),
+    evidence_record_ids: z
+      .array(z.string().min(1))
+      .min(1)
+      .superRefine(requireUniqueItems),
+    proposed_revision: z.string().max(2000).nullable(),
+  })
+  .strict()
+  .superRefine(requireMethodologyDecisionShape);
 export type MethodologyReview = z.infer<typeof MethodologyReviewSchema>;
 
-export const ScorePredictionSchema = z.object({"match_id": z.string().min(1), "full_time_score": z.object({"home": z.number().int().min(0).max(20), "away": z.number().int().min(0).max(20)}).strict(), "half_time_score": z.object({"home": z.number().int().min(0).max(20), "away": z.number().int().min(0).max(20)}).strict(), "alternative_scores": z.array(z.object({"home": z.number().int().min(0).max(20), "away": z.number().int().min(0).max(20)}).strict()).min(1).max(2), "direction": z.union([z.literal("home"), z.literal("draw"), z.literal("away")]), "direction_confidence": z.number().int().min(0).max(100), "opponent_type": z.union([z.literal("A"), z.literal("B"), z.literal("C"), z.literal("U")]), "motivation_type": z.union([z.literal("1"), z.literal("2"), z.literal("3"), z.literal("4"), z.literal("5"), z.literal("6"), z.literal("7"), z.literal("U")]), "interaction_summary": z.string().min(1).max(1000), "risk_signals": z.array(z.string().min(1)).min(2).max(3), "arguments": z.array(z.object({"argument_id": z.string().min(1), "text": z.string().min(1).max(1000), "fact_claim_ids": z.array(z.string().min(1)).superRefine(requireUniqueItems)}).strict()), "fact_claims": z.array(z.object({"claim_id": z.string().min(1), "text": z.string().min(1).max(500), "fact_type": z.union([z.literal("odds"), z.literal("form"), z.literal("standing"), z.literal("injury"), z.literal("lineup"), z.literal("h2h"), z.literal("weather"), z.literal("competition_state"), z.literal("other")]), "source_record_ids": z.array(z.string().min(1)).superRefine(requireUniqueItems)}).strict()), "missing_fields": z.array(z.string().min(1)).superRefine(requireUniqueItems)}).strict();
+export const ScorePredictionSchema = z
+  .object({
+    match_id: z.string().min(1),
+    full_time_score: z
+      .object({
+        home: z.number().int().min(0).max(20),
+        away: z.number().int().min(0).max(20),
+      })
+      .strict(),
+    half_time_score: z
+      .object({
+        home: z.number().int().min(0).max(20),
+        away: z.number().int().min(0).max(20),
+      })
+      .strict(),
+    alternative_scores: z
+      .array(
+        z
+          .object({
+            home: z.number().int().min(0).max(20),
+            away: z.number().int().min(0).max(20),
+          })
+          .strict(),
+      )
+      .min(1)
+      .max(2),
+    direction: z.union([
+      z.literal("home"),
+      z.literal("draw"),
+      z.literal("away"),
+    ]),
+    direction_confidence: z.number().int().min(0).max(100),
+    opponent_type: z.union([
+      z.literal("A"),
+      z.literal("B"),
+      z.literal("C"),
+      z.literal("U"),
+    ]),
+    motivation_type: z.union([
+      z.literal("1"),
+      z.literal("2"),
+      z.literal("3"),
+      z.literal("4"),
+      z.literal("5"),
+      z.literal("6"),
+      z.literal("7"),
+      z.literal("U"),
+    ]),
+    interaction_summary: z.string().min(1).max(1000),
+    risk_signals: z.array(z.string().min(1)).min(2).max(3),
+    arguments: z.array(
+      z
+        .object({
+          argument_id: z.string().min(1),
+          text: z.string().min(1).max(1000),
+          fact_claim_ids: z
+            .array(z.string().min(1))
+            .superRefine(requireUniqueItems),
+        })
+        .strict(),
+    ),
+    fact_claims: z.array(
+      z
+        .object({
+          claim_id: z.string().min(1),
+          text: z.string().min(1).max(500),
+          fact_type: z.union([
+            z.literal("odds"),
+            z.literal("form"),
+            z.literal("standing"),
+            z.literal("injury"),
+            z.literal("lineup"),
+            z.literal("h2h"),
+            z.literal("weather"),
+            z.literal("competition_state"),
+            z.literal("other"),
+          ]),
+          source_record_ids: z
+            .array(z.string().min(1))
+            .superRefine(requireUniqueItems),
+        })
+        .strict(),
+    ),
+    missing_fields: z.array(z.string().min(1)).superRefine(requireUniqueItems),
+  })
+  .strict();
 export type ScorePrediction = z.infer<typeof ScorePredictionSchema>;
 
-export const PredictionCardScoreSchema = z.object({"home": z.number().int().min(0).max(20), "away": z.number().int().min(0).max(20)}).strict();
+export const PredictionCardScoreSchema = z
+  .object({
+    home: z.number().int().min(0).max(20),
+    away: z.number().int().min(0).max(20),
+  })
+  .strict();
 export type PredictionCardScore = z.infer<typeof PredictionCardScoreSchema>;
 
-export const PredictionCardFactClaimSchema = z.object({"claim_id": z.string().min(1), "text": z.string().min(1).max(500), "fact_type": z.union([z.literal("odds"), z.literal("form"), z.literal("standing"), z.literal("injury"), z.literal("lineup"), z.literal("h2h"), z.literal("weather"), z.literal("competition_state"), z.literal("other")]), "source_record_ids": z.array(z.string().min(1)).superRefine(requireUniqueItems)}).strict();
-export type PredictionCardFactClaim = z.infer<typeof PredictionCardFactClaimSchema>;
+export const PredictionCardFactClaimSchema = z
+  .object({
+    claim_id: z.string().min(1),
+    text: z.string().min(1).max(500),
+    fact_type: z.union([
+      z.literal("odds"),
+      z.literal("form"),
+      z.literal("standing"),
+      z.literal("injury"),
+      z.literal("lineup"),
+      z.literal("h2h"),
+      z.literal("weather"),
+      z.literal("competition_state"),
+      z.literal("other"),
+    ]),
+    source_record_ids: z
+      .array(z.string().min(1))
+      .superRefine(requireUniqueItems),
+  })
+  .strict();
+export type PredictionCardFactClaim = z.infer<
+  typeof PredictionCardFactClaimSchema
+>;
 
-export const PredictionCardArgumentSchema = z.object({"argument_id": z.string().min(1), "text": z.string().min(1).max(1000), "fact_claim_ids": z.array(z.string().min(1)).superRefine(requireUniqueItems)}).strict();
-export type PredictionCardArgument = z.infer<typeof PredictionCardArgumentSchema>;
+export const PredictionCardArgumentSchema = z
+  .object({
+    argument_id: z.string().min(1),
+    text: z.string().min(1).max(1000),
+    fact_claim_ids: z.array(z.string().min(1)).superRefine(requireUniqueItems),
+  })
+  .strict();
+export type PredictionCardArgument = z.infer<
+  typeof PredictionCardArgumentSchema
+>;
 
-export const ReviewAndLessonsSchema = z.object({"prediction_assessment": z.string().min(1).max(2000), "root_causes": z.array(z.string().min(1).max(500)).max(8), "lesson_candidates": z.array(z.object({"rule": z.string().min(1).max(500), "evidence": z.string().min(1).max(1000), "category": z.union([z.literal("opponent_type"), z.literal("motivation"), z.literal("style_interaction"), z.literal("data_completeness"), z.literal("odds_reasoning"), z.literal("position_management")]), "severity": z.union([z.literal("high"), z.literal("medium"), z.literal("low")]), "evidence_record_ids": z.array(z.string().min(1)).min(1).superRefine(requireUniqueItems)}).strict()).max(8)}).strict();
+export const ReviewAndLessonsSchema = z
+  .object({
+    prediction_assessment: z.string().min(1).max(2000),
+    root_causes: z.array(z.string().min(1).max(500)).max(8),
+    lesson_candidates: z
+      .array(
+        z
+          .object({
+            rule: z.string().min(1).max(500),
+            evidence: z.string().min(1).max(1000),
+            category: z.union([
+              z.literal("opponent_type"),
+              z.literal("motivation"),
+              z.literal("style_interaction"),
+              z.literal("data_completeness"),
+              z.literal("odds_reasoning"),
+              z.literal("position_management"),
+            ]),
+            severity: z.union([
+              z.literal("high"),
+              z.literal("medium"),
+              z.literal("low"),
+            ]),
+            evidence_record_ids: z
+              .array(z.string().min(1))
+              .min(1)
+              .superRefine(requireUniqueItems),
+          })
+          .strict(),
+      )
+      .max(8),
+  })
+  .strict();
 export type ReviewAndLessons = z.infer<typeof ReviewAndLessonsSchema>;
 
-export const RoundtableContractSchema = z.union([z.object({"nominations": z.array(z.object({"match_id": z.string().min(1), "direction": z.union([z.literal("home"), z.literal("draw"), z.literal("away")]), "direction_confidence": z.number().int().min(0).max(100), "argument_ids": z.array(z.string().min(1)).superRefine(requireUniqueItems), "missing_fields": z.array(z.string().min(1)).superRefine(requireUniqueItems)}).strict()), "arguments": z.array(z.object({"argument_id": z.string().min(1), "text": z.string().min(1).max(1000), "fact_claim_ids": z.array(z.string().min(1)).superRefine(requireUniqueItems)}).strict()), "fact_claims": z.array(z.object({"claim_id": z.string().min(1), "text": z.string().min(1).max(500), "fact_type": z.union([z.literal("odds"), z.literal("form"), z.literal("standing"), z.literal("injury"), z.literal("lineup"), z.literal("h2h"), z.literal("weather"), z.literal("competition_state"), z.literal("other")]), "source_record_ids": z.array(z.string().min(1)).superRefine(requireUniqueItems)}).strict())}).strict(), z.object({"responses": z.array(z.object({"target_codename": z.string().min(1), "match_id": z.string().min(1), "stance": z.union([z.literal("support"), z.literal("oppose"), z.literal("supplement")]), "argument_ids": z.array(z.string().min(1)).min(1)}).strict()), "arguments": z.array(z.object({"argument_id": z.string().min(1), "text": z.string().min(1).max(1000), "fact_claim_ids": z.array(z.string().min(1)).superRefine(requireUniqueItems)}).strict()), "fact_claims": z.array(z.object({"claim_id": z.string().min(1), "text": z.string().min(1).max(500), "fact_type": z.union([z.literal("odds"), z.literal("form"), z.literal("standing"), z.literal("injury"), z.literal("lineup"), z.literal("h2h"), z.literal("weather"), z.literal("competition_state"), z.literal("other")]), "source_record_ids": z.array(z.string().min(1)).superRefine(requireUniqueItems)}).strict())}).strict(), z.object({"votes": z.array(z.object({"match_id": z.string().min(1), "decision": z.union([z.literal("yes"), z.literal("no")]), "direction_confidence": z.number().int().min(0).max(100), "reason": z.string().min(1).max(500), "verified_fact_claim_ids": z.array(z.string().min(1)).superRefine(requireUniqueItems)}).strict())}).strict(), z.object({"match_id": z.string().min(1), "full_time_score": z.object({"home": z.number().int().min(0).max(20), "away": z.number().int().min(0).max(20)}).strict(), "half_time_score": z.object({"home": z.number().int().min(0).max(20), "away": z.number().int().min(0).max(20)}).strict(), "alternative_scores": z.array(z.object({"home": z.number().int().min(0).max(20), "away": z.number().int().min(0).max(20)}).strict()).min(1).max(2), "direction": z.union([z.literal("home"), z.literal("draw"), z.literal("away")]), "direction_confidence": z.number().int().min(0).max(100), "opponent_type": z.union([z.literal("A"), z.literal("B"), z.literal("C"), z.literal("U")]), "motivation_type": z.union([z.literal("1"), z.literal("2"), z.literal("3"), z.literal("4"), z.literal("5"), z.literal("6"), z.literal("7"), z.literal("U")]), "interaction_summary": z.string().min(1).max(1000), "risk_signals": z.array(z.string().min(1)).min(2).max(3), "arguments": z.array(z.object({"argument_id": z.string().min(1), "text": z.string().min(1).max(1000), "fact_claim_ids": z.array(z.string().min(1)).superRefine(requireUniqueItems)}).strict()), "fact_claims": z.array(z.object({"claim_id": z.string().min(1), "text": z.string().min(1).max(500), "fact_type": z.union([z.literal("odds"), z.literal("form"), z.literal("standing"), z.literal("injury"), z.literal("lineup"), z.literal("h2h"), z.literal("weather"), z.literal("competition_state"), z.literal("other")]), "source_record_ids": z.array(z.string().min(1)).superRefine(requireUniqueItems)}).strict()), "missing_fields": z.array(z.string().min(1)).superRefine(requireUniqueItems)}).strict(), z.object({"responses": z.array(z.object({"target_codename": z.string().min(1), "stance": z.union([z.literal("hold"), z.literal("change"), z.literal("question"), z.literal("supplement")]), "argument_ids": z.array(z.string().min(1)).min(1)}).strict()), "revised_full_time_score": z.union([z.object({"home": z.number().int().min(0).max(20), "away": z.number().int().min(0).max(20)}).strict(), z.null()]), "revised_half_time_score": z.union([z.object({"home": z.number().int().min(0).max(20), "away": z.number().int().min(0).max(20)}).strict(), z.null()]), "revised_direction_confidence": z.number().int().min(0).max(100).nullable(), "arguments": z.array(z.object({"argument_id": z.string().min(1), "text": z.string().min(1).max(1000), "fact_claim_ids": z.array(z.string().min(1)).superRefine(requireUniqueItems)}).strict()), "fact_claims": z.array(z.object({"claim_id": z.string().min(1), "text": z.string().min(1).max(500), "fact_type": z.union([z.literal("odds"), z.literal("form"), z.literal("standing"), z.literal("injury"), z.literal("lineup"), z.literal("h2h"), z.literal("weather"), z.literal("competition_state"), z.literal("other")]), "source_record_ids": z.array(z.string().min(1)).superRefine(requireUniqueItems)}).strict())}).strict(), z.object({"match_id": z.string().min(1), "full_time_score": z.object({"home": z.number().int().min(0).max(20), "away": z.number().int().min(0).max(20)}).strict(), "half_time_score": z.object({"home": z.number().int().min(0).max(20), "away": z.number().int().min(0).max(20)}).strict(), "direction": z.union([z.literal("home"), z.literal("draw"), z.literal("away")]), "direction_confidence": z.number().int().min(0).max(100), "reason": z.string().min(1).max(500), "verified_fact_claim_ids": z.array(z.string().min(1)).superRefine(requireUniqueItems)}).strict(), z.object({"decision": z.union([z.literal("bet"), z.literal("no_bet")]), "plan_confidence": z.number().int().min(0).max(100), "plan": z.union([z.object({"name": z.string().min(1).max(100), "type": z.union([z.literal("single"), z.literal("parlay")]), "legs": z.array(z.object({"match_id": z.string().min(1), "play": z.union([z.literal("had"), z.literal("hhad"), z.literal("crs"), z.literal("ttg"), z.literal("hafu")]), "offer_option_ids": z.array(z.string().min(1)).min(1).superRefine(requireUniqueItems)}).strict()).min(1), "pass_types": z.array(z.string().min(1)).min(1).superRefine(requireUniqueItems), "multiplier": z.number().int().min(1), "stake_percent": z.number().min(1).max(5), "reasoning": z.string().min(1).max(1500), "verified_fact_claim_ids": z.array(z.string().min(1)).superRefine(requireUniqueItems)}).strict(), z.null()]), "no_bet_reason": z.string().min(1).max(500).nullable()}).strict().superRefine(requireBetDecisionShape), z.object({"decision": z.union([z.literal("bet"), z.literal("no_bet")]), "plan_confidence": z.number().int().min(0).max(100), "plan": z.union([z.object({"name": z.string().min(1).max(100), "type": z.union([z.literal("single"), z.literal("parlay")]), "legs": z.array(z.object({"match_id": z.string().min(1), "play": z.union([z.literal("had"), z.literal("hhad"), z.literal("crs"), z.literal("ttg"), z.literal("hafu")]), "offer_option_ids": z.array(z.string().min(1)).min(1).superRefine(requireUniqueItems)}).strict()).min(1), "pass_types": z.array(z.string().min(1)).min(1).superRefine(requireUniqueItems), "multiplier": z.number().int().min(1), "stake_percent": z.number().min(1).max(5), "reasoning": z.string().min(1).max(1500), "verified_fact_claim_ids": z.array(z.string().min(1)).superRefine(requireUniqueItems)}).strict(), z.null()]), "no_bet_reason": z.string().min(1).max(500).nullable(), "target_candidate_ids": z.array(z.string().min(1)).min(1).superRefine(requireUniqueItems)}).strict().superRefine(requireBetDecisionShape), z.object({"candidate_id": z.string().min(1), "decision": z.union([z.literal("bet"), z.literal("no_bet")]), "plan_confidence": z.number().int().min(0).max(100), "reason": z.string().min(1).max(500), "verified_fact_claim_ids": z.array(z.string().min(1)).superRefine(requireUniqueItems)}).strict(), z.object({"prediction_assessment": z.string().min(1).max(2000), "root_causes": z.array(z.string().min(1).max(500)).max(8), "lesson_candidates": z.array(z.object({"rule": z.string().min(1).max(500), "evidence": z.string().min(1).max(1000), "category": z.union([z.literal("opponent_type"), z.literal("motivation"), z.literal("style_interaction"), z.literal("data_completeness"), z.literal("odds_reasoning"), z.literal("position_management")]), "severity": z.union([z.literal("high"), z.literal("medium"), z.literal("low")]), "evidence_record_ids": z.array(z.string().min(1)).min(1).superRefine(requireUniqueItems)}).strict()).max(8)}).strict(), z.object({"proposal_understanding": z.string().min(1).max(500), "evidence_assessment": z.string().min(1).max(1500), "backtest_assessment": z.string().min(1).max(1500), "risks": z.array(z.string().min(1).max(500)).min(1).max(8), "decision": z.union([z.literal("support"), z.literal("oppose"), z.literal("revise_and_review")]), "reason": z.string().min(1).max(1000), "evidence_record_ids": z.array(z.string().min(1)).min(1).superRefine(requireUniqueItems), "proposed_revision": z.string().max(2000).nullable()}).strict().superRefine(requireMethodologyDecisionShape)]);
+export const RoundtableContractSchema = z.union([
+  z
+    .object({
+      nominations: z.array(
+        z
+          .object({
+            match_id: z.string().min(1),
+            direction: z.union([
+              z.literal("home"),
+              z.literal("draw"),
+              z.literal("away"),
+            ]),
+            direction_confidence: z.number().int().min(0).max(100),
+            argument_ids: z
+              .array(z.string().min(1))
+              .superRefine(requireUniqueItems),
+            missing_fields: z
+              .array(z.string().min(1))
+              .superRefine(requireUniqueItems),
+          })
+          .strict(),
+      ),
+      arguments: z.array(
+        z
+          .object({
+            argument_id: z.string().min(1),
+            text: z.string().min(1).max(1000),
+            fact_claim_ids: z
+              .array(z.string().min(1))
+              .superRefine(requireUniqueItems),
+          })
+          .strict(),
+      ),
+      fact_claims: z.array(
+        z
+          .object({
+            claim_id: z.string().min(1),
+            text: z.string().min(1).max(500),
+            fact_type: z.union([
+              z.literal("odds"),
+              z.literal("form"),
+              z.literal("standing"),
+              z.literal("injury"),
+              z.literal("lineup"),
+              z.literal("h2h"),
+              z.literal("weather"),
+              z.literal("competition_state"),
+              z.literal("other"),
+            ]),
+            source_record_ids: z
+              .array(z.string().min(1))
+              .superRefine(requireUniqueItems),
+          })
+          .strict(),
+      ),
+    })
+    .strict(),
+  z
+    .object({
+      responses: z.array(
+        z
+          .object({
+            target_codename: z.string().min(1),
+            match_id: z.string().min(1),
+            stance: z.union([
+              z.literal("support"),
+              z.literal("oppose"),
+              z.literal("supplement"),
+            ]),
+            argument_ids: z.array(z.string().min(1)).min(1),
+          })
+          .strict(),
+      ),
+      arguments: z.array(
+        z
+          .object({
+            argument_id: z.string().min(1),
+            text: z.string().min(1).max(1000),
+            fact_claim_ids: z
+              .array(z.string().min(1))
+              .superRefine(requireUniqueItems),
+          })
+          .strict(),
+      ),
+      fact_claims: z.array(
+        z
+          .object({
+            claim_id: z.string().min(1),
+            text: z.string().min(1).max(500),
+            fact_type: z.union([
+              z.literal("odds"),
+              z.literal("form"),
+              z.literal("standing"),
+              z.literal("injury"),
+              z.literal("lineup"),
+              z.literal("h2h"),
+              z.literal("weather"),
+              z.literal("competition_state"),
+              z.literal("other"),
+            ]),
+            source_record_ids: z
+              .array(z.string().min(1))
+              .superRefine(requireUniqueItems),
+          })
+          .strict(),
+      ),
+    })
+    .strict(),
+  z
+    .object({
+      votes: z.array(
+        z
+          .object({
+            match_id: z.string().min(1),
+            decision: z.union([z.literal("yes"), z.literal("no")]),
+            direction_confidence: z.number().int().min(0).max(100),
+            reason: z.string().min(1).max(500),
+            verified_fact_claim_ids: z
+              .array(z.string().min(1))
+              .superRefine(requireUniqueItems),
+          })
+          .strict(),
+      ),
+    })
+    .strict(),
+  z
+    .object({
+      match_id: z.string().min(1),
+      full_time_score: z
+        .object({
+          home: z.number().int().min(0).max(20),
+          away: z.number().int().min(0).max(20),
+        })
+        .strict(),
+      half_time_score: z
+        .object({
+          home: z.number().int().min(0).max(20),
+          away: z.number().int().min(0).max(20),
+        })
+        .strict(),
+      alternative_scores: z
+        .array(
+          z
+            .object({
+              home: z.number().int().min(0).max(20),
+              away: z.number().int().min(0).max(20),
+            })
+            .strict(),
+        )
+        .min(1)
+        .max(2),
+      direction: z.union([
+        z.literal("home"),
+        z.literal("draw"),
+        z.literal("away"),
+      ]),
+      direction_confidence: z.number().int().min(0).max(100),
+      opponent_type: z.union([
+        z.literal("A"),
+        z.literal("B"),
+        z.literal("C"),
+        z.literal("U"),
+      ]),
+      motivation_type: z.union([
+        z.literal("1"),
+        z.literal("2"),
+        z.literal("3"),
+        z.literal("4"),
+        z.literal("5"),
+        z.literal("6"),
+        z.literal("7"),
+        z.literal("U"),
+      ]),
+      interaction_summary: z.string().min(1).max(1000),
+      risk_signals: z.array(z.string().min(1)).min(2).max(3),
+      arguments: z.array(
+        z
+          .object({
+            argument_id: z.string().min(1),
+            text: z.string().min(1).max(1000),
+            fact_claim_ids: z
+              .array(z.string().min(1))
+              .superRefine(requireUniqueItems),
+          })
+          .strict(),
+      ),
+      fact_claims: z.array(
+        z
+          .object({
+            claim_id: z.string().min(1),
+            text: z.string().min(1).max(500),
+            fact_type: z.union([
+              z.literal("odds"),
+              z.literal("form"),
+              z.literal("standing"),
+              z.literal("injury"),
+              z.literal("lineup"),
+              z.literal("h2h"),
+              z.literal("weather"),
+              z.literal("competition_state"),
+              z.literal("other"),
+            ]),
+            source_record_ids: z
+              .array(z.string().min(1))
+              .superRefine(requireUniqueItems),
+          })
+          .strict(),
+      ),
+      missing_fields: z
+        .array(z.string().min(1))
+        .superRefine(requireUniqueItems),
+    })
+    .strict(),
+  z
+    .object({
+      responses: z.array(
+        z
+          .object({
+            target_codename: z.string().min(1),
+            stance: z.union([
+              z.literal("hold"),
+              z.literal("change"),
+              z.literal("question"),
+              z.literal("supplement"),
+            ]),
+            argument_ids: z.array(z.string().min(1)).min(1),
+          })
+          .strict(),
+      ),
+      revised_full_time_score: z.union([
+        z
+          .object({
+            home: z.number().int().min(0).max(20),
+            away: z.number().int().min(0).max(20),
+          })
+          .strict(),
+        z.null(),
+      ]),
+      revised_half_time_score: z.union([
+        z
+          .object({
+            home: z.number().int().min(0).max(20),
+            away: z.number().int().min(0).max(20),
+          })
+          .strict(),
+        z.null(),
+      ]),
+      revised_direction_confidence: z.number().int().min(0).max(100).nullable(),
+      arguments: z.array(
+        z
+          .object({
+            argument_id: z.string().min(1),
+            text: z.string().min(1).max(1000),
+            fact_claim_ids: z
+              .array(z.string().min(1))
+              .superRefine(requireUniqueItems),
+          })
+          .strict(),
+      ),
+      fact_claims: z.array(
+        z
+          .object({
+            claim_id: z.string().min(1),
+            text: z.string().min(1).max(500),
+            fact_type: z.union([
+              z.literal("odds"),
+              z.literal("form"),
+              z.literal("standing"),
+              z.literal("injury"),
+              z.literal("lineup"),
+              z.literal("h2h"),
+              z.literal("weather"),
+              z.literal("competition_state"),
+              z.literal("other"),
+            ]),
+            source_record_ids: z
+              .array(z.string().min(1))
+              .superRefine(requireUniqueItems),
+          })
+          .strict(),
+      ),
+    })
+    .strict(),
+  z
+    .object({
+      match_id: z.string().min(1),
+      full_time_score: z
+        .object({
+          home: z.number().int().min(0).max(20),
+          away: z.number().int().min(0).max(20),
+        })
+        .strict(),
+      half_time_score: z
+        .object({
+          home: z.number().int().min(0).max(20),
+          away: z.number().int().min(0).max(20),
+        })
+        .strict(),
+      direction: z.union([
+        z.literal("home"),
+        z.literal("draw"),
+        z.literal("away"),
+      ]),
+      direction_confidence: z.number().int().min(0).max(100),
+      reason: z.string().min(1).max(500),
+      verified_fact_claim_ids: z
+        .array(z.string().min(1))
+        .superRefine(requireUniqueItems),
+    })
+    .strict(),
+  z
+    .object({
+      decision: z.union([z.literal("bet"), z.literal("no_bet")]),
+      plan_confidence: z.number().int().min(0).max(100),
+      plan: z.union([
+        z
+          .object({
+            name: z.string().min(1).max(100),
+            type: z.union([z.literal("single"), z.literal("parlay")]),
+            legs: z
+              .array(
+                z
+                  .object({
+                    match_id: z.string().min(1),
+                    play: z.union([
+                      z.literal("had"),
+                      z.literal("hhad"),
+                      z.literal("crs"),
+                      z.literal("ttg"),
+                      z.literal("hafu"),
+                    ]),
+                    offer_option_ids: z
+                      .array(z.string().min(1))
+                      .min(1)
+                      .superRefine(requireUniqueItems),
+                  })
+                  .strict(),
+              )
+              .min(1),
+            pass_types: z
+              .array(z.string().min(1))
+              .min(1)
+              .superRefine(requireUniqueItems),
+            multiplier: z.number().int().min(1),
+            stake_percent: z.number().min(1).max(5),
+            reasoning: z.string().min(1).max(1500),
+            verified_fact_claim_ids: z
+              .array(z.string().min(1))
+              .superRefine(requireUniqueItems),
+          })
+          .strict(),
+        z.null(),
+      ]),
+      no_bet_reason: z.string().min(1).max(500).nullable(),
+    })
+    .strict()
+    .superRefine(requireBetDecisionShape),
+  z
+    .object({
+      decision: z.union([z.literal("bet"), z.literal("no_bet")]),
+      plan_confidence: z.number().int().min(0).max(100),
+      plan: z.union([
+        z
+          .object({
+            name: z.string().min(1).max(100),
+            type: z.union([z.literal("single"), z.literal("parlay")]),
+            legs: z
+              .array(
+                z
+                  .object({
+                    match_id: z.string().min(1),
+                    play: z.union([
+                      z.literal("had"),
+                      z.literal("hhad"),
+                      z.literal("crs"),
+                      z.literal("ttg"),
+                      z.literal("hafu"),
+                    ]),
+                    offer_option_ids: z
+                      .array(z.string().min(1))
+                      .min(1)
+                      .superRefine(requireUniqueItems),
+                  })
+                  .strict(),
+              )
+              .min(1),
+            pass_types: z
+              .array(z.string().min(1))
+              .min(1)
+              .superRefine(requireUniqueItems),
+            multiplier: z.number().int().min(1),
+            stake_percent: z.number().min(1).max(5),
+            reasoning: z.string().min(1).max(1500),
+            verified_fact_claim_ids: z
+              .array(z.string().min(1))
+              .superRefine(requireUniqueItems),
+          })
+          .strict(),
+        z.null(),
+      ]),
+      no_bet_reason: z.string().min(1).max(500).nullable(),
+      target_candidate_ids: z
+        .array(z.string().min(1))
+        .min(1)
+        .superRefine(requireUniqueItems),
+    })
+    .strict()
+    .superRefine(requireBetDecisionShape),
+  z
+    .object({
+      candidate_id: z.string().min(1),
+      decision: z.union([z.literal("bet"), z.literal("no_bet")]),
+      plan_confidence: z.number().int().min(0).max(100),
+      reason: z.string().min(1).max(500),
+      verified_fact_claim_ids: z
+        .array(z.string().min(1))
+        .superRefine(requireUniqueItems),
+    })
+    .strict(),
+  z
+    .object({
+      prediction_assessment: z.string().min(1).max(2000),
+      root_causes: z.array(z.string().min(1).max(500)).max(8),
+      lesson_candidates: z
+        .array(
+          z
+            .object({
+              rule: z.string().min(1).max(500),
+              evidence: z.string().min(1).max(1000),
+              category: z.union([
+                z.literal("opponent_type"),
+                z.literal("motivation"),
+                z.literal("style_interaction"),
+                z.literal("data_completeness"),
+                z.literal("odds_reasoning"),
+                z.literal("position_management"),
+              ]),
+              severity: z.union([
+                z.literal("high"),
+                z.literal("medium"),
+                z.literal("low"),
+              ]),
+              evidence_record_ids: z
+                .array(z.string().min(1))
+                .min(1)
+                .superRefine(requireUniqueItems),
+            })
+            .strict(),
+        )
+        .max(8),
+    })
+    .strict(),
+  z
+    .object({
+      proposal_understanding: z.string().min(1).max(500),
+      evidence_assessment: z.string().min(1).max(1500),
+      backtest_assessment: z.string().min(1).max(1500),
+      risks: z.array(z.string().min(1).max(500)).min(1).max(8),
+      decision: z.union([
+        z.literal("support"),
+        z.literal("oppose"),
+        z.literal("revise_and_review"),
+      ]),
+      reason: z.string().min(1).max(1000),
+      evidence_record_ids: z
+        .array(z.string().min(1))
+        .min(1)
+        .superRefine(requireUniqueItems),
+      proposed_revision: z.string().max(2000).nullable(),
+    })
+    .strict()
+    .superRefine(requireMethodologyDecisionShape),
+]);
 export type RoundtableContract = z.infer<typeof RoundtableContractSchema>;
 
-export const ProviderRequestSchema = z.object({"request_id": z.string().uuid(), "business_idempotency_key": z.string().min(1), "model_id": z.string().min(1), "model_version": z.string().min(1), "connection_version": z.number().int().min(1), "identity_prompt_version": z.number().int().min(1), "core_methodology_version": z.number().int().min(1), "phase_prompt_version": z.number().int().min(1), "input_snapshot_id": z.string().uuid().nullable(), "history_context_version_id": z.string().uuid().nullable(), "lesson_set_version_id": z.string().uuid().nullable(), "postmatch_review_context_snapshot_id": z.string().uuid().nullable(), "methodology_review_context_snapshot_id": z.string().uuid().nullable(), "output_schema_version": z.number().int().min(1), "tool_contract_version": z.number().int().min(1), "generation_parameter_version": z.number().int().min(1), "timeout_seconds": z.number().int().min(1).max(900), "max_output_tokens": z.number().int().min(1)}).strict();
+export const ProviderRequestSchema = z
+  .object({
+    request_id: z.string().uuid(),
+    business_idempotency_key: z.string().min(1),
+    model_id: z.string().min(1),
+    model_version: z.string().min(1),
+    connection_version: z.number().int().min(1),
+    identity_prompt_version: z.number().int().min(1),
+    core_methodology_version: z.number().int().min(1),
+    phase_prompt_version: z.number().int().min(1),
+    input_snapshot_id: z.string().uuid().nullable(),
+    history_context_version_id: z.string().uuid().nullable(),
+    lesson_set_version_id: z.string().uuid().nullable(),
+    postmatch_review_context_snapshot_id: z.string().uuid().nullable(),
+    methodology_review_context_snapshot_id: z.string().uuid().nullable(),
+    output_schema_version: z.number().int().min(1),
+    tool_contract_version: z.number().int().min(1),
+    generation_parameter_version: z.number().int().min(1),
+    timeout_seconds: z.number().int().min(1).max(900),
+    max_output_tokens: z.number().int().min(1),
+  })
+  .strict();
 export type ProviderRequest = z.infer<typeof ProviderRequestSchema>;
 
-export const ProviderUsageSchema = z.object({"input_tokens": z.number().int().min(0).nullable(), "output_tokens": z.number().int().min(0).nullable(), "total_tokens": z.number().int().min(0).nullable()}).strict();
+export const ProviderUsageSchema = z
+  .object({
+    input_tokens: z.number().int().min(0).nullable(),
+    output_tokens: z.number().int().min(0).nullable(),
+    total_tokens: z.number().int().min(0).nullable(),
+  })
+  .strict();
 export type ProviderUsage = z.infer<typeof ProviderUsageSchema>;
 
-export const ProviderErrorSchema = z.object({"category": z.union([z.literal("authentication"), z.literal("permission"), z.literal("rate_limit"), z.literal("timeout"), z.literal("refusal"), z.literal("invalid_response"), z.literal("schema_violation"), z.literal("upstream_unavailable"), z.literal("unknown")]), "code": z.string().nullable(), "message_redacted": z.string().min(1), "retryable": z.boolean()}).strict();
+export const ProviderErrorSchema = z
+  .object({
+    category: z.union([
+      z.literal("authentication"),
+      z.literal("permission"),
+      z.literal("rate_limit"),
+      z.literal("timeout"),
+      z.literal("refusal"),
+      z.literal("invalid_response"),
+      z.literal("schema_violation"),
+      z.literal("upstream_unavailable"),
+      z.literal("unknown"),
+    ]),
+    code: z.string().nullable(),
+    message_redacted: z.string().min(1),
+    retryable: z.boolean(),
+  })
+  .strict();
 export type ProviderError = z.infer<typeof ProviderErrorSchema>;
 
-export const ProviderResultSchema = z.object({"request_id": z.string().uuid(), "provider_request_id": z.string().nullable(), "model_id": z.string().min(1), "data": z.unknown(), "usage": z.object({"input_tokens": z.number().int().min(0).nullable(), "output_tokens": z.number().int().min(0).nullable(), "total_tokens": z.number().int().min(0).nullable()}).strict(), "finish_reason": z.string().nullable(), "latency_ms": z.number().int().min(0), "retry_count": z.number().int().min(0), "error": z.union([z.object({"category": z.union([z.literal("authentication"), z.literal("permission"), z.literal("rate_limit"), z.literal("timeout"), z.literal("refusal"), z.literal("invalid_response"), z.literal("schema_violation"), z.literal("upstream_unavailable"), z.literal("unknown")]), "code": z.string().nullable(), "message_redacted": z.string().min(1), "retryable": z.boolean()}).strict(), z.null()])}).strict();
+export const ProviderResultSchema = z
+  .object({
+    request_id: z.string().uuid(),
+    provider_request_id: z.string().nullable(),
+    model_id: z.string().min(1),
+    data: z.unknown(),
+    usage: z
+      .object({
+        input_tokens: z.number().int().min(0).nullable(),
+        output_tokens: z.number().int().min(0).nullable(),
+        total_tokens: z.number().int().min(0).nullable(),
+      })
+      .strict(),
+    finish_reason: z.string().nullable(),
+    latency_ms: z.number().int().min(0),
+    retry_count: z.number().int().min(0),
+    error: z.union([
+      z
+        .object({
+          category: z.union([
+            z.literal("authentication"),
+            z.literal("permission"),
+            z.literal("rate_limit"),
+            z.literal("timeout"),
+            z.literal("refusal"),
+            z.literal("invalid_response"),
+            z.literal("schema_violation"),
+            z.literal("upstream_unavailable"),
+            z.literal("unknown"),
+          ]),
+          code: z.string().nullable(),
+          message_redacted: z.string().min(1),
+          retryable: z.boolean(),
+        })
+        .strict(),
+      z.null(),
+    ]),
+  })
+  .strict();
 export type ProviderResult = z.infer<typeof ProviderResultSchema>;
 
-export const SelectionPhaseOutputSchema = z.union([z.object({"nominations": z.array(z.object({"match_id": z.string().min(1), "direction": z.union([z.literal("home"), z.literal("draw"), z.literal("away")]), "direction_confidence": z.number().int().min(0).max(100), "argument_ids": z.array(z.string().min(1)).superRefine(requireUniqueItems), "missing_fields": z.array(z.string().min(1)).superRefine(requireUniqueItems)}).strict()), "arguments": z.array(z.object({"argument_id": z.string().min(1), "text": z.string().min(1).max(1000), "fact_claim_ids": z.array(z.string().min(1)).superRefine(requireUniqueItems)}).strict()), "fact_claims": z.array(z.object({"claim_id": z.string().min(1), "text": z.string().min(1).max(500), "fact_type": z.union([z.literal("odds"), z.literal("form"), z.literal("standing"), z.literal("injury"), z.literal("lineup"), z.literal("h2h"), z.literal("weather"), z.literal("competition_state"), z.literal("other")]), "source_record_ids": z.array(z.string().min(1)).superRefine(requireUniqueItems)}).strict())}).strict(), z.object({"responses": z.array(z.object({"target_codename": z.string().min(1), "match_id": z.string().min(1), "stance": z.union([z.literal("support"), z.literal("oppose"), z.literal("supplement")]), "argument_ids": z.array(z.string().min(1)).min(1)}).strict()), "arguments": z.array(z.object({"argument_id": z.string().min(1), "text": z.string().min(1).max(1000), "fact_claim_ids": z.array(z.string().min(1)).superRefine(requireUniqueItems)}).strict()), "fact_claims": z.array(z.object({"claim_id": z.string().min(1), "text": z.string().min(1).max(500), "fact_type": z.union([z.literal("odds"), z.literal("form"), z.literal("standing"), z.literal("injury"), z.literal("lineup"), z.literal("h2h"), z.literal("weather"), z.literal("competition_state"), z.literal("other")]), "source_record_ids": z.array(z.string().min(1)).superRefine(requireUniqueItems)}).strict())}).strict(), z.object({"votes": z.array(z.object({"match_id": z.string().min(1), "decision": z.union([z.literal("yes"), z.literal("no")]), "direction_confidence": z.number().int().min(0).max(100), "reason": z.string().min(1).max(500), "verified_fact_claim_ids": z.array(z.string().min(1)).superRefine(requireUniqueItems)}).strict())}).strict()]);
+export const SelectionPhaseOutputSchema = z.union([
+  z
+    .object({
+      nominations: z.array(
+        z
+          .object({
+            match_id: z.string().min(1),
+            direction: z.union([
+              z.literal("home"),
+              z.literal("draw"),
+              z.literal("away"),
+            ]),
+            direction_confidence: z.number().int().min(0).max(100),
+            argument_ids: z
+              .array(z.string().min(1))
+              .superRefine(requireUniqueItems),
+            missing_fields: z
+              .array(z.string().min(1))
+              .superRefine(requireUniqueItems),
+          })
+          .strict(),
+      ),
+      arguments: z.array(
+        z
+          .object({
+            argument_id: z.string().min(1),
+            text: z.string().min(1).max(1000),
+            fact_claim_ids: z
+              .array(z.string().min(1))
+              .superRefine(requireUniqueItems),
+          })
+          .strict(),
+      ),
+      fact_claims: z.array(
+        z
+          .object({
+            claim_id: z.string().min(1),
+            text: z.string().min(1).max(500),
+            fact_type: z.union([
+              z.literal("odds"),
+              z.literal("form"),
+              z.literal("standing"),
+              z.literal("injury"),
+              z.literal("lineup"),
+              z.literal("h2h"),
+              z.literal("weather"),
+              z.literal("competition_state"),
+              z.literal("other"),
+            ]),
+            source_record_ids: z
+              .array(z.string().min(1))
+              .superRefine(requireUniqueItems),
+          })
+          .strict(),
+      ),
+    })
+    .strict(),
+  z
+    .object({
+      responses: z.array(
+        z
+          .object({
+            target_codename: z.string().min(1),
+            match_id: z.string().min(1),
+            stance: z.union([
+              z.literal("support"),
+              z.literal("oppose"),
+              z.literal("supplement"),
+            ]),
+            argument_ids: z.array(z.string().min(1)).min(1),
+          })
+          .strict(),
+      ),
+      arguments: z.array(
+        z
+          .object({
+            argument_id: z.string().min(1),
+            text: z.string().min(1).max(1000),
+            fact_claim_ids: z
+              .array(z.string().min(1))
+              .superRefine(requireUniqueItems),
+          })
+          .strict(),
+      ),
+      fact_claims: z.array(
+        z
+          .object({
+            claim_id: z.string().min(1),
+            text: z.string().min(1).max(500),
+            fact_type: z.union([
+              z.literal("odds"),
+              z.literal("form"),
+              z.literal("standing"),
+              z.literal("injury"),
+              z.literal("lineup"),
+              z.literal("h2h"),
+              z.literal("weather"),
+              z.literal("competition_state"),
+              z.literal("other"),
+            ]),
+            source_record_ids: z
+              .array(z.string().min(1))
+              .superRefine(requireUniqueItems),
+          })
+          .strict(),
+      ),
+    })
+    .strict(),
+  z
+    .object({
+      votes: z.array(
+        z
+          .object({
+            match_id: z.string().min(1),
+            decision: z.union([z.literal("yes"), z.literal("no")]),
+            direction_confidence: z.number().int().min(0).max(100),
+            reason: z.string().min(1).max(500),
+            verified_fact_claim_ids: z
+              .array(z.string().min(1))
+              .superRefine(requireUniqueItems),
+          })
+          .strict(),
+      ),
+    })
+    .strict(),
+]);
 export type SelectionPhaseOutput = z.infer<typeof SelectionPhaseOutputSchema>;
 
-export const SelectionFactClaimSchema = z.object({"claim_id": z.string().min(1), "text": z.string().min(1).max(500), "fact_type": z.union([z.literal("odds"), z.literal("form"), z.literal("standing"), z.literal("injury"), z.literal("lineup"), z.literal("h2h"), z.literal("weather"), z.literal("competition_state"), z.literal("other")]), "source_record_ids": z.array(z.string().min(1)).superRefine(requireUniqueItems)}).strict();
+export const SelectionFactClaimSchema = z
+  .object({
+    claim_id: z.string().min(1),
+    text: z.string().min(1).max(500),
+    fact_type: z.union([
+      z.literal("odds"),
+      z.literal("form"),
+      z.literal("standing"),
+      z.literal("injury"),
+      z.literal("lineup"),
+      z.literal("h2h"),
+      z.literal("weather"),
+      z.literal("competition_state"),
+      z.literal("other"),
+    ]),
+    source_record_ids: z
+      .array(z.string().min(1))
+      .superRefine(requireUniqueItems),
+  })
+  .strict();
 export type SelectionFactClaim = z.infer<typeof SelectionFactClaimSchema>;
 
-export const SelectionArgumentSchema = z.object({"argument_id": z.string().min(1), "text": z.string().min(1).max(1000), "fact_claim_ids": z.array(z.string().min(1)).superRefine(requireUniqueItems)}).strict();
+export const SelectionArgumentSchema = z
+  .object({
+    argument_id: z.string().min(1),
+    text: z.string().min(1).max(1000),
+    fact_claim_ids: z.array(z.string().min(1)).superRefine(requireUniqueItems),
+  })
+  .strict();
 export type SelectionArgument = z.infer<typeof SelectionArgumentSchema>;
 
-export const SelectionNominationSchema = z.object({"nominations": z.array(z.object({"match_id": z.string().min(1), "direction": z.union([z.literal("home"), z.literal("draw"), z.literal("away")]), "direction_confidence": z.number().int().min(0).max(100), "argument_ids": z.array(z.string().min(1)).superRefine(requireUniqueItems), "missing_fields": z.array(z.string().min(1)).superRefine(requireUniqueItems)}).strict()), "arguments": z.array(z.object({"argument_id": z.string().min(1), "text": z.string().min(1).max(1000), "fact_claim_ids": z.array(z.string().min(1)).superRefine(requireUniqueItems)}).strict()), "fact_claims": z.array(z.object({"claim_id": z.string().min(1), "text": z.string().min(1).max(500), "fact_type": z.union([z.literal("odds"), z.literal("form"), z.literal("standing"), z.literal("injury"), z.literal("lineup"), z.literal("h2h"), z.literal("weather"), z.literal("competition_state"), z.literal("other")]), "source_record_ids": z.array(z.string().min(1)).superRefine(requireUniqueItems)}).strict())}).strict();
+export const SelectionNominationSchema = z
+  .object({
+    nominations: z.array(
+      z
+        .object({
+          match_id: z.string().min(1),
+          direction: z.union([
+            z.literal("home"),
+            z.literal("draw"),
+            z.literal("away"),
+          ]),
+          direction_confidence: z.number().int().min(0).max(100),
+          argument_ids: z
+            .array(z.string().min(1))
+            .superRefine(requireUniqueItems),
+          missing_fields: z
+            .array(z.string().min(1))
+            .superRefine(requireUniqueItems),
+        })
+        .strict(),
+    ),
+    arguments: z.array(
+      z
+        .object({
+          argument_id: z.string().min(1),
+          text: z.string().min(1).max(1000),
+          fact_claim_ids: z
+            .array(z.string().min(1))
+            .superRefine(requireUniqueItems),
+        })
+        .strict(),
+    ),
+    fact_claims: z.array(
+      z
+        .object({
+          claim_id: z.string().min(1),
+          text: z.string().min(1).max(500),
+          fact_type: z.union([
+            z.literal("odds"),
+            z.literal("form"),
+            z.literal("standing"),
+            z.literal("injury"),
+            z.literal("lineup"),
+            z.literal("h2h"),
+            z.literal("weather"),
+            z.literal("competition_state"),
+            z.literal("other"),
+          ]),
+          source_record_ids: z
+            .array(z.string().min(1))
+            .superRefine(requireUniqueItems),
+        })
+        .strict(),
+    ),
+  })
+  .strict();
 export type SelectionNomination = z.infer<typeof SelectionNominationSchema>;
 
-export const SelectionDebateSchema = z.object({"responses": z.array(z.object({"target_codename": z.string().min(1), "match_id": z.string().min(1), "stance": z.union([z.literal("support"), z.literal("oppose"), z.literal("supplement")]), "argument_ids": z.array(z.string().min(1)).min(1)}).strict()), "arguments": z.array(z.object({"argument_id": z.string().min(1), "text": z.string().min(1).max(1000), "fact_claim_ids": z.array(z.string().min(1)).superRefine(requireUniqueItems)}).strict()), "fact_claims": z.array(z.object({"claim_id": z.string().min(1), "text": z.string().min(1).max(500), "fact_type": z.union([z.literal("odds"), z.literal("form"), z.literal("standing"), z.literal("injury"), z.literal("lineup"), z.literal("h2h"), z.literal("weather"), z.literal("competition_state"), z.literal("other")]), "source_record_ids": z.array(z.string().min(1)).superRefine(requireUniqueItems)}).strict())}).strict();
+export const SelectionDebateSchema = z
+  .object({
+    responses: z.array(
+      z
+        .object({
+          target_codename: z.string().min(1),
+          match_id: z.string().min(1),
+          stance: z.union([
+            z.literal("support"),
+            z.literal("oppose"),
+            z.literal("supplement"),
+          ]),
+          argument_ids: z.array(z.string().min(1)).min(1),
+        })
+        .strict(),
+    ),
+    arguments: z.array(
+      z
+        .object({
+          argument_id: z.string().min(1),
+          text: z.string().min(1).max(1000),
+          fact_claim_ids: z
+            .array(z.string().min(1))
+            .superRefine(requireUniqueItems),
+        })
+        .strict(),
+    ),
+    fact_claims: z.array(
+      z
+        .object({
+          claim_id: z.string().min(1),
+          text: z.string().min(1).max(500),
+          fact_type: z.union([
+            z.literal("odds"),
+            z.literal("form"),
+            z.literal("standing"),
+            z.literal("injury"),
+            z.literal("lineup"),
+            z.literal("h2h"),
+            z.literal("weather"),
+            z.literal("competition_state"),
+            z.literal("other"),
+          ]),
+          source_record_ids: z
+            .array(z.string().min(1))
+            .superRefine(requireUniqueItems),
+        })
+        .strict(),
+    ),
+  })
+  .strict();
 export type SelectionDebate = z.infer<typeof SelectionDebateSchema>;
 
-export const SelectionVoteSchema = z.object({"votes": z.array(z.object({"match_id": z.string().min(1), "decision": z.union([z.literal("yes"), z.literal("no")]), "direction_confidence": z.number().int().min(0).max(100), "reason": z.string().min(1).max(500), "verified_fact_claim_ids": z.array(z.string().min(1)).superRefine(requireUniqueItems)}).strict())}).strict();
+export const SelectionVoteSchema = z
+  .object({
+    votes: z.array(
+      z
+        .object({
+          match_id: z.string().min(1),
+          decision: z.union([z.literal("yes"), z.literal("no")]),
+          direction_confidence: z.number().int().min(0).max(100),
+          reason: z.string().min(1).max(500),
+          verified_fact_claim_ids: z
+            .array(z.string().min(1))
+            .superRefine(requireUniqueItems),
+        })
+        .strict(),
+    ),
+  })
+  .strict();
 export type SelectionVote = z.infer<typeof SelectionVoteSchema>;
 
-export const AleaToolCallSchema = z.union([z.object({"name": z.literal("list_selection_candidates"), "arguments": z.object({"selection_scope_snapshot_id": z.string().uuid(), "page_cursor": z.string().nullable()}).strict()}).strict(), z.object({"name": z.literal("get_match_data"), "arguments": z.object({"input_snapshot_id": z.string().uuid(), "match_id": z.string().uuid()}).strict()}).strict(), z.object({"name": z.literal("get_team_current_season_stats"), "arguments": z.object({"input_snapshot_id": z.string().uuid(), "team_id": z.string().uuid()}).strict()}).strict(), z.object({"name": z.literal("check_weather"), "arguments": z.object({"input_snapshot_id": z.string().uuid(), "match_id": z.string().uuid()}).strict()}).strict(), z.object({"name": z.literal("calculate_ticket"), "arguments": z.object({"bet_context_snapshot_id": z.string().uuid(), "selections": z.array(z.object({"match_id": z.string().uuid(), "play": z.union([z.literal("had"), z.literal("hhad"), z.literal("crs"), z.literal("ttg"), z.literal("hafu")]), "offer_option_ids": z.array(z.string().min(1)).min(1).superRefine(requireUniqueItems)}).strict()).min(1).superRefine(requireUniqueItems), "pass_types": z.array(z.string().min(1)).min(1).superRefine(requireUniqueItems), "multiplier": z.number().int().min(1).max(50)}).strict()}).strict()]);
+export const AleaToolCallSchema = z.union([
+  z
+    .object({
+      name: z.literal("list_selection_candidates"),
+      arguments: z
+        .object({
+          selection_scope_snapshot_id: z.string().uuid(),
+          page_cursor: z.string().nullable(),
+        })
+        .strict(),
+    })
+    .strict(),
+  z
+    .object({
+      name: z.literal("get_match_data"),
+      arguments: z
+        .object({
+          input_snapshot_id: z.string().uuid(),
+          match_id: z.string().uuid(),
+        })
+        .strict(),
+    })
+    .strict(),
+  z
+    .object({
+      name: z.literal("get_team_current_season_stats"),
+      arguments: z
+        .object({
+          input_snapshot_id: z.string().uuid(),
+          team_id: z.string().uuid(),
+        })
+        .strict(),
+    })
+    .strict(),
+  z
+    .object({
+      name: z.literal("check_weather"),
+      arguments: z
+        .object({
+          input_snapshot_id: z.string().uuid(),
+          match_id: z.string().uuid(),
+        })
+        .strict(),
+    })
+    .strict(),
+  z
+    .object({
+      name: z.literal("calculate_ticket"),
+      arguments: z
+        .object({
+          bet_context_snapshot_id: z.string().uuid(),
+          selections: z
+            .array(
+              z
+                .object({
+                  match_id: z.string().uuid(),
+                  play: z.union([
+                    z.literal("had"),
+                    z.literal("hhad"),
+                    z.literal("crs"),
+                    z.literal("ttg"),
+                    z.literal("hafu"),
+                  ]),
+                  offer_option_ids: z
+                    .array(z.string().min(1))
+                    .min(1)
+                    .superRefine(requireUniqueItems),
+                })
+                .strict(),
+            )
+            .min(1)
+            .superRefine(requireUniqueItems),
+          pass_types: z
+            .array(z.string().min(1))
+            .min(1)
+            .superRefine(requireUniqueItems),
+          multiplier: z.number().int().min(1).max(50),
+        })
+        .strict(),
+    })
+    .strict(),
+]);
 export type AleaToolCall = z.infer<typeof AleaToolCallSchema>;
 
 export const ToolsNoToolsSchema = z.never();
 export type ToolsNoTools = z.infer<typeof ToolsNoToolsSchema>;
 
-export const ToolsSelectionToolsSchema = z.object({"name": z.literal("list_selection_candidates"), "arguments": z.object({"selection_scope_snapshot_id": z.string().uuid(), "page_cursor": z.string().nullable()}).strict()}).strict();
+export const ToolsSelectionToolsSchema = z
+  .object({
+    name: z.literal("list_selection_candidates"),
+    arguments: z
+      .object({
+        selection_scope_snapshot_id: z.string().uuid(),
+        page_cursor: z.string().nullable(),
+      })
+      .strict(),
+  })
+  .strict();
 export type ToolsSelectionTools = z.infer<typeof ToolsSelectionToolsSchema>;
 
-export const ToolsMatchToolsSchema = z.union([z.object({"name": z.literal("get_match_data"), "arguments": z.object({"input_snapshot_id": z.string().uuid(), "match_id": z.string().uuid()}).strict()}).strict(), z.object({"name": z.literal("get_team_current_season_stats"), "arguments": z.object({"input_snapshot_id": z.string().uuid(), "team_id": z.string().uuid()}).strict()}).strict(), z.object({"name": z.literal("check_weather"), "arguments": z.object({"input_snapshot_id": z.string().uuid(), "match_id": z.string().uuid()}).strict()}).strict()]);
+export const ToolsMatchToolsSchema = z.union([
+  z
+    .object({
+      name: z.literal("get_match_data"),
+      arguments: z
+        .object({
+          input_snapshot_id: z.string().uuid(),
+          match_id: z.string().uuid(),
+        })
+        .strict(),
+    })
+    .strict(),
+  z
+    .object({
+      name: z.literal("get_team_current_season_stats"),
+      arguments: z
+        .object({
+          input_snapshot_id: z.string().uuid(),
+          team_id: z.string().uuid(),
+        })
+        .strict(),
+    })
+    .strict(),
+  z
+    .object({
+      name: z.literal("check_weather"),
+      arguments: z
+        .object({
+          input_snapshot_id: z.string().uuid(),
+          match_id: z.string().uuid(),
+        })
+        .strict(),
+    })
+    .strict(),
+]);
 export type ToolsMatchTools = z.infer<typeof ToolsMatchToolsSchema>;
 
-export const ToolsBetToolsSchema = z.object({"name": z.literal("calculate_ticket"), "arguments": z.object({"bet_context_snapshot_id": z.string().uuid(), "selections": z.array(z.object({"match_id": z.string().uuid(), "play": z.union([z.literal("had"), z.literal("hhad"), z.literal("crs"), z.literal("ttg"), z.literal("hafu")]), "offer_option_ids": z.array(z.string().min(1)).min(1).superRefine(requireUniqueItems)}).strict()).min(1).superRefine(requireUniqueItems), "pass_types": z.array(z.string().min(1)).min(1).superRefine(requireUniqueItems), "multiplier": z.number().int().min(1).max(50)}).strict()}).strict();
+export const ToolsBetToolsSchema = z
+  .object({
+    name: z.literal("calculate_ticket"),
+    arguments: z
+      .object({
+        bet_context_snapshot_id: z.string().uuid(),
+        selections: z
+          .array(
+            z
+              .object({
+                match_id: z.string().uuid(),
+                play: z.union([
+                  z.literal("had"),
+                  z.literal("hhad"),
+                  z.literal("crs"),
+                  z.literal("ttg"),
+                  z.literal("hafu"),
+                ]),
+                offer_option_ids: z
+                  .array(z.string().min(1))
+                  .min(1)
+                  .superRefine(requireUniqueItems),
+              })
+              .strict(),
+          )
+          .min(1)
+          .superRefine(requireUniqueItems),
+        pass_types: z
+          .array(z.string().min(1))
+          .min(1)
+          .superRefine(requireUniqueItems),
+        multiplier: z.number().int().min(1).max(50),
+      })
+      .strict(),
+  })
+  .strict();
 export type ToolsBetTools = z.infer<typeof ToolsBetToolsSchema>;
 
-export const ListSelectionCandidatesCallSchema = z.object({"name": z.literal("list_selection_candidates"), "arguments": z.object({"selection_scope_snapshot_id": z.string().uuid(), "page_cursor": z.string().nullable()}).strict()}).strict();
-export type ListSelectionCandidatesCall = z.infer<typeof ListSelectionCandidatesCallSchema>;
+export const ListSelectionCandidatesCallSchema = z
+  .object({
+    name: z.literal("list_selection_candidates"),
+    arguments: z
+      .object({
+        selection_scope_snapshot_id: z.string().uuid(),
+        page_cursor: z.string().nullable(),
+      })
+      .strict(),
+  })
+  .strict();
+export type ListSelectionCandidatesCall = z.infer<
+  typeof ListSelectionCandidatesCallSchema
+>;
 
-export const GetMatchDataCallSchema = z.object({"name": z.literal("get_match_data"), "arguments": z.object({"input_snapshot_id": z.string().uuid(), "match_id": z.string().uuid()}).strict()}).strict();
+export const GetMatchDataCallSchema = z
+  .object({
+    name: z.literal("get_match_data"),
+    arguments: z
+      .object({
+        input_snapshot_id: z.string().uuid(),
+        match_id: z.string().uuid(),
+      })
+      .strict(),
+  })
+  .strict();
 export type GetMatchDataCall = z.infer<typeof GetMatchDataCallSchema>;
 
-export const GetTeamCurrentSeasonStatsCallSchema = z.object({"name": z.literal("get_team_current_season_stats"), "arguments": z.object({"input_snapshot_id": z.string().uuid(), "team_id": z.string().uuid()}).strict()}).strict();
-export type GetTeamCurrentSeasonStatsCall = z.infer<typeof GetTeamCurrentSeasonStatsCallSchema>;
+export const GetTeamCurrentSeasonStatsCallSchema = z
+  .object({
+    name: z.literal("get_team_current_season_stats"),
+    arguments: z
+      .object({
+        input_snapshot_id: z.string().uuid(),
+        team_id: z.string().uuid(),
+      })
+      .strict(),
+  })
+  .strict();
+export type GetTeamCurrentSeasonStatsCall = z.infer<
+  typeof GetTeamCurrentSeasonStatsCallSchema
+>;
 
-export const CheckWeatherCallSchema = z.object({"name": z.literal("check_weather"), "arguments": z.object({"input_snapshot_id": z.string().uuid(), "match_id": z.string().uuid()}).strict()}).strict();
+export const CheckWeatherCallSchema = z
+  .object({
+    name: z.literal("check_weather"),
+    arguments: z
+      .object({
+        input_snapshot_id: z.string().uuid(),
+        match_id: z.string().uuid(),
+      })
+      .strict(),
+  })
+  .strict();
 export type CheckWeatherCall = z.infer<typeof CheckWeatherCallSchema>;
 
-export const CalculateTicketCallSchema = z.object({"name": z.literal("calculate_ticket"), "arguments": z.object({"bet_context_snapshot_id": z.string().uuid(), "selections": z.array(z.object({"match_id": z.string().uuid(), "play": z.union([z.literal("had"), z.literal("hhad"), z.literal("crs"), z.literal("ttg"), z.literal("hafu")]), "offer_option_ids": z.array(z.string().min(1)).min(1).superRefine(requireUniqueItems)}).strict()).min(1).superRefine(requireUniqueItems), "pass_types": z.array(z.string().min(1)).min(1).superRefine(requireUniqueItems), "multiplier": z.number().int().min(1).max(50)}).strict()}).strict();
+export const CalculateTicketCallSchema = z
+  .object({
+    name: z.literal("calculate_ticket"),
+    arguments: z
+      .object({
+        bet_context_snapshot_id: z.string().uuid(),
+        selections: z
+          .array(
+            z
+              .object({
+                match_id: z.string().uuid(),
+                play: z.union([
+                  z.literal("had"),
+                  z.literal("hhad"),
+                  z.literal("crs"),
+                  z.literal("ttg"),
+                  z.literal("hafu"),
+                ]),
+                offer_option_ids: z
+                  .array(z.string().min(1))
+                  .min(1)
+                  .superRefine(requireUniqueItems),
+              })
+              .strict(),
+          )
+          .min(1)
+          .superRefine(requireUniqueItems),
+        pass_types: z
+          .array(z.string().min(1))
+          .min(1)
+          .superRefine(requireUniqueItems),
+        multiplier: z.number().int().min(1).max(50),
+      })
+      .strict(),
+  })
+  .strict();
 export type CalculateTicketCall = z.infer<typeof CalculateTicketCallSchema>;
 
-export const ToolsTicketSelectionSchema = z.object({"match_id": z.string().uuid(), "play": z.union([z.literal("had"), z.literal("hhad"), z.literal("crs"), z.literal("ttg"), z.literal("hafu")]), "offer_option_ids": z.array(z.string().min(1)).min(1).superRefine(requireUniqueItems)}).strict();
+export const ToolsTicketSelectionSchema = z
+  .object({
+    match_id: z.string().uuid(),
+    play: z.union([
+      z.literal("had"),
+      z.literal("hhad"),
+      z.literal("crs"),
+      z.literal("ttg"),
+      z.literal("hafu"),
+    ]),
+    offer_option_ids: z
+      .array(z.string().min(1))
+      .min(1)
+      .superRefine(requireUniqueItems),
+  })
+  .strict();
 export type ToolsTicketSelection = z.infer<typeof ToolsTicketSelectionSchema>;
 
-export const ToolsSourceMetadataSchema = z.object({"source_record_ids": z.array(z.string().min(1)).min(1).superRefine(requireUniqueItems), "observed_at": z.string().datetime({ offset: true }), "valid_from": z.string().datetime({ offset: true }).nullable(), "expires_at": z.string().datetime({ offset: true }).nullable(), "confidence": z.number().min(0).max(1), "missing_fields": z.array(z.string().min(1)).superRefine(requireUniqueItems)}).strict();
+export const ToolsSourceMetadataSchema = z
+  .object({
+    source_record_ids: z
+      .array(z.string().min(1))
+      .min(1)
+      .superRefine(requireUniqueItems),
+    observed_at: z.string().datetime({ offset: true }),
+    valid_from: z.string().datetime({ offset: true }).nullable(),
+    expires_at: z.string().datetime({ offset: true }).nullable(),
+    confidence: z.number().min(0).max(1),
+    missing_fields: z.array(z.string().min(1)).superRefine(requireUniqueItems),
+  })
+  .strict();
 export type ToolsSourceMetadata = z.infer<typeof ToolsSourceMetadataSchema>;
 
-export const ToolsSelectionCandidatePageSchema = z.object({"selection_scope_snapshot_id": z.string().uuid(), "candidates": z.array(z.object({"match_id": z.string().uuid(), "competition": z.string().min(1), "stage": z.string().nullable(), "round": z.string().nullable(), "kickoff_at": z.string().datetime({ offset: true }), "sales_cutoff_at": z.string().datetime({ offset: true }).nullable(), "home_team": z.string().min(1), "away_team": z.string().min(1), "data_completeness": z.number().min(0).max(1), "offer_summary": z.record(z.string(), z.unknown()), "single_available": z.boolean(), "source_record_ids": z.array(z.string().min(1)).min(1).superRefine(requireUniqueItems), "observed_at": z.string().datetime({ offset: true }), "valid_from": z.string().datetime({ offset: true }).nullable(), "expires_at": z.string().datetime({ offset: true }).nullable(), "confidence": z.number().min(0).max(1), "missing_fields": z.array(z.string().min(1)).superRefine(requireUniqueItems)}).strict()), "next_page_cursor": z.string().nullable()}).strict();
-export type ToolsSelectionCandidatePage = z.infer<typeof ToolsSelectionCandidatePageSchema>;
+export const ToolsSelectionCandidatePageSchema = z
+  .object({
+    selection_scope_snapshot_id: z.string().uuid(),
+    candidates: z.array(
+      z
+        .object({
+          match_id: z.string().uuid(),
+          competition: z.string().min(1),
+          stage: z.string().nullable(),
+          round: z.string().nullable(),
+          kickoff_at: z.string().datetime({ offset: true }),
+          sales_cutoff_at: z.string().datetime({ offset: true }).nullable(),
+          home_team: z.string().min(1),
+          away_team: z.string().min(1),
+          data_completeness: z.number().min(0).max(1),
+          offer_summary: z.record(z.string(), z.unknown()),
+          single_available: z.boolean(),
+          source_record_ids: z
+            .array(z.string().min(1))
+            .min(1)
+            .superRefine(requireUniqueItems),
+          observed_at: z.string().datetime({ offset: true }),
+          valid_from: z.string().datetime({ offset: true }).nullable(),
+          expires_at: z.string().datetime({ offset: true }).nullable(),
+          confidence: z.number().min(0).max(1),
+          missing_fields: z
+            .array(z.string().min(1))
+            .superRefine(requireUniqueItems),
+        })
+        .strict(),
+    ),
+    next_page_cursor: z.string().nullable(),
+  })
+  .strict();
+export type ToolsSelectionCandidatePage = z.infer<
+  typeof ToolsSelectionCandidatePageSchema
+>;
 
-export const ToolsSelectionCandidateSchema = z.object({"match_id": z.string().uuid(), "competition": z.string().min(1), "stage": z.string().nullable(), "round": z.string().nullable(), "kickoff_at": z.string().datetime({ offset: true }), "sales_cutoff_at": z.string().datetime({ offset: true }).nullable(), "home_team": z.string().min(1), "away_team": z.string().min(1), "data_completeness": z.number().min(0).max(1), "offer_summary": z.record(z.string(), z.unknown()), "single_available": z.boolean(), "source_record_ids": z.array(z.string().min(1)).min(1).superRefine(requireUniqueItems), "observed_at": z.string().datetime({ offset: true }), "valid_from": z.string().datetime({ offset: true }).nullable(), "expires_at": z.string().datetime({ offset: true }).nullable(), "confidence": z.number().min(0).max(1), "missing_fields": z.array(z.string().min(1)).superRefine(requireUniqueItems)}).strict();
-export type ToolsSelectionCandidate = z.infer<typeof ToolsSelectionCandidateSchema>;
+export const ToolsSelectionCandidateSchema = z
+  .object({
+    match_id: z.string().uuid(),
+    competition: z.string().min(1),
+    stage: z.string().nullable(),
+    round: z.string().nullable(),
+    kickoff_at: z.string().datetime({ offset: true }),
+    sales_cutoff_at: z.string().datetime({ offset: true }).nullable(),
+    home_team: z.string().min(1),
+    away_team: z.string().min(1),
+    data_completeness: z.number().min(0).max(1),
+    offer_summary: z.record(z.string(), z.unknown()),
+    single_available: z.boolean(),
+    source_record_ids: z
+      .array(z.string().min(1))
+      .min(1)
+      .superRefine(requireUniqueItems),
+    observed_at: z.string().datetime({ offset: true }),
+    valid_from: z.string().datetime({ offset: true }).nullable(),
+    expires_at: z.string().datetime({ offset: true }).nullable(),
+    confidence: z.number().min(0).max(1),
+    missing_fields: z.array(z.string().min(1)).superRefine(requireUniqueItems),
+  })
+  .strict();
+export type ToolsSelectionCandidate = z.infer<
+  typeof ToolsSelectionCandidateSchema
+>;
 
-export const ToolsMatchSnapshotViewSchema = z.object({"input_snapshot_id": z.string().uuid(), "match_id": z.string().uuid(), "competition": z.string().min(1), "stage": z.string().nullable(), "round": z.string().nullable(), "kickoff_at": z.string().datetime({ offset: true }), "sales_cutoff_at": z.string().datetime({ offset: true }).nullable(), "venue": z.string().nullable(), "venue_neutral": z.boolean(), "referee": z.string().nullable(), "leg_number": z.number().int().min(1).nullable(), "first_leg_score": z.union([z.object({"home": z.number().int().min(0).max(20), "away": z.number().int().min(0).max(20)}).strict(), z.null()]), "aggregate_score": z.union([z.object({"home": z.number().int().min(0).max(20), "away": z.number().int().min(0).max(20)}).strict(), z.null()]), "home_team": z.object({"id": z.string().uuid(), "name": z.string().min(1)}).strict(), "away_team": z.object({"id": z.string().uuid(), "name": z.string().min(1)}).strict(), "offers": z.array(z.object({"offer_option_id": z.string().min(1), "play": z.union([z.literal("had"), z.literal("hhad"), z.literal("crs"), z.literal("ttg"), z.literal("hafu")]), "selection": z.string().min(1), "fixed_odds": z.number().gt(1), "single_available": z.boolean(), "source_record_id": z.string().min(1), "observed_at": z.string().datetime({ offset: true }), "valid_from": z.string().datetime({ offset: true }).nullable(), "expires_at": z.string().datetime({ offset: true }).nullable(), "confidence": z.number().min(0).max(1)}).strict()), "facts": z.array(z.object({"field": z.string().min(1), "value": z.unknown(), "source_record_ids": z.array(z.string().min(1)).min(1).superRefine(requireUniqueItems), "observed_at": z.string().datetime({ offset: true }), "valid_from": z.string().datetime({ offset: true }).nullable(), "expires_at": z.string().datetime({ offset: true }).nullable(), "confidence": z.number().min(0).max(1), "missing_fields": z.array(z.string().min(1)).superRefine(requireUniqueItems)}).strict()), "source_record_ids": z.array(z.string().min(1)).min(1).superRefine(requireUniqueItems), "observed_at": z.string().datetime({ offset: true }), "valid_from": z.string().datetime({ offset: true }).nullable(), "expires_at": z.string().datetime({ offset: true }).nullable(), "confidence": z.number().min(0).max(1), "missing_fields": z.array(z.string().min(1)).superRefine(requireUniqueItems), "frozen_at": z.string().datetime({ offset: true })}).strict();
-export type ToolsMatchSnapshotView = z.infer<typeof ToolsMatchSnapshotViewSchema>;
+export const ToolsMatchSnapshotViewSchema = z
+  .object({
+    input_snapshot_id: z.string().uuid(),
+    match_id: z.string().uuid(),
+    competition: z.string().min(1),
+    stage: z.string().nullable(),
+    round: z.string().nullable(),
+    kickoff_at: z.string().datetime({ offset: true }),
+    sales_cutoff_at: z.string().datetime({ offset: true }).nullable(),
+    venue: z.string().nullable(),
+    venue_neutral: z.boolean(),
+    referee: z.string().nullable(),
+    leg_number: z.number().int().min(1).nullable(),
+    first_leg_score: z.union([
+      z
+        .object({
+          home: z.number().int().min(0).max(20),
+          away: z.number().int().min(0).max(20),
+        })
+        .strict(),
+      z.null(),
+    ]),
+    aggregate_score: z.union([
+      z
+        .object({
+          home: z.number().int().min(0).max(20),
+          away: z.number().int().min(0).max(20),
+        })
+        .strict(),
+      z.null(),
+    ]),
+    home_team: z
+      .object({ id: z.string().uuid(), name: z.string().min(1) })
+      .strict(),
+    away_team: z
+      .object({ id: z.string().uuid(), name: z.string().min(1) })
+      .strict(),
+    offers: z.array(
+      z
+        .object({
+          offer_option_id: z.string().min(1),
+          play: z.union([
+            z.literal("had"),
+            z.literal("hhad"),
+            z.literal("crs"),
+            z.literal("ttg"),
+            z.literal("hafu"),
+          ]),
+          selection: z.string().min(1),
+          fixed_odds: z.number().gt(1),
+          single_available: z.boolean(),
+          source_record_id: z.string().min(1),
+          observed_at: z.string().datetime({ offset: true }),
+          valid_from: z.string().datetime({ offset: true }).nullable(),
+          expires_at: z.string().datetime({ offset: true }).nullable(),
+          confidence: z.number().min(0).max(1),
+        })
+        .strict(),
+    ),
+    facts: z.array(
+      z
+        .object({
+          field: z.string().min(1),
+          value: z.unknown(),
+          source_record_ids: z
+            .array(z.string().min(1))
+            .min(1)
+            .superRefine(requireUniqueItems),
+          observed_at: z.string().datetime({ offset: true }),
+          valid_from: z.string().datetime({ offset: true }).nullable(),
+          expires_at: z.string().datetime({ offset: true }).nullable(),
+          confidence: z.number().min(0).max(1),
+          missing_fields: z
+            .array(z.string().min(1))
+            .superRefine(requireUniqueItems),
+        })
+        .strict(),
+    ),
+    source_record_ids: z
+      .array(z.string().min(1))
+      .min(1)
+      .superRefine(requireUniqueItems),
+    observed_at: z.string().datetime({ offset: true }),
+    valid_from: z.string().datetime({ offset: true }).nullable(),
+    expires_at: z.string().datetime({ offset: true }).nullable(),
+    confidence: z.number().min(0).max(1),
+    missing_fields: z.array(z.string().min(1)).superRefine(requireUniqueItems),
+    frozen_at: z.string().datetime({ offset: true }),
+  })
+  .strict();
+export type ToolsMatchSnapshotView = z.infer<
+  typeof ToolsMatchSnapshotViewSchema
+>;
 
-export const ToolsSourcedTeamStatsSchema = z.object({"input_snapshot_id": z.string().uuid(), "team_id": z.string().uuid(), "season": z.string().min(1), "stats": z.record(z.string(), z.unknown()), "source_record_ids": z.array(z.string().min(1)).min(1).superRefine(requireUniqueItems), "observed_at": z.string().datetime({ offset: true }), "valid_from": z.string().datetime({ offset: true }).nullable(), "expires_at": z.string().datetime({ offset: true }).nullable(), "confidence": z.number().min(0).max(1), "missing_fields": z.array(z.string().min(1)).superRefine(requireUniqueItems)}).strict();
+export const ToolsSourcedTeamStatsSchema = z
+  .object({
+    input_snapshot_id: z.string().uuid(),
+    team_id: z.string().uuid(),
+    season: z.string().min(1),
+    stats: z.record(z.string(), z.unknown()),
+    source_record_ids: z
+      .array(z.string().min(1))
+      .min(1)
+      .superRefine(requireUniqueItems),
+    observed_at: z.string().datetime({ offset: true }),
+    valid_from: z.string().datetime({ offset: true }).nullable(),
+    expires_at: z.string().datetime({ offset: true }).nullable(),
+    confidence: z.number().min(0).max(1),
+    missing_fields: z.array(z.string().min(1)).superRefine(requireUniqueItems),
+  })
+  .strict();
 export type ToolsSourcedTeamStats = z.infer<typeof ToolsSourcedTeamStatsSchema>;
 
-export const ToolsSourcedWeatherSchema = z.object({"input_snapshot_id": z.string().uuid(), "match_id": z.string().uuid(), "weather": z.record(z.string(), z.unknown()), "source_record_ids": z.array(z.string().min(1)).min(1).superRefine(requireUniqueItems), "observed_at": z.string().datetime({ offset: true }), "valid_from": z.string().datetime({ offset: true }).nullable(), "expires_at": z.string().datetime({ offset: true }).nullable(), "confidence": z.number().min(0).max(1), "missing_fields": z.array(z.string().min(1)).superRefine(requireUniqueItems)}).strict();
+export const ToolsSourcedWeatherSchema = z
+  .object({
+    input_snapshot_id: z.string().uuid(),
+    match_id: z.string().uuid(),
+    weather: z.record(z.string(), z.unknown()),
+    source_record_ids: z
+      .array(z.string().min(1))
+      .min(1)
+      .superRefine(requireUniqueItems),
+    observed_at: z.string().datetime({ offset: true }),
+    valid_from: z.string().datetime({ offset: true }).nullable(),
+    expires_at: z.string().datetime({ offset: true }).nullable(),
+    confidence: z.number().min(0).max(1),
+    missing_fields: z.array(z.string().min(1)).superRefine(requireUniqueItems),
+  })
+  .strict();
 export type ToolsSourcedWeather = z.infer<typeof ToolsSourcedWeatherSchema>;
 
-export const ToolsTicketCalculationSchema = z.object({"bet_context_snapshot_id": z.string().uuid(), "sporttery_rule_version_id": z.string().uuid(), "bet_count": z.number().int().min(0), "stake": z.number().min(0), "theoretical_payout": z.number().min(0), "resolved_offer_option_ids": z.array(z.string().min(1)).superRefine(requireUniqueItems), "validation_errors": z.array(z.object({"code": z.string().min(1), "message": z.string().min(1)}).strict())}).strict();
-export type ToolsTicketCalculation = z.infer<typeof ToolsTicketCalculationSchema>;
+export const ToolsTicketCalculationSchema = z
+  .object({
+    bet_context_snapshot_id: z.string().uuid(),
+    sporttery_rule_version_id: z.string().uuid(),
+    bet_count: z.number().int().min(0),
+    stake: z.number().min(0),
+    theoretical_payout: z.number().min(0),
+    resolved_offer_option_ids: z
+      .array(z.string().min(1))
+      .superRefine(requireUniqueItems),
+    validation_errors: z.array(
+      z
+        .object({ code: z.string().min(1), message: z.string().min(1) })
+        .strict(),
+    ),
+  })
+  .strict();
+export type ToolsTicketCalculation = z.infer<
+  typeof ToolsTicketCalculationSchema
+>;

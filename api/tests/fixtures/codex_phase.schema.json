@@ -1,0 +1,15 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["phase", "payload", "confidence"],
+  "properties": {
+    "phase": {"type": "string", "const": "predict_score"},
+    "payload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["summary"],
+      "properties": {"summary": {"type": "string"}}
+    },
+    "confidence": {"type": "number", "minimum": 0, "maximum": 1}
+  }
+}

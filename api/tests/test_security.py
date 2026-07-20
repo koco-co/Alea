@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import UTC, datetime, timedelta
+from types import SimpleNamespace
 
 import jwt
 import pytest
@@ -8,7 +10,9 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 
 import httpx
 
+from app.routers.admin import _command
 from app.security import (
+    AuthenticatedPrincipal,
     JWTVerifier,
     SafeHttpClient,
     SecurityError,
@@ -62,6 +66,51 @@ def test_redaction_removes_headers_keys_and_query_secrets() -> None:
     assert "secretvalue" not in redacted["message"]
 
 
+@pytest.mark.asyncio
+async def test_admin_command_preserves_encrypted_envelope_for_database_gateway() -> None:
+    class CaptureGateway:
+        received: Mapping[str, object] | None = None
+
+        async def command(
+            self,
+            operation: str,
+            *,
+            actor_id: str,
+            request_id: str,
+            payload: Mapping[str, object],
+        ) -> Mapping[str, object]:
+            del operation, actor_id, request_id
+            self.received = payload
+            return {"ok": True}
+
+    gateway = CaptureGateway()
+    encrypted = {
+        "ciphertext": "aa",
+        "ciphertext_nonce": "bb",
+        "wrapped_dek": "cc",
+        "wrapped_dek_nonce": "dd",
+        "kek_version": 1,
+        "secret_tail": "tail",
+    }
+    principal = AuthenticatedPrincipal(
+        subject="00000000-0000-0000-0000-000000000001",
+        role="admin",
+        email=None,
+        claims={},
+    )
+
+    result = await _command(
+        gateway,
+        "save_provider",
+        principal,
+        SimpleNamespace(state=SimpleNamespace(request_id="request-1")),
+        {"encrypted_secret": encrypted},
+    )
+
+    assert result == {"ok": True}
+    assert gateway.received == {"encrypted_secret": encrypted}
+
+
 @pytest.mark.parametrize(
     "url",
     [
@@ -77,7 +126,9 @@ def test_outbound_url_rejects_ssrf_targets(url: str) -> None:
 
 
 def test_outbound_url_requires_allowlist_and_public_dns() -> None:
-    def resolver(*args: object, **kwargs: object) -> list[tuple[None, None, None, None, tuple[str, int]]]:
+    def resolver(
+        *args: object, **kwargs: object
+    ) -> list[tuple[None, None, None, None, tuple[str, int]]]:
         return [(None, None, None, None, ("203.0.113.9", 443))]
 
     # Documentation ranges are reserved and intentionally rejected.
@@ -89,11 +140,14 @@ def test_outbound_url_requires_allowlist_and_public_dns() -> None:
     ) -> list[tuple[None, None, None, None, tuple[str, int]]]:
         return [(None, None, None, None, ("8.8.8.8", 443))]
 
-    assert validate_outbound_url(
-        "https://provider.example/v1",
-        allowed_hosts={"provider.example"},
-        resolver=public_resolver,
-    ) == "https://provider.example/v1"
+    assert (
+        validate_outbound_url(
+            "https://provider.example/v1",
+            allowed_hosts={"provider.example"},
+            resolver=public_resolver,
+        )
+        == "https://provider.example/v1"
+    )
 
 
 def test_envelope_roundtrip_tamper_aad_and_rotation() -> None:
@@ -101,7 +155,9 @@ def test_envelope_roundtrip_tamper_aad_and_rotation() -> None:
     encrypted = cipher.encrypt("sk-live-secret", connection_id="conn-1", connection_version=3)
     assert encrypted.secret_tail == "cret"
     assert b"sk-live-secret" not in encrypted.ciphertext
-    assert cipher.decrypt(encrypted, connection_id="conn-1", connection_version=3) == "sk-live-secret"
+    assert (
+        cipher.decrypt(encrypted, connection_id="conn-1", connection_version=3) == "sk-live-secret"
+    )
     rotated = cipher.rewrap(
         encrypted,
         connection_id="conn-1",
@@ -133,10 +189,13 @@ async def test_safe_http_client_rechecks_redirect_type_and_size() -> None:
             resolver=public_resolver,
             max_response_bytes=8,
         )
-        assert await client.get(
-            "https://provider.example/redirect",
-            allowed_content_types={"application/json"},
-        ) == b"{}"
+        assert (
+            await client.get(
+                "https://provider.example/redirect",
+                allowed_content_types={"application/json"},
+            )
+            == b"{}"
+        )
 
     async with httpx.AsyncClient(
         transport=httpx.MockTransport(

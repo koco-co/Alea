@@ -46,17 +46,10 @@ create trigger roundtable_events_broadcast
 after insert on roundtable_events
 for each row execute function broadcast_roundtable_event();
 
-alter table realtime.messages enable row level security;
-
-create policy roundtable_broadcast_authenticated_read
-on realtime.messages
-for select
-to authenticated
-using (can_read_roundtable_topic(realtime.topic()));
-
--- No INSERT policy is created for anon/authenticated. Client-originated Broadcast is
--- therefore rejected; only the security-definer database trigger may publish events.
-revoke insert on realtime.messages from anon, authenticated;
+-- Supabase owns realtime.messages with supabase_realtime_admin and already enables
+-- RLS. Cloud migrations execute as postgres, which cannot create policies on that
+-- platform-owned table. The private-channel read policy must therefore be installed
+-- by the Realtime owner through the supported dashboard workflow before G2 can pass.
 revoke all on function can_read_roundtable_topic(text) from public;
 grant execute on function can_read_roundtable_topic(text) to authenticated;
 revoke all on function broadcast_roundtable_event() from public;

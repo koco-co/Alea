@@ -1,13 +1,17 @@
 from __future__ import annotations
 
+import asyncio
+import os
 from enum import StrEnum
 from typing import Annotated, Any, Literal, Mapping, Protocol
 from uuid import UUID
 
+import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.security import AuthenticatedPrincipal, redact_sensitive
+from app.security import AuthenticatedPrincipal
+from app.secrets.envelope import EnvelopeEncryption
 
 
 router = APIRouter(prefix="/v1/admin", tags=["admin"])
@@ -150,6 +154,38 @@ class RoundtableControlRequest(StrictModel):
     confirmed: bool
 
 
+class ProviderExecutionMode(StrEnum):
+    API = "api"
+    CODEX_CLI = "codex_cli"
+
+
+class SaveProviderRequest(StrictModel):
+    provider_id: UUID | None = None
+    connection_id: UUID
+    connection_version: int = Field(ge=1)
+    display_name: str = Field(min_length=1, max_length=100)
+    execution_mode: ProviderExecutionMode
+    protocol: str = Field(min_length=1, max_length=80)
+    api_url: str | None = None
+    runtime_key: Literal["codex"] | None = None
+    model_id: str = Field(min_length=1, max_length=128)
+    allowed_api_domains: list[str] = Field(default_factory=list, max_length=20)
+    api_key: str | None = Field(default=None, min_length=2, max_length=10_000)
+    clear_secret: bool = False
+    enabled: bool = False
+
+
+class SaveProviderInstanceRequest(StrictModel):
+    nickname: str = Field(min_length=1, max_length=100)
+    instance_number: int = Field(ge=1, le=3)
+    model_id: str = Field(min_length=1, max_length=128)
+    reasoning_level: str | None = Field(default=None, max_length=40)
+    timeout_seconds: int = Field(default=120, ge=1, le=900)
+    max_concurrency: int = Field(default=1, ge=1, le=16)
+    prompt_version: str = Field(min_length=1, max_length=100)
+    enabled: bool = False
+
+
 def run_publication_quality_checks(
     context: PublicationQualityContext,
 ) -> PublicationQualityReport:
@@ -166,20 +202,14 @@ def run_publication_quality_checks(
             code="illegal_bet",
             severity=QualitySeverity.BLOCK,
             passed=context.legal_bet,
-            message=(
-                "玩法与串关组合合法"
-                if context.legal_bet
-                else "方案含非法玩法或串关组合"
-            ),
+            message=("玩法与串关组合合法" if context.legal_bet else "方案含非法玩法或串关组合"),
         ),
         PublicationQualityItem(
             code="sales_cutoff_too_close",
             severity=QualitySeverity.BLOCK,
             passed=context.minutes_to_sales_cutoff >= 10,
             message=(
-                "距停售时间充足"
-                if context.minutes_to_sales_cutoff >= 10
-                else "距停售不足 10 分钟"
+                "距停售时间充足" if context.minutes_to_sales_cutoff >= 10 else "距停售不足 10 分钟"
             ),
         ),
         PublicationQualityItem(
@@ -187,20 +217,14 @@ def run_publication_quality_checks(
             severity=QualitySeverity.BLOCK,
             passed=not context.duplicate_active_card,
             message=(
-                "没有重复在售卡片"
-                if not context.duplicate_active_card
-                else "同场次已有在售卡片"
+                "没有重复在售卡片" if not context.duplicate_active_card else "同场次已有在售卡片"
             ),
         ),
         PublicationQualityItem(
             code="stale_odds",
             severity=QualitySeverity.WARNING,
             passed=context.odds_age_minutes <= 60,
-            message=(
-                "赔率快照有效"
-                if context.odds_age_minutes <= 60
-                else "赔率快照超过 60 分钟"
-            ),
+            message=("赔率快照有效" if context.odds_age_minutes <= 60 else "赔率快照超过 60 分钟"),
         ),
         PublicationQualityItem(
             code="unsupported_facts",
@@ -588,6 +612,164 @@ async def terminate_roundtable(
     )
 
 
+@router.get("/providers")
+async def list_providers(
+    principal: AdminPrincipal,
+    gateway: Gateway,
+) -> Mapping[str, Any]:
+    return await _query(gateway, "list_providers", principal, {})
+
+
+@router.get("/providers/runtime/codex")
+async def inspect_codex_runtime(principal: AdminPrincipal) -> Mapping[str, Any]:
+    del principal
+    runner_url = os.getenv("CODEX_RUNNER_URL", "http://127.0.0.1:8765").rstrip("/")
+    token = os.getenv("ALEA_RUNNER_TOKEN", "")
+    try:
+        async with httpx.AsyncClient(timeout=5) as client:
+            health_response, models_response = await asyncio.gather(
+                client.get(f"{runner_url}/health"),
+                client.get(
+                    f"{runner_url}/models",
+                    headers={"X-Alea-Runner-Token": token},
+                ),
+            )
+        health_response.raise_for_status()
+        models_response.raise_for_status()
+    except httpx.HTTPError as exc:
+        raise HTTPException(status_code=503, detail="codex_runner_unavailable") from exc
+    return {
+        "runtime_key": "codex",
+        "health": health_response.json(),
+        "catalog": models_response.json(),
+    }
+
+
+@router.put("/providers/{connection_id}")
+async def save_provider(
+    connection_id: UUID,
+    body: SaveProviderRequest,
+    request: Request,
+    principal: AdminPrincipal,
+    gateway: Gateway,
+) -> Mapping[str, Any]:
+    if connection_id != body.connection_id:
+        raise HTTPException(status_code=422, detail="connection_id_mismatch")
+    if body.clear_secret and body.api_key:
+        raise HTTPException(status_code=422, detail="secret_action_conflict")
+    if body.execution_mode is ProviderExecutionMode.CODEX_CLI:
+        if body.runtime_key != "codex" or body.api_url or body.api_key or body.allowed_api_domains:
+            raise HTTPException(status_code=422, detail="invalid_codex_cli_configuration")
+    elif (
+        body.runtime_key is not None
+        or not body.api_url
+        or not body.api_url.startswith("https://")
+        or not body.allowed_api_domains
+    ):
+        raise HTTPException(status_code=422, detail="invalid_api_provider_configuration")
+
+    payload = body.model_dump(mode="json", exclude={"api_key"})
+    if body.api_key is not None:
+        envelope = EnvelopeEncryption().encrypt(
+            body.api_key,
+            connection_id=body.connection_id,
+            connection_version=body.connection_version,
+        )
+        payload["encrypted_secret"] = {
+            key: value.hex() if isinstance(value, bytes) else value
+            for key, value in envelope.as_record().items()
+        }
+    return await _command(gateway, "save_provider", principal, request, payload)
+
+
+@router.post("/providers/{connection_id}/test")
+async def test_provider_connection(
+    connection_id: UUID,
+    request: Request,
+    principal: AdminPrincipal,
+    gateway: Gateway,
+) -> Mapping[str, Any]:
+    return await _command(
+        gateway,
+        "test_provider_connection",
+        principal,
+        request,
+        {"connection_id": str(connection_id)},
+    )
+
+
+@router.delete("/providers/{connection_id}/secret")
+async def clear_provider_secret(
+    connection_id: UUID,
+    request: Request,
+    principal: AdminPrincipal,
+    gateway: Gateway,
+) -> Mapping[str, Any]:
+    return await _command(
+        gateway,
+        "clear_provider_secret",
+        principal,
+        request,
+        {"connection_id": str(connection_id)},
+    )
+
+
+@router.post("/providers/{provider_id}/instances", status_code=201)
+async def create_provider_instance(
+    provider_id: UUID,
+    body: SaveProviderInstanceRequest,
+    request: Request,
+    principal: AdminPrincipal,
+    gateway: Gateway,
+) -> Mapping[str, Any]:
+    return await _command(
+        gateway,
+        "create_provider_instance",
+        principal,
+        request,
+        {"provider_id": str(provider_id), **body.model_dump(mode="json")},
+    )
+
+
+@router.put("/providers/{provider_id}/instances/{instance_id}")
+async def update_provider_instance(
+    provider_id: UUID,
+    instance_id: UUID,
+    body: SaveProviderInstanceRequest,
+    request: Request,
+    principal: AdminPrincipal,
+    gateway: Gateway,
+) -> Mapping[str, Any]:
+    return await _command(
+        gateway,
+        "update_provider_instance",
+        principal,
+        request,
+        {
+            "provider_id": str(provider_id),
+            "instance_id": str(instance_id),
+            **body.model_dump(mode="json"),
+        },
+    )
+
+
+@router.delete("/providers/{provider_id}/instances/{instance_id}")
+async def delete_provider_instance(
+    provider_id: UUID,
+    instance_id: UUID,
+    request: Request,
+    principal: AdminPrincipal,
+    gateway: Gateway,
+) -> Mapping[str, Any]:
+    return await _command(
+        gateway,
+        "delete_provider_instance",
+        principal,
+        request,
+        {"provider_id": str(provider_id), "instance_id": str(instance_id)},
+    )
+
+
 async def _confirmed_user_command(
     operation: str,
     user_id: UUID,
@@ -646,14 +828,16 @@ async def _command(
     payload: Mapping[str, Any],
 ) -> Mapping[str, Any]:
     try:
-        redacted_payload = redact_sensitive(payload)
-        if not isinstance(redacted_payload, Mapping):
+        if not isinstance(payload, Mapping):
             raise AdminGatewayError("invalid_admin_command_payload", status_code=500)
+        # The gateway needs the encrypted Provider envelope to persist it.
+        # Redaction belongs only on the audit/log copy inside the gateway's
+        # transaction; applying it here would replace `encrypted_secret`.
         return await gateway.command(
             operation,
             actor_id=principal.subject,
             request_id=str(getattr(request.state, "request_id", "missing-request-id")),
-            payload=redacted_payload,
+            payload=payload,
         )
     except AdminGatewayError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.code) from exc

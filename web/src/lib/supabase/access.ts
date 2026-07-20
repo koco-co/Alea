@@ -13,7 +13,10 @@ export interface AccessContext {
 
 export async function getAccessContext(): Promise<AccessContext | null> {
   const demoRole = process.env.ALEA_DEMO_ROLE;
-  if (process.env.NODE_ENV !== "production" && (demoRole === "user" || demoRole === "admin")) {
+  if (
+    process.env.NODE_ENV !== "production" &&
+    (demoRole === "user" || demoRole === "admin")
+  ) {
     return {
       userId: "local-demo",
       email: `${demoRole}@alea.local`,

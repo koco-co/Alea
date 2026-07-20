@@ -209,9 +209,13 @@ def _object_output(value: Any) -> dict[str, Any]:
     try:
         decoded = json.loads(value)
     except json.JSONDecodeError as exc:
-        raise ProviderFailure("invalid_json", "provider returned invalid JSON", retryable=False) from exc
+        raise ProviderFailure(
+            "invalid_json", "provider returned invalid JSON", retryable=False
+        ) from exc
     if not isinstance(decoded, dict):
-        raise ProviderFailure("invalid_json", "provider JSON root must be an object", retryable=False)
+        raise ProviderFailure(
+            "invalid_json", "provider JSON root must be an object", retryable=False
+        )
     return decoded
 
 
@@ -219,19 +223,25 @@ def _json_body(response: httpx.Response) -> dict[str, Any]:
     try:
         body = response.json()
     except ValueError as exc:
-        raise ProviderFailure("invalid_json", "provider returned invalid JSON", retryable=False) from exc
+        raise ProviderFailure(
+            "invalid_json", "provider returned invalid JSON", retryable=False
+        ) from exc
     return dict(_mapping(body, "response"))
 
 
 def _mapping(value: Any, field: str) -> Mapping[str, Any]:
     if not isinstance(value, Mapping):
-        raise ProviderFailure("invalid_response", f"provider field {field} is invalid", retryable=False)
+        raise ProviderFailure(
+            "invalid_response", f"provider field {field} is invalid", retryable=False
+        )
     return value
 
 
 def _list(value: Any, field: str) -> list[Any]:
     if not isinstance(value, list):
-        raise ProviderFailure("invalid_response", f"provider field {field} is invalid", retryable=False)
+        raise ProviderFailure(
+            "invalid_response", f"provider field {field} is invalid", retryable=False
+        )
     return value
 
 
@@ -253,12 +263,16 @@ def _raise_for_status(response: httpx.Response, provider_name: str) -> None:
         return
     status = response.status_code
     if status in {408, 409, 429} or status >= 500:
-        code, retryable = ("rate_limited", True) if status == 429 else ("provider_unavailable", True)
+        code, retryable = (
+            ("rate_limited", True) if status == 429 else ("provider_unavailable", True)
+        )
     elif status in {401, 403}:
         code, retryable = "authentication_failed", False
     else:
         code, retryable = "provider_rejected", False
-    raise ProviderFailure(code, f"{provider_name} request failed with HTTP {status}", retryable=retryable)
+    raise ProviderFailure(
+        code, f"{provider_name} request failed with HTTP {status}", retryable=retryable
+    )
 
 
 _install_business_methods()

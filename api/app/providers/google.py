@@ -66,18 +66,27 @@ class GoogleProvider(HTTPProvider):
         body = _json_body(response)
         candidates = body.get("candidates")
         if not isinstance(candidates, list) or not candidates:
-            raise ProviderFailure("empty_response", "provider returned no candidates", retryable=False)
+            raise ProviderFailure(
+                "empty_response", "provider returned no candidates", retryable=False
+            )
         candidate = _mapping(candidates[0], "candidates[0]")
         content = _mapping(candidate.get("content"), "candidates[0].content")
         parts = content.get("parts")
         if not isinstance(parts, list) or not parts:
-            raise ProviderFailure("empty_response", "provider returned no content parts", retryable=False)
+            raise ProviderFailure(
+                "empty_response", "provider returned no content parts", retryable=False
+            )
         part = _mapping(parts[0], "candidates[0].content.parts[0]")
-        output = _object_output(part.get("functionCall", {}).get("args") if isinstance(part.get("functionCall"), Mapping) else part.get("text"))
+        output = _object_output(
+            part.get("functionCall", {}).get("args")
+            if isinstance(part.get("functionCall"), Mapping)
+            else part.get("text")
+        )
         usage = _mapping(body.get("usageMetadata", {}), "usageMetadata")
         return ProviderResult(
             request_id=req.request_id,
-            provider_request_id=response.headers.get("x-request-id") or _optional_string(body.get("responseId")),
+            provider_request_id=response.headers.get("x-request-id")
+            or _optional_string(body.get("responseId")),
             model_id=req.model_id,
             output=output,
             usage=Usage(

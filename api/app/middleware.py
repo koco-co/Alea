@@ -8,6 +8,7 @@ import uuid
 from collections import defaultdict, deque
 from dataclasses import dataclass
 from http.cookies import SimpleCookie
+from typing import Any, cast
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -156,7 +157,7 @@ def configure_security(app: FastAPI, *, verifier: JWTVerifier | None = None) -> 
             jwks_url=os.getenv("SUPABASE_JWKS_URL"),
         )
     app.add_middleware(
-        SecurityMiddleware,
+        cast(Any, SecurityMiddleware),
         verifier=verifier,
         allowed_origins=allowed_origins,
     )

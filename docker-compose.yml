@@ -11,10 +11,14 @@ services:
     build:
       context: ./web
       args:
-        - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
-        - NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=${NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY}
+        - NEXT_PUBLIC_SUPABASE_URL=${PROJECT_URL}
+        - NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=${PUBLISHABLE_KEY}
     environment:
       - INTERNAL_API_URL=http://api:8000
+      - CODEX_RUNNER_URL=http://host.docker.internal:8765
+      - ALEA_RUNNER_TOKEN=${ALEA_RUNNER_TOKEN}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     healthcheck:
       test: ["CMD", "bun", "-e", "fetch('http://localhost:3000/api/health').then(r=>{if(!r.ok)process.exit(1)})"]
       interval: 10s
@@ -25,11 +29,16 @@ services:
   api:
     build: ./api
     environment:
-      - SUPABASE_URL=${SUPABASE_URL}
-      - SUPABASE_SECRET_KEY=${SUPABASE_SECRET_KEY}
+      - SUPABASE_URL=${PROJECT_URL}
+      - SUPABASE_PUBLISHABLE_KEY=${PUBLISHABLE_KEY}
+      - SUPABASE_SECRET_KEY=${SECRET_KEY}
       - DATABASE_URL_ALEA_API=${DATABASE_URL_ALEA_API}
       - PROVIDER_KEK_V1=${PROVIDER_KEK_V1}
+      - CODEX_RUNNER_URL=http://host.docker.internal:8765
+      - ALEA_RUNNER_TOKEN=${ALEA_RUNNER_TOKEN}
       - REDIS_URL=redis://redis:6379/0
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       redis: {condition: service_healthy}
     healthcheck:

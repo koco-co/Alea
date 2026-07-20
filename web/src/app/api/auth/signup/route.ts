@@ -21,26 +21,42 @@ export async function POST(request: Request) {
   const email = typeof body.email === "string" ? body.email.trim() : "";
   const password = typeof body.password === "string" ? body.password : "";
   if (!email || password.length < 8) {
-    return NextResponse.json({ error: "请输入有效邮箱与至少 8 位密码" }, { status: 400 });
+    return NextResponse.json(
+      { error: "请输入有效邮箱与至少 8 位密码" },
+      { status: 400 },
+    );
   }
   if (body.ageConfirmed !== true || body.termsAccepted !== true) {
-    return NextResponse.json({ error: "必须确认年满 18 周岁并同意风险与隐私条款" }, { status: 422 });
+    return NextResponse.json(
+      { error: "必须确认年满 18 周岁并同意风险与隐私条款" },
+      { status: 422 },
+    );
   }
   const internalApiUrl = process.env.INTERNAL_API_URL;
-  if (!internalApiUrl) return NextResponse.json({ error: "认证服务尚未配置" }, { status: 503 });
+  if (!internalApiUrl)
+    return NextResponse.json({ error: "认证服务尚未配置" }, { status: 503 });
   try {
-    const upstream = await fetch(`${internalApiUrl.replace(/\/$/, "")}/auth/signup`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-Request-ID": crypto.randomUUID() },
-      body: JSON.stringify({
-        email,
-        password,
-        age_confirmed: body.ageConfirmed,
-        terms_accepted: body.termsAccepted,
-      }),
-      cache: "no-store",
-    });
-    const result = (await upstream.json()) as { error?: string; requiresEmailConfirmation?: boolean };
+    const upstream = await fetch(
+      `${internalApiUrl.replace(/\/$/, "")}/auth/signup`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Request-ID": crypto.randomUUID(),
+        },
+        body: JSON.stringify({
+          email,
+          password,
+          age_confirmed: body.ageConfirmed,
+          terms_accepted: body.termsAccepted,
+        }),
+        cache: "no-store",
+      },
+    );
+    const result = (await upstream.json()) as {
+      error?: string;
+      requiresEmailConfirmation?: boolean;
+    };
     if (!upstream.ok) {
       const message =
         result.error === "consent_persistence_failed"

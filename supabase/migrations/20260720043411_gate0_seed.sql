@@ -277,16 +277,16 @@ with rule_seed as (
     'calculation', jsonb_build_object(
       'bet_count', 'sum of expanded valid combinations including compound selections',
       'stake', 'bet_count * stake_per_bet * multiplier',
-      'theoretical_payout', 'sum of fixed-odds products * stake_per_bet * multiplier capped per ticket'
+      'theoretical_payout', 'sum of fixed-odds products * stake_per_bet * multiplier capped per ticket',
+      'rounding', 'half_even_each_expanded_winning_bet_to_two_decimals'
     ),
     'official_sources', jsonb_build_array(
-      'https://www.sporttery.cn/jc/jsq/zqspf/',
-      'https://www.sporttery.cn/help/249715.html',
-      'https://www.sporttery.cn/help/2961.html',
-      'https://www.sporttery.cn/help/60328.html',
-      'https://www.sporttery.cn/help/60333.html'
+      'https://www.sporttery.cn/help/2968.html?gid=9',
+      'https://m.sporttery.cn/bzzx/20210118/3002863.html?gid=7',
+      'https://www.sporttery.cn/help/40213.html',
+      'https://www.sporttery.cn/football/jcjq/2018/0530/320867.html'
     ),
-    'verification_status', 'official_materials_transcribed; Gate G5 golden verification pending'
+    'verification_status', 'official_materials_transcribed; Python and TypeScript golden verification required'
   ) as rules
 )
 insert into sporttery_rule_versions (
