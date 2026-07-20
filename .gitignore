@@ -18,4 +18,6 @@ api/.ruff_cache/
 __pycache__/
 *.py[cod]
 redis_data/
+.codex-runner.log
+supabase/.temp/
 docs/evidence/**/artifacts/private/

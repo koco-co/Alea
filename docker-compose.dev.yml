@@ -11,28 +11,22 @@ services:
     command: uv run --locked uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     volumes:
       - ./api:/app
-      - api_venv:/app/.venv
 
   worker:
     volumes:
       - ./api:/app
-      - api_venv:/app/.venv
 
   worker-short:
     volumes:
       - ./api:/app
-      - api_venv:/app/.venv
 
   dispatcher:
     volumes:
       - ./api:/app
-      - api_venv:/app/.venv
 
   scheduler:
     volumes:
       - ./api:/app
-      - api_venv:/app/.venv
 
 volumes:
   web_node_modules:
-  api_venv:
