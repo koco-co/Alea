@@ -36,6 +36,45 @@ class FakeDatabase:
         return self.last_cursor
 
 
+class FakeSupabaseQuery:
+    def __init__(self, rows: list[dict[str, Any]]) -> None:
+        self.rows = rows
+        self.filters: dict[str, object] = {}
+
+    def select(self, value: str) -> FakeSupabaseQuery:
+        self.filters["select"] = value
+        return self
+
+    def eq(self, key: str, value: object) -> FakeSupabaseQuery:
+        self.filters[key] = value
+        return self
+
+    def gt(self, key: str, value: object) -> FakeSupabaseQuery:
+        self.filters[f"{key}_gt"] = value
+        return self
+
+    def order(self, value: str) -> FakeSupabaseQuery:
+        self.filters["order"] = value
+        return self
+
+    def limit(self, value: int) -> FakeSupabaseQuery:
+        self.filters["limit"] = value
+        return self
+
+    def execute(self) -> object:
+        return type("Response", (), {"data": self.rows})()
+
+
+class FakeSupabase:
+    def __init__(self, rows: list[dict[str, Any]]) -> None:
+        self.query = FakeSupabaseQuery(rows)
+        self.table_name = ""
+
+    def table(self, value: str) -> FakeSupabaseQuery:
+        self.table_name = value
+        return self.query
+
+
 def gateway(database: FakeDatabase) -> BusinessGateway:
     return BusinessGateway(
         database,
@@ -87,4 +126,33 @@ async def test_business_operation_name_cannot_inject_sql() -> None:
     database = FakeDatabase([])
 
     with pytest.raises(ValueError, match="invalid_business_operation"):
-        await gateway(database).query("events; drop table profiles", viewer_id="viewer-1", params={})
+        await gateway(database).query(
+            "events; drop table profiles",
+            viewer_id="viewer-1",
+            params={},
+        )
+
+
+@pytest.mark.asyncio
+async def test_admin_event_reader_uses_privileged_internal_table() -> None:
+    rows = [{"job_id": "job-1", "event_seq": 3}]
+    supabase = FakeSupabase(rows)
+    value = BusinessGateway(
+        FakeDatabase([]),
+        datasource_factory=DatasourceFactory(),
+        provider_factory=ProviderFactory(),
+        privileged_supabase=supabase,
+    )
+
+    result = await value.read_events(
+        "job-1",
+        after_seq=2,
+        limit=20,
+        visibility="internal",
+        viewer_id="admin-1",
+    )
+
+    assert result == rows
+    assert supabase.table_name == "roundtable_events"
+    assert supabase.query.filters["job_id"] == "job-1"
+    assert supabase.query.filters["event_seq_gt"] == 2

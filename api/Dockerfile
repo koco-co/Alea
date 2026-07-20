@@ -9,7 +9,9 @@ COPY --from=uv /uv /uvx /bin/
 COPY pyproject.toml uv.lock ./
 RUN uv sync --locked --no-dev
 COPY app ./app
-RUN addgroup --system alea && adduser --system --ingroup alea alea && chown -R alea:alea /app
+RUN addgroup --system alea && adduser --system --ingroup alea alea && chown -R alea:alea /app /opt/venv
+ENV HOME=/app
+ENV UV_CACHE_DIR=/app/.uv-cache
 USER alea
 EXPOSE 8000
-CMD ["uv", "run", "--locked", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["/opt/venv/bin/uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

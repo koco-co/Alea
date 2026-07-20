@@ -22,4 +22,4 @@ COPY --from=builder --chown=alea:alea /app/.next/static ./.next/static
 COPY --from=builder --chown=alea:alea /app/public ./public
 USER alea
 EXPOSE 3000
-CMD ["bun", "server.js"]
+CMD HOSTNAME=0.0.0.0 bun server.js

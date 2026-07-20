@@ -89,6 +89,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
                 database,
                 datasource_factory=datasource_factory,
                 provider_factory=provider_factory,
+                privileged_supabase=supabase_client,
             )
         app.state.supabase = supabase_client
         app.state.database = database
@@ -122,8 +123,11 @@ app.include_router(admin.router)
 app.include_router(roundtable.router)
 app.include_router(matches.router)
 app.include_router(ledger.router)
+app.include_router(ledger.rankings_router)
 app.include_router(real_ledger.router)
 app.include_router(settings.router)
+app.include_router(settings.messages_router)
+app.include_router(settings.admin_settings_router)
 
 
 @app.get("/health", tags=["system"])

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import re
 from collections.abc import Mapping, Sequence
 from typing import Any
@@ -59,10 +60,12 @@ class BusinessGateway:
         *,
         datasource_factory: DatasourceFactory,
         provider_factory: ProviderFactory,
+        privileged_supabase: Any | None = None,
     ) -> None:
         self.database = database
         self.datasource_factory = datasource_factory
         self.provider_factory = provider_factory
+        self.privileged_supabase = privileged_supabase
 
     async def read_events(
         self,
@@ -75,6 +78,13 @@ class BusinessGateway:
     ) -> list[Mapping[str, Any]]:
         del viewer_id  # Authentication and role selection happen at the router boundary.
         if visibility == "internal":
+            if self.privileged_supabase is not None:
+                return await asyncio.to_thread(
+                    self._read_internal_events,
+                    job_id,
+                    after_seq,
+                    limit,
+                )
             statement = """
                 select id, job_id, event_seq, event_type, payload, created_at
                 from roundtable_events
@@ -94,6 +104,23 @@ class BusinessGateway:
         else:
             raise ValueError("invalid_roundtable_event_visibility")
         return await self._fetch_rows(statement, (job_id, after_seq, limit))
+
+    def _read_internal_events(
+        self, job_id: str, after_seq: int, limit: int
+    ) -> list[Mapping[str, Any]]:
+        response = (
+            self.privileged_supabase.table("roundtable_events")
+            .select("id,job_id,event_seq,event_type,payload,created_at")
+            .eq("job_id", job_id)
+            .gt("event_seq", after_seq)
+            .order("event_seq")
+            .limit(limit)
+            .execute()
+        )
+        data = getattr(response, "data", None)
+        if not isinstance(data, list) or not all(isinstance(row, Mapping) for row in data):
+            raise TypeError("invalid_internal_roundtable_event_projection")
+        return data
 
     async def query(
         self,
