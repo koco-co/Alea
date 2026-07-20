@@ -37,6 +37,8 @@
     @media(max-width:1000px){.admin-layout>div,#lineup{min-width:0}.admin-flow-nav{grid-template-columns:repeat(6,minmax(110px,1fr));overflow-x:auto}.lineup-provider-panel{position:static}.lineup-workspace{grid-template-columns:270px minmax(0,1fr)}}
     @media(max-width:760px){.sync-log .admin-table-row{grid-template-columns:1fr}.user-toolbar{grid-template-columns:1fr}.settings-search{grid-template-columns:1fr}.settings-search .status{justify-self:start}.settings-form-grid.three,.settings-toggle-grid{grid-template-columns:minmax(0,1fr)}.admin-main{padding-top:14px;padding-bottom:24px}.admin-sidebar{overflow:hidden;padding:8px}.admin-sidebar-label{display:none}.admin-flow-nav{display:flex;overflow-x:auto;scrollbar-width:none}.admin-flow-nav a{min-width:max-content}.admin-head{display:block}.admin-head h1{max-width:18ch;font-size:30px}.admin-head>.status,.admin-head>div:last-child:not(:first-child){margin-top:12px}.launch-match-head{align-items:flex-start;flex-direction:column}.launch-matchup{gap:10px;padding:13px 8px}.launch-team{min-width:0;flex:1}.launch-team img{width:48px;height:32px}.launch-team strong{font-size:17px}.launch-fact-grid,.launch-settings,.mode-switch{grid-template-columns:minmax(0,1fr)}.lineup-head-actions{margin-top:10px}.lineup-context{grid-template-columns:auto minmax(0,1fr);padding:13px}.lineup-context>.tag{grid-column:1/-1}.lineup-workspace{grid-template-columns:minmax(0,1fr)}.lineup-provider-panel{min-width:0;padding:12px;overflow:hidden}.lineup-provider-list{display:grid;max-width:100%;overflow:visible;padding-bottom:0;scroll-snap-type:none}.lineup-provider-button{min-width:0;width:100%;scroll-snap-align:none}.lineup-editor{max-width:100%;padding:14px;overflow:hidden}.lineup-section-head{display:block}.lineup-section-head>.lineup-inline-actions{margin-top:9px}.lineup-form-grid,.lineup-instance-grid{grid-template-columns:minmax(0,1fr)}.lineup-form-grid .wide{grid-column:auto}.lineup-model-tools{grid-template-columns:minmax(0,1fr)}.lineup-instance-metrics{grid-template-columns:1fr}.lineup-key-state{align-items:stretch;flex-direction:column}.lineup-key-state .lineup-inline-actions{display:grid;grid-template-columns:1fr 1fr}.lineup-key-state .btn{min-width:0;padding-inline:8px}.lineup-savebar,.settings-savebar{position:static;bottom:auto;align-items:stretch;flex-direction:column}.lineup-savebar p{display:none}.lineup-save-actions{display:grid;grid-template-columns:1fr 1fr;width:100%;margin-left:0}.lineup-savebar .btn{min-width:0}.lineup-editor>.admin-card-head{align-items:flex-start}.lineup-provider-identity h2{font-size:22px}}
     @media(max-width:430px){.admin-topbar #adminSyncStatus{max-width:96px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}.admin-topbar .brand-lockup{max-width:88px}.admin-topbar .header-actions{gap:2px}}
+    .lineup-mode-tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin:0 0 14px;padding:4px;border:1px solid var(--border-soft);border-radius:var(--radius-md);background:var(--surface-warm)}.lineup-mode-tab{min-height:44px;border:0;border-radius:10px;background:transparent;color:var(--fg);cursor:pointer}.lineup-mode-tab[aria-selected="true"]{background:var(--surface);box-shadow:var(--elev-ring)}.cli-runtime-meta{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.cli-runtime-meta>div{padding:10px;border:1px solid var(--border-soft);border-radius:var(--radius-md);background:var(--surface-warm)}.cli-runtime-meta span,.cli-runtime-meta strong{display:block}.cli-runtime-meta span{color:var(--muted);font-size:9px}.cli-runtime-meta strong{margin-top:3px;font-size:11px}.cli-path-note{margin-top:7px;color:var(--muted);font-size:10px;line-height:1.55}
+    @media(max-width:760px){.cli-runtime-meta{grid-template-columns:minmax(0,1fr)}}
   </style>
 </head>
 <body>
@@ -183,9 +185,14 @@
 
         <section class="admin-screen" id="lineup" data-od-id="admin-lineup-screen">
           <header class="admin-head">
-            <div><p class="eyebrow">系统管理 · 模型阵容</p><h1>管理可验证的模型阵容。</h1><p>厂商凭据仅由服务端保存；配置变化后必须重新测试，退役实例保留历史记录且不得进入新圆桌。</p></div>
-            <div class="lineup-head-actions"><span class="status status-good" id="lineupAvailability">6 个厂商 · 7 个实例</span><button class="btn btn-secondary" id="addProviderButton" type="button" aria-haspopup="dialog">新增厂商</button></div>
+            <div><p class="eyebrow">系统管理 · 模型阵容</p><h1>管理可验证的模型阵容。</h1><p>API 厂商与 CLI 工具均在此配置；变化后必须重新测试，退役实例保留历史记录且不得进入新圆桌。</p></div>
+            <div class="lineup-head-actions"><span class="status status-good" id="lineupAvailability">API 厂商 · 6 个已配置</span><button class="btn btn-secondary" id="addProviderButton" type="button" aria-haspopup="dialog">新增连接</button></div>
           </header>
+
+          <div class="lineup-mode-tabs" role="tablist" aria-label="模型阵容连接类型">
+            <button class="lineup-mode-tab" id="apiProviderTab" type="button" role="tab" aria-selected="true" aria-controls="apiProviderWorkspace">API 厂商</button>
+            <button class="lineup-mode-tab" id="cliRuntimeTab" type="button" role="tab" aria-selected="false" aria-controls="cliRuntimeWorkspace">CLI 工具</button>
+          </div>
 
           <section class="lineup-context" data-od-id="lineup-execution-context" aria-labelledby="lineupContextTitle">
             <div class="lineup-context-flags"><img src="assets/flag-spain.png" alt="西班牙国旗"><img src="assets/flag-argentina.png" alt="阿根廷国旗"></div>
@@ -193,7 +200,7 @@
             <span class="tag">未绑定比赛数据</span>
           </section>
 
-          <div class="lineup-workspace">
+          <div class="lineup-workspace" id="apiProviderWorkspace" role="tabpanel" aria-labelledby="apiProviderTab">
             <aside class="card lineup-provider-panel" data-od-id="lineup-provider-list-panel" aria-labelledby="providerListTitle">
               <div class="admin-card-head"><div><p class="eyebrow">官方厂商</p><h2 id="providerListTitle">配置目录</h2></div><span class="tag" id="providerCount">6 / 6</span></div>
               <div class="lineup-provider-list" id="providerList" aria-label="AI 厂商列表"></div>
@@ -202,9 +209,21 @@
             <section class="card lineup-editor" id="lineupEditor" data-od-id="lineup-provider-editor" aria-busy="false"></section>
           </div>
 
-          <div class="lineup-savebar" data-od-id="lineup-save-bar">
+          <div class="lineup-workspace" id="cliRuntimeWorkspace" role="tabpanel" aria-labelledby="cliRuntimeTab" hidden>
+            <aside class="card lineup-provider-panel" aria-labelledby="cliRuntimeListTitle">
+              <div class="admin-card-head"><div><p class="eyebrow">本地运行时目录</p><h2 id="cliRuntimeListTitle">CLI 工具</h2></div><span class="tag">11 项</span></div>
+              <div class="lineup-provider-list" id="cliRuntimeList" aria-label="CLI 工具列表"></div>
+            </aside>
+            <section class="card lineup-editor" id="cliRuntimeEditor" aria-live="polite"></section>
+          </div>
+
+          <div class="lineup-savebar" id="apiProviderSavebar" data-od-id="lineup-save-bar">
             <div><span class="status status-neutral" id="lineupSaveStatus" role="status" aria-live="polite">未修改</span><p id="lineupSaveHelp">所有配置与上次保存一致。</p></div>
             <div class="lineup-save-actions"><button class="btn btn-secondary" id="discardLineupChanges" type="button" disabled>撤销修改</button><button class="btn btn-primary" id="saveLineup" type="button" disabled>保存配置</button></div>
+          </div>
+          <div class="lineup-savebar" id="cliRuntimeSavebar" hidden>
+            <div><span class="status status-neutral" id="cliSaveStatus" role="status" aria-live="polite">未修改</span><p>CLI 路径由管理员手动填写；平台不扫描 PATH、不部署 daemon。</p></div>
+            <div class="lineup-save-actions"><button class="btn btn-secondary" id="revertCliRuntime" type="button">撤销修改</button><button class="btn btn-primary" id="saveCliRuntime" type="button">保存 CLI 配置</button></div>
           </div>
 
           <section class="lineup-dialog" id="addProviderDialog" role="dialog" aria-modal="true" aria-labelledby="addProviderTitle" aria-describedby="addProviderDescription" hidden>
@@ -473,6 +492,58 @@
     document.addEventListener('keydown',event=>{const dialog=document.querySelector('[role="dialog"][aria-modal="true"]:not([hidden])');if(!dialog)return;trapDialogFocus(event,dialog);if(event.key==='Escape'){const cancelByDialog={stopDialog:'cancelStop',publishConfirmPanel:'cancelPublish',withdrawPanel:'cancelWithdrawal',addProviderDialog:'cancelAddProvider',clearKeyDialog:'cancelClearKey',retireInstanceDialog:'cancelRetireInstance',lineupLeaveDialog:'stayLineupChanges',settingsLeaveDialog:'staySettings'};const cancelId=cancelByDialog[dialog.id];if(cancelId)document.getElementById(cancelId).click()}});
     const adminPopoverButtons=[document.getElementById('adminNotificationButton'),document.getElementById('adminAccountButton')],adminPopovers=[document.getElementById('adminNotificationPanel'),document.getElementById('adminAccountPanel')];let activeAdminPopoverButton=null;function closeAdminPopovers(){adminPopovers.forEach(panel=>panel.hidden=true);adminPopoverButtons.forEach(button=>button.setAttribute('aria-expanded','false'))}adminPopoverButtons.forEach(button=>button.addEventListener('click',event=>{event.stopPropagation();const panel=document.getElementById(button.getAttribute('aria-controls')),willOpen=panel.hidden;closeAdminPopovers();panel.hidden=!willOpen;button.setAttribute('aria-expanded',String(willOpen));activeAdminPopoverButton=willOpen?button:null;if(willOpen)panel.querySelector('button,a')?.focus({preventScroll:true})}));adminPopovers.forEach(panel=>panel.addEventListener('click',event=>event.stopPropagation()));document.addEventListener('click',()=>{closeAdminPopovers();activeAdminPopoverButton=null});document.addEventListener('keydown',event=>{if(event.key==='Escape'&&activeAdminPopoverButton){const returnFocus=activeAdminPopoverButton;closeAdminPopovers();activeAdminPopoverButton=null;returnFocus.focus({preventScroll:true})}});document.getElementById('adminMarkRead').addEventListener('click',()=>{document.getElementById('adminNotificationButton').setAttribute('aria-label','通知，无待处理');notify('管理通知已全部标记为已读')});document.querySelectorAll('[data-admin-account-action]').forEach(button=>button.addEventListener('click',()=>notify(`${button.dataset.adminAccountAction}已打开`)));
     window.addEventListener('hashchange',()=>go(routeName()));go(routeName(),{replace:true});
+  </script>
+  <script>
+    (() => {
+      const cliRuntimes = [
+        {key:'codex',name:'Codex CLI',asset:'assets/vendors/openai.svg',path:'/opt/homebrew/bin/codex',version:'0.144.6',auth:'已认证',status:'passed',models:['default','gpt-5.4'],model:'default',reasoning:true,instances:[{id:1,nickname:'Codex-1',enabled:true,model:'default',reasoning:'高',timeout:120,concurrency:1,promptVersion:'prediction-v1'}]},
+        {key:'claude',name:'Claude Code',asset:'assets/vendors/anthropic.svg',path:'',version:'待探测',auth:'未知',status:'idle',models:['default','sonnet','opus','haiku'],model:'default',reasoning:true,instances:[{id:1,nickname:'Claude-1',enabled:false,model:'default',reasoning:'中',timeout:120,concurrency:1,promptVersion:'prediction-v1'}]},
+        {key:'gemini',name:'Gemini CLI',asset:'assets/vendors/gemini.svg',path:'',version:'待探测',auth:'未知',status:'idle',models:['auto','gemini-3-pro-preview'],model:'auto',reasoning:true,instances:[{id:1,nickname:'Gemini-1',enabled:false,model:'auto',reasoning:'中',timeout:120,concurrency:1,promptVersion:'prediction-v1'}]},
+        {key:'copilot',name:'Copilot CLI',asset:null,path:'',version:'待探测',auth:'未知',status:'idle',models:['default'],model:'default',reasoning:false,instances:[{id:1,nickname:'Copilot-1',enabled:false,model:'default',reasoning:'',timeout:120,concurrency:1,promptVersion:'prediction-v1'}]},
+        {key:'cursor',name:'Cursor Agent',asset:null,path:'',version:'待探测',auth:'未知',status:'idle',models:['auto'],model:'auto',reasoning:true,instances:[{id:1,nickname:'Cursor-1',enabled:false,model:'auto',reasoning:'中',timeout:120,concurrency:1,promptVersion:'prediction-v1'}]},
+        {key:'opencode',name:'OpenCode',asset:null,path:'',version:'待探测',auth:'未知',status:'idle',models:['default'],model:'default',reasoning:false,instances:[{id:1,nickname:'OpenCode-1',enabled:false,model:'default',reasoning:'',timeout:120,concurrency:1,promptVersion:'prediction-v1'}]},
+        {key:'hermes',name:'Hermes',asset:null,path:'',version:'待探测',auth:'未知',status:'idle',models:['default'],model:'default',reasoning:true,instances:[{id:1,nickname:'Hermes-1',enabled:false,model:'default',reasoning:'中',timeout:120,concurrency:1,promptVersion:'prediction-v1'}]},
+        {key:'kimi',name:'Kimi CLI',asset:'assets/vendors/kimi.png',path:'',version:'待探测',auth:'未知',status:'idle',models:['default'],model:'default',reasoning:true,instances:[{id:1,nickname:'Kimi-1',enabled:false,model:'default',reasoning:'中',timeout:120,concurrency:1,promptVersion:'prediction-v1'}]},
+        {key:'qwen',name:'Qwen Code',asset:'assets/vendors/qwen.svg',path:'',version:'待探测',auth:'未知',status:'idle',models:['default'],model:'default',reasoning:false,instances:[{id:1,nickname:'Qwen-1',enabled:false,model:'default',reasoning:'',timeout:120,concurrency:1,promptVersion:'prediction-v1'}]},
+        {key:'aider',name:'Aider',asset:null,path:'',version:'待探测',auth:'未知',status:'idle',models:['default'],model:'default',reasoning:false,instances:[{id:1,nickname:'Aider-1',enabled:false,model:'default',reasoning:'',timeout:120,concurrency:1,promptVersion:'prediction-v1'}]},
+        {key:'amp',name:'Amp',asset:null,path:'',version:'待探测',auth:'未知',status:'idle',models:['default'],model:'default',reasoning:false,instances:[{id:1,nickname:'Amp-1',enabled:false,model:'default',reasoning:'',timeout:120,concurrency:1,promptVersion:'prediction-v1'}]}
+      ];
+      let selectedCliKey='codex';
+      const apiTab=document.getElementById('apiProviderTab'),cliTab=document.getElementById('cliRuntimeTab'),apiWorkspace=document.getElementById('apiProviderWorkspace'),cliWorkspace=document.getElementById('cliRuntimeWorkspace'),apiSavebar=document.getElementById('apiProviderSavebar'),cliSavebar=document.getElementById('cliRuntimeSavebar'),addButton=document.getElementById('addProviderButton'),availability=document.getElementById('lineupAvailability'),cliList=document.getElementById('cliRuntimeList'),cliEditor=document.getElementById('cliRuntimeEditor'),cliSaveStatus=document.getElementById('cliSaveStatus');
+      const safe=value=>String(value).replace(/[&<>'"]/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
+      function switchMode(mode){
+        const cli=mode==='cli';
+        apiTab.setAttribute('aria-selected',String(!cli));cliTab.setAttribute('aria-selected',String(cli));
+        apiWorkspace.hidden=cli;apiSavebar.hidden=cli;cliWorkspace.hidden=!cli;cliSavebar.hidden=!cli;addButton.hidden=cli;
+        availability.textContent=cli?'CLI 工具 · 11 项目录':'API 厂商 · 6 个已配置';
+        if(cli){renderCliList();renderCliEditor()}
+      }
+      function runtimeStatus(runtime){
+        if(runtime.status==='passed')return ['status-good','可用'];
+        if(runtime.status==='failed')return ['status-bad','不可用'];
+        return ['status-neutral','待探测'];
+      }
+      function renderCliList(){
+        cliList.innerHTML=cliRuntimes.map(runtime=>{
+          const [statusClass,statusText]=runtimeStatus(runtime);
+          const identity=runtime.asset?`<span class="vendor-avatar"><img src="${runtime.asset}" alt="${safe(runtime.name)} 官方标识"></span>`:'';
+          return `<button class="lineup-provider-button${runtime.key===selectedCliKey?' active':''}" type="button" data-cli-key="${runtime.key}" aria-pressed="${runtime.key===selectedCliKey}">${identity}<span><strong>${safe(runtime.name)}</strong><small>${runtime.path?safe(runtime.path):'未填写本地路径'}</small></span><span class="status ${statusClass}">${statusText}</span></button>`
+        }).join('');
+      }
+      function renderCliEditor(){
+        const runtime=cliRuntimes.find(item=>item.key===selectedCliKey);if(!runtime)return;
+        const [statusClass,statusText]=runtimeStatus(runtime);
+        const identity=runtime.asset?`<span class="vendor-avatar"><img src="${runtime.asset}" alt="${safe(runtime.name)} 官方标识"></span>`:'';
+        cliEditor.innerHTML=`<div class="admin-card-head"><div class="lineup-provider-identity">${identity}<div><h2>${safe(runtime.name)}</h2><p>runtime_key=${safe(runtime.key)} · 路径由管理员手动配置</p></div></div><span class="status ${statusClass}">${statusText}</span></div><div class="lineup-section"><div class="lineup-section-head"><div><h3>本地可执行路径</h3><p>不扫描 PATH；FastAPI 与 Worker 都必须能访问同一绝对路径。</p></div><button class="btn btn-secondary" type="button" data-cli-action="probe">重新探测</button></div><div class="admin-field"><label for="cliExecutablePath">绝对可执行路径</label><input id="cliExecutablePath" value="${safe(runtime.path)}" placeholder="/absolute/path/to/${safe(runtime.key)}" autocomplete="off"></div><p class="cli-path-note">仅执行适配器固定参数数组；禁止 shell 拼接、任意命令、脚本和自定义启动参数。</p><div class="cli-runtime-meta" style="margin-top:10px"><div><span>版本</span><strong>${safe(runtime.version)}</strong></div><div><span>认证状态</span><strong>${safe(runtime.auth)}</strong></div><div><span>可用模型</span><strong>${runtime.models.length} 个</strong></div></div></div><div class="lineup-section"><div class="lineup-section-head"><div><h3>模型与连接验证</h3><p>路径、认证或模型变化后必须重新测试。</p></div><button class="btn btn-secondary" type="button" data-cli-action="test">测试连接</button></div><div class="lineup-form-grid"><div class="admin-field"><label for="cliModel">模型</label><select id="cliModel">${runtime.models.map(model=>`<option${model===runtime.model?' selected':''}>${safe(model)}</option>`).join('')}</select></div><div class="admin-field"><label for="cliCustomModel">自定义模型 ID</label><input id="cliCustomModel" placeholder="adapter-supported-model"></div></div><div class="lineup-callout${runtime.status==='failed'?' bad':''}" style="margin-top:10px" id="cliTestMessage">${runtime.status==='passed'?'连接测试通过；版本、认证与结构化输出可用。':runtime.status==='failed'?'探测失败；实例保持停用，不进入圆桌。':'尚未执行真实探测。'}</div></div><div class="lineup-section"><div class="lineup-section-head"><div><h3>实例管理</h3><p>${runtime.instances.length} / 3 个实例</p></div><button class="btn btn-secondary" type="button" data-cli-action="add-instance"${runtime.instances.length>=3?' disabled':''}>${runtime.instances.length>=3?'已达上限':'新增实例'}</button></div><div class="lineup-instance-list">${runtime.instances.map(instance=>`<article class="lineup-instance"><div class="lineup-instance-head"><div class="lineup-instance-title"><strong>${safe(instance.nickname)}</strong><small>实例 ${String(instance.id).padStart(2,'0')}</small></div><div class="lineup-inline-actions"><label class="lineup-switch"><input type="checkbox" data-cli-instance="${instance.id}"${instance.enabled?' checked':''}${runtime.status!=='passed'?' disabled':''}><span>启用</span></label><button class="btn btn-ghost" type="button" data-cli-action="retire-instance" data-instance-id="${instance.id}">退役</button></div></div><div class="lineup-instance-grid"><div class="admin-field"><label>昵称</label><input value="${safe(instance.nickname)}" data-instance-field="nickname" data-instance-id="${instance.id}"></div><div class="admin-field"><label>模型</label><input value="${safe(instance.model)}" data-instance-field="model" data-instance-id="${instance.id}"></div><div class="admin-field"><label>超时</label><input type="number" min="1" max="900" value="${instance.timeout}" data-instance-field="timeout" data-instance-id="${instance.id}"></div><div class="admin-field"><label>并发</label><input type="number" min="1" max="16" value="${instance.concurrency}" data-instance-field="concurrency" data-instance-id="${instance.id}"></div></div></article>`).join('')}</div></div>`;
+      }
+      apiTab.addEventListener('click',()=>switchMode('api'));cliTab.addEventListener('click',()=>switchMode('cli'));
+      cliList.addEventListener('click',event=>{const button=event.target.closest('[data-cli-key]');if(!button)return;selectedCliKey=button.dataset.cliKey;renderCliList();renderCliEditor()});
+      cliEditor.addEventListener('input',event=>{const runtime=cliRuntimes.find(item=>item.key===selectedCliKey);if(!runtime)return;if(event.target.id==='cliExecutablePath'){runtime.path=event.target.value;runtime.status='idle';runtime.version='待探测';runtime.auth='未知'}if(event.target.id==='cliModel'){runtime.model=event.target.value;runtime.status='idle'}const instance=runtime.instances.find(item=>String(item.id)===event.target.dataset.instanceId);if(instance&&event.target.dataset.instanceField){instance[event.target.dataset.instanceField]=event.target.type==='number'?Number(event.target.value):event.target.value}cliSaveStatus.className='status status-warn';cliSaveStatus.textContent='有未保存修改';renderCliList()});
+      cliEditor.addEventListener('change',event=>{const runtime=cliRuntimes.find(item=>item.key===selectedCliKey);const instance=runtime?.instances.find(item=>String(item.id)===event.target.dataset.cliInstance);if(instance)instance.enabled=event.target.checked});
+      cliEditor.addEventListener('click',event=>{const button=event.target.closest('[data-cli-action]'),runtime=cliRuntimes.find(item=>item.key===selectedCliKey);if(!button||!runtime)return;const action=button.dataset.cliAction;if(action==='probe'||action==='test'){runtime.status='idle';document.getElementById('cliTestMessage').textContent='正在由 FastAPI 执行最小探测…';setTimeout(()=>{const valid=runtime.path.startsWith('/')&&runtime.key==='codex';runtime.status=valid?'passed':'failed';runtime.version=valid?'0.144.6':'探测失败';runtime.auth=valid?'已认证':'未知';renderCliList();renderCliEditor()},600);return}if(action==='add-instance'&&runtime.instances.length<3){const id=Math.max(0,...runtime.instances.map(item=>item.id))+1;runtime.instances.push({id,nickname:`${runtime.name}-${id}`,enabled:false,model:runtime.model,reasoning:runtime.reasoning?'中':'',timeout:120,concurrency:1,promptVersion:'prediction-v1'});renderCliEditor();return}if(action==='retire-instance'){runtime.instances=runtime.instances.filter(item=>String(item.id)!==button.dataset.instanceId);renderCliEditor()}});
+      document.getElementById('saveCliRuntime').addEventListener('click',()=>{const runtime=cliRuntimes.find(item=>item.key===selectedCliKey);const valid=runtime&&runtime.path.startsWith('/')&&runtime.status==='passed'&&runtime.instances.length>=1&&runtime.instances.length<=3;cliSaveStatus.className=`status ${valid?'status-good':'status-bad'}`;cliSaveStatus.textContent=valid?'已保存':'保存失败 · 先完成路径与连接测试'});
+      document.getElementById('revertCliRuntime').addEventListener('click',()=>{renderCliEditor();cliSaveStatus.className='status status-neutral';cliSaveStatus.textContent='未修改'});
+    })();
   </script>
 </body>
 </html>

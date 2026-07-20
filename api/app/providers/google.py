@@ -16,6 +16,7 @@ from app.providers.openai_compat import (
     _object_output,
     _optional_int,
     _optional_string,
+    _validate_output_schema,
 )
 
 
@@ -82,6 +83,7 @@ class GoogleProvider(HTTPProvider):
             if isinstance(part.get("functionCall"), Mapping)
             else part.get("text")
         )
+        _validate_output_schema(output, ctx)
         usage = _mapping(body.get("usageMetadata", {}), "usageMetadata")
         return ProviderResult(
             request_id=req.request_id,

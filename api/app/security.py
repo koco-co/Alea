@@ -135,6 +135,7 @@ def validate_outbound_url(
     *,
     allowed_hosts: set[str] | None = None,
     resolver: Callable[..., list[tuple[Any, ...]]] = socket.getaddrinfo,
+    allow_proxy_synthetic_dns: bool = False,
 ) -> str:
     try:
         parsed = urlsplit(value)
@@ -157,7 +158,20 @@ def validate_outbound_url(
         addresses = {answer[4][0] for answer in answers}
     else:
         addresses = {str(literal)}
-    if not addresses or any(_is_forbidden_ip(address) for address in addresses):
+    synthetic_proxy_network = ipaddress.ip_network("198.18.0.0/15")
+    proxy_synthetic_only = bool(addresses) and all(
+        ipaddress.ip_address(address) in synthetic_proxy_network for address in addresses
+    )
+    if (
+        not addresses
+        or any(_is_forbidden_ip(address) for address in addresses)
+        and not (
+            allow_proxy_synthetic_dns
+            and allowed_hosts is not None
+            and hostname in {host.casefold() for host in allowed_hosts}
+            and proxy_synthetic_only
+        )
+    ):
         raise SecurityError("outbound_address_forbidden")
     return urlunsplit((parsed.scheme, parsed.netloc, parsed.path or "/", parsed.query, ""))
 

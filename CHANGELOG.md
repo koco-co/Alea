@@ -6,7 +6,7 @@
 
 ### Added
 
-- Codex CLI 隔离 runner、11 阶段 Provider adapter 与本地/生产启动配置。
+- API 厂商与通用 CLI 工具双目录、11 阶段 Provider adapter、固定参数子进程隔离与本地/生产启动配置；移除独立 runner daemon。
 - CLI/API Provider 执行模式和管理员模型阵容交互。
 - Supabase 服务角色迁移、环境校验、Python/Bun 锁文件。
 - 竞彩官方规则证据台账与 Python/TypeScript `half_even` golden tests。

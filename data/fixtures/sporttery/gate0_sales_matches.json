@@ -1,0 +1,91 @@
+{
+  "fixture_kind": "sporttery_sales_fixture",
+  "fixture": true,
+  "sporttery_sale_scope": true,
+  "parser_version": "fixture-v1",
+  "provenance_note": "Artificial Gate 0 records for parser, idempotency, settlement-state, backup and migration tests. They are not official Sporttery sales or results.",
+  "records": [
+    {
+      "source_record_key": "fixture:2030-01-01:001",
+      "sporttery_match_number": "FIXTURE-001",
+      "business_date": "2030-01-01",
+      "observed_at": "2030-01-01T08:00:00+08:00",
+      "source_url": null,
+      "competition": {
+        "source_key": "fixture-world-cup",
+        "name": "世界杯 Fixture",
+        "country_code": "INT",
+        "competition_type": "cup"
+      },
+      "season": {
+        "source_key": "fixture-world-cup-2030",
+        "name": "2030 Fixture",
+        "starts_on": "2030-01-01",
+        "ends_on": "2030-12-31"
+      },
+      "home_team": {
+        "source_key": "fixture-spain",
+        "name": "Fixture 西班牙",
+        "country_code": "TST"
+      },
+      "away_team": {
+        "source_key": "fixture-argentina",
+        "name": "Fixture 阿根廷",
+        "country_code": "TST"
+      },
+      "kickoff_at": "2030-01-01T20:00:00+08:00",
+      "sales_cutoff_at": "2030-01-01T19:55:00+08:00",
+      "sales_status": "closed",
+      "odds": [
+        {
+          "play_type": "HAD",
+          "values": {
+            "H": "1.80",
+            "D": "3.20",
+            "A": "4.10"
+          },
+          "observed_at": "2030-01-01T08:00:00+08:00"
+        }
+      ],
+      "result": {
+        "home_score": 2,
+        "away_score": 1,
+        "status": "pending"
+      }
+    },
+    {
+      "source_record_key": "fixture:2030-01-02:002",
+      "sporttery_match_number": "FIXTURE-002",
+      "business_date": "2030-01-02",
+      "observed_at": "2030-01-02T08:00:00+08:00",
+      "source_url": null,
+      "competition": {
+        "source_key": "fixture-premier-league",
+        "name": "英超 Fixture",
+        "country_code": "GBR",
+        "competition_type": "league"
+      },
+      "season": {
+        "source_key": "fixture-premier-league-2029",
+        "name": "2029/30 Fixture",
+        "starts_on": "2029-08-01",
+        "ends_on": "2030-05-31"
+      },
+      "home_team": {
+        "source_key": "fixture-premier-home",
+        "name": "Fixture 英超主队",
+        "country_code": "TST"
+      },
+      "away_team": {
+        "source_key": "fixture-premier-away",
+        "name": "Fixture 英超客队",
+        "country_code": "TST"
+      },
+      "kickoff_at": "2030-01-02T20:00:00+08:00",
+      "sales_cutoff_at": "2030-01-02T19:55:00+08:00",
+      "sales_status": "scheduled",
+      "odds": [],
+      "result": null
+    }
+  ]
+}

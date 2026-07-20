@@ -46,10 +46,25 @@ create trigger roundtable_events_broadcast
 after insert on roundtable_events
 for each row execute function broadcast_roundtable_event();
 
--- Supabase owns realtime.messages with supabase_realtime_admin and already enables
--- RLS. Cloud migrations execute as postgres, which cannot create policies on that
--- platform-owned table. The private-channel read policy must therefore be installed
--- by the Realtime owner through the supported dashboard workflow before G2 can pass.
+-- Supabase owns realtime.messages with supabase_realtime_admin. The migration
+-- operator temporarily assumes that owner role to remove client writes and install
+-- the private-channel read policy. Alea publishes only through the database trigger.
+grant usage on schema public to supabase_realtime_admin;
+grant execute on function public.can_read_roundtable_topic(text)
+  to supabase_realtime_admin;
+set role supabase_realtime_admin;
+revoke insert, update, delete on realtime.messages from authenticated;
+drop policy if exists alea_roundtable_private_read on realtime.messages;
+create policy alea_roundtable_private_read
+on realtime.messages
+for select
+to authenticated
+using (
+  realtime.topic() like 'roundtable:%'
+  and public.can_read_roundtable_topic(realtime.topic())
+);
+reset role;
+
 revoke all on function can_read_roundtable_topic(text) from public;
 grant execute on function can_read_roundtable_topic(text) to authenticated;
 revoke all on function broadcast_roundtable_event() from public;

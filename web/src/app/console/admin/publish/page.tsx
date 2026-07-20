@@ -111,14 +111,30 @@ export default function PublishPage() {
         <div>
           <p className="eyebrow">系统管理 · 发布审核 · PRD 15.3</p>
           <h1>管理员只能备注与决定是否发布，不能改写公证内容。</h1>
-          <p>质检红项会阻断发布；黄项必须显式确认。发布与否不改变公证、排行或模拟盘统计。</p>
+          <p>
+            质检红项会阻断发布；黄项必须显式确认。发布与否不改变公证、排行或模拟盘统计。
+          </p>
         </div>
-        <span className="status-chip warning">{drafts.filter((draft) => draft.status === "待审核").length} 个待审核</span>
+        <span className="status-chip warning">
+          {drafts.filter((draft) => draft.status === "待审核").length} 个待审核
+        </span>
       </header>
 
       <div className="segmented-control" aria-label="发布审核类型">
-        <button className={tab === "predictions" ? "active" : ""} type="button" onClick={() => setTab("predictions")}>预测卡草稿</button>
-        <button className={tab === "rest" ? "active" : ""} type="button" onClick={() => setTab("rest")}>今日休战</button>
+        <button
+          className={tab === "predictions" ? "active" : ""}
+          type="button"
+          onClick={() => setTab("predictions")}
+        >
+          预测卡草稿
+        </button>
+        <button
+          className={tab === "rest" ? "active" : ""}
+          type="button"
+          onClick={() => setTab("rest")}
+        >
+          今日休战
+        </button>
       </div>
 
       {tab === "rest" ? (
@@ -134,23 +150,52 @@ export default function PublishPage() {
             <div>
               <p className="eyebrow">只读审计结论</p>
               <h2>当日全部在售场次均未超过 50% 加权 yes 票</h2>
-              <p>选场范围、有效参与数、冻结版本与零场入围结论来自执行审计，不可编辑。</p>
+              <p>
+                选场范围、有效参与数、冻结版本与零场入围结论来自执行审计，不可编辑。
+              </p>
             </div>
             <dl>
-              <div><dt>选场范围</dt><dd>2026-07-20 · 全部在售</dd></div>
-              <div><dt>有效参与</dt><dd>4 / 5 实例 · 3 厂商</dd></div>
-              <div><dt>冻结版本</dt><dd>VOTE-7.1 · LINEUP-7.4</dd></div>
+              <div>
+                <dt>选场范围</dt>
+                <dd>2026-07-20 · 全部在售</dd>
+              </div>
+              <div>
+                <dt>有效参与</dt>
+                <dd>4 / 5 实例 · 3 厂商</dd>
+              </div>
+              <div>
+                <dt>冻结版本</dt>
+                <dd>VOTE-7.1 · LINEUP-7.4</dd>
+              </div>
             </dl>
           </div>
           <label className="block">
-            <span className="mb-2 block text-sm font-bold">管理员备注（可选）</span>
-            <textarea className="min-h-28 w-full rounded-2xl border border-stone-200 bg-white p-4" placeholder="只能添加备注，不能改写 AI 提名与终投结论" />
+            <span className="mb-2 block text-sm font-bold">
+              管理员备注（可选）
+            </span>
+            <textarea
+              className="min-h-28 w-full rounded-2xl border border-stone-200 bg-white p-4"
+              placeholder="只能添加备注，不能改写 AI 提名与终投结论"
+            />
           </label>
           <div className="mt-4 flex flex-wrap gap-3">
-            <button className="button primary inline" type="button" disabled={restPublished} onClick={() => setRestPublished(true)}>
+            <button
+              className="button primary inline"
+              type="button"
+              disabled={restPublished}
+              onClick={() => setRestPublished(true)}
+            >
               {restPublished ? "今日休战已发布" : "发布今日休战"}
             </button>
-            <button className="button secondary" type="button" onClick={() => setStatus("公告保持未发布；公开审计投影仍会进入历史推演。")}>不发布</button>
+            <button
+              className="button secondary"
+              type="button"
+              onClick={() =>
+                setStatus("公告保持未发布；公开审计投影仍会进入历史推演。")
+              }
+            >
+              不发布
+            </button>
           </div>
         </section>
       ) : (
@@ -165,15 +210,32 @@ export default function PublishPage() {
             </div>
             <div className="data-table" role="table">
               <div className="data-table-row data-table-head" role="row">
-                <span>草稿</span><span>类型</span><span>公证状态</span><span>停售</span><span>操作</span>
+                <span>草稿</span>
+                <span>类型</span>
+                <span>公证状态</span>
+                <span>停售</span>
+                <span>操作</span>
               </div>
               {drafts.map((draft) => (
                 <div className="data-table-row" role="row" key={draft.id}>
-                  <span><strong>{draft.title}</strong><small className="block">{draft.audit}</small></span>
+                  <span>
+                    <strong>{draft.title}</strong>
+                    <small className="block">{draft.audit}</small>
+                  </span>
                   <span>{draft.kind}</span>
-                  <span className={draft.notary ? "positive-copy" : "negative-copy"}>{draft.notary ?? "未达法定人数"}</span>
+                  <span
+                    className={draft.notary ? "positive-copy" : "negative-copy"}
+                  >
+                    {draft.notary ?? "未达法定人数"}
+                  </span>
                   <span className="mono-value">{draft.cutoff}</span>
-                  <button className="button secondary" type="button" onClick={() => setSelectedId(draft.id)}>审核</button>
+                  <button
+                    className="button secondary"
+                    type="button"
+                    onClick={() => setSelectedId(draft.id)}
+                  >
+                    审核
+                  </button>
                 </div>
               ))}
             </div>
@@ -184,48 +246,117 @@ export default function PublishPage() {
               <p className="eyebrow">用户端完整预览 · 只读</p>
               <h2>{selected.title}</h2>
               <div className="score-compare">
-                <div><span>终投比分</span><strong>2 : 1</strong><i>半场 1 : 0</i></div>
-                <div><span>共识度</span><strong>71%</strong><i>原始票数 5 / 7</i></div>
+                <div>
+                  <span>终投比分</span>
+                  <strong>2 : 1</strong>
+                  <i>半场 1 : 0</i>
+                </div>
+                <div>
+                  <span>共识度</span>
+                  <strong>71%</strong>
+                  <i>原始票数 5 / 7</i>
+                </div>
               </div>
               <div className="inline-callout">
-                <strong>{selected.notary ? `公证账本 ${selected.notary}` : `执行审计 ${selected.audit}`}</strong>
-                <p>{selected.notary ? "AI 结论、玩法、赔率快照、仓位与回放已经冻结。" : "未达法定人数，不写入公证账本且禁止发布。"}</p>
+                <strong>
+                  {selected.notary
+                    ? `公证账本 ${selected.notary}`
+                    : `执行审计 ${selected.audit}`}
+                </strong>
+                <p>
+                  {selected.notary
+                    ? "AI 结论、玩法、赔率快照、仓位与回放已经冻结。"
+                    : "未达法定人数，不写入公证账本且禁止发布。"}
+                </p>
               </div>
               <label className="block">
                 <span className="mb-2 block text-sm font-bold">管理员备注</span>
-                <textarea className="min-h-28 w-full rounded-2xl border border-stone-200 bg-white p-4" value={note} onChange={(event) => setNote(event.target.value)} placeholder="备注会追加保存，不修改公证内容" />
+                <textarea
+                  className="min-h-28 w-full rounded-2xl border border-stone-200 bg-white p-4"
+                  value={note}
+                  onChange={(event) => setNote(event.target.value)}
+                  placeholder="备注会追加保存，不修改公证内容"
+                />
               </label>
-              <button className="button secondary" type="button" onClick={() => setStatus(note.trim() ? "管理员备注已追加。" : "请先填写管理员备注。")}>保存备注</button>
+              <button
+                className="button secondary"
+                type="button"
+                onClick={() =>
+                  setStatus(
+                    note.trim() ? "管理员备注已追加。" : "请先填写管理员备注。",
+                  )
+                }
+              >
+                保存备注
+              </button>
             </section>
 
             <section className="review-section">
               <p className="eyebrow">发布前质检清单</p>
-              <h2>{blocked ? "存在红项，禁止发布" : "红项已通过，确认黄色警告"}</h2>
+              <h2>
+                {blocked ? "存在红项，禁止发布" : "红项已通过，确认黄色警告"}
+              </h2>
               <div className="switch-stack">
                 {CHECKS.map(([label, result, detail]) => (
                   <div className="version-row" key={label}>
-                    <div><strong>{label}</strong><span>{detail}</span></div>
-                    <span className={result === "警告" ? "status-chip warning" : "status-chip"}>{result}</span>
+                    <div>
+                      <strong>{label}</strong>
+                      <span>{detail}</span>
+                    </div>
+                    <span
+                      className={
+                        result === "警告"
+                          ? "status-chip warning"
+                          : "status-chip"
+                      }
+                    >
+                      {result}
+                    </span>
                   </div>
                 ))}
                 {!selected.notary ? (
                   <div className="version-row">
-                    <div><strong>法定人数</strong><span>仅执行审计，不可公证或发布</span></div>
+                    <div>
+                      <strong>法定人数</strong>
+                      <span>仅执行审计，不可公证或发布</span>
+                    </div>
                     <span className="status-chip warning">禁止</span>
                   </div>
                 ) : null}
               </div>
               {hasWarnings && !blocked ? (
                 <label className="switch-row">
-                  <input type="checkbox" checked={warningsConfirmed} onChange={(event) => setWarningsConfirmed(event.target.checked)} />
-                  <span><strong>我已检查并确认黄色警告</strong><small>确认动作会连同操作者与时间写入审计。</small></span>
+                  <input
+                    type="checkbox"
+                    checked={warningsConfirmed}
+                    onChange={(event) =>
+                      setWarningsConfirmed(event.target.checked)
+                    }
+                  />
+                  <span>
+                    <strong>我已检查并确认黄色警告</strong>
+                    <small>确认动作会连同操作者与时间写入审计。</small>
+                  </span>
                 </label>
               ) : null}
               <div className="flex flex-wrap gap-3">
                 {selected.status === "已发布" ? (
-                  <button className="button secondary" type="button" onClick={() => setWithdrawId(selected.id)}>撤回下架</button>
+                  <button
+                    className="button secondary"
+                    type="button"
+                    onClick={() => setWithdrawId(selected.id)}
+                  >
+                    撤回下架
+                  </button>
                 ) : (
-                  <button className="button primary inline" type="button" disabled={blocked} onClick={publish}>发布</button>
+                  <button
+                    className="button primary inline"
+                    type="button"
+                    disabled={blocked}
+                    onClick={publish}
+                  >
+                    发布
+                  </button>
                 )}
               </div>
             </section>
@@ -233,17 +364,39 @@ export default function PublishPage() {
         </>
       )}
 
-      {status ? <p className="form-message" role="status">{status}</p> : null}
+      {status ? (
+        <p className="form-message" role="status">
+          {status}
+        </p>
+      ) : null}
 
       {confirmPublish ? (
         <div className="confirm-overlay" role="presentation">
-          <section role="dialog" aria-modal="true" aria-labelledby="publish-confirm-title">
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="publish-confirm-title"
+          >
             <p className="eyebrow">二次确认</p>
             <h2 id="publish-confirm-title">确认发布 {selected.title}？</h2>
-            <p>发布后卡片锁定，仅可撤回下架；公证内容、排行与模拟盘统计不受发布状态影响。</p>
+            <p>
+              发布后卡片锁定，仅可撤回下架；公证内容、排行与模拟盘统计不受发布状态影响。
+            </p>
             <div>
-              <button className="button secondary" type="button" onClick={() => setConfirmPublish(false)}>取消</button>
-              <button className="button primary inline" type="button" onClick={confirmPublication}>确认发布</button>
+              <button
+                className="button secondary"
+                type="button"
+                onClick={() => setConfirmPublish(false)}
+              >
+                取消
+              </button>
+              <button
+                className="button primary inline"
+                type="button"
+                onClick={confirmPublication}
+              >
+                确认发布
+              </button>
             </div>
           </section>
         </div>
@@ -251,17 +404,37 @@ export default function PublishPage() {
 
       {withdrawId ? (
         <div className="confirm-overlay" role="presentation">
-          <section role="dialog" aria-modal="true" aria-labelledby="withdraw-title">
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="withdraw-title"
+          >
             <p className="eyebrow">撤回流程</p>
             <h2 id="withdraw-title">撤回已发布卡片？</h2>
             <p>用户端历史将保留撤回时间、原因和可展开的原内容。</p>
             <label>
               <span>撤回原因</span>
-              <textarea value={withdrawReason} onChange={(event) => setWithdrawReason(event.target.value)} placeholder="必填，并写入审计记录" />
+              <textarea
+                value={withdrawReason}
+                onChange={(event) => setWithdrawReason(event.target.value)}
+                placeholder="必填，并写入审计记录"
+              />
             </label>
             <div>
-              <button className="button secondary" type="button" onClick={() => setWithdrawId(null)}>取消</button>
-              <button className="button primary inline" type="button" onClick={withdraw}>确认撤回</button>
+              <button
+                className="button secondary"
+                type="button"
+                onClick={() => setWithdrawId(null)}
+              >
+                取消
+              </button>
+              <button
+                className="button primary inline"
+                type="button"
+                onClick={withdraw}
+              >
+                确认撤回
+              </button>
             </div>
           </section>
         </div>

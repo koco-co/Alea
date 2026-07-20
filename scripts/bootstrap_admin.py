@@ -64,27 +64,9 @@ def main() -> None:
     with psycopg.connect(config["SUPABASE_DB_URL"]) as connection:
         with connection.transaction():
             with connection.cursor() as cursor:
-                cursor.execute("select count(*) from profiles where role = 'admin' and status = 'active'")
-                if cursor.fetchone()[0] != 0:
-                    raise RuntimeError("an active administrator already exists; bootstrap is one-time only")
-                cursor.execute("select id from auth.users where id = %s", (user_id,))
-                if cursor.fetchone() is None:
-                    raise RuntimeError("Auth user is not visible in the target database")
                 cursor.execute(
-                    """
-                    insert into profiles (id, role, status)
-                    values (%s, 'admin', 'active')
-                    on conflict (id) do update set role = 'admin', status = 'active', updated_at = now()
-                    """,
-                    (user_id,),
-                )
-                cursor.execute(
-                    "insert into admin_role_grants (user_id, action, granted_by, reason, active) values (%s, 'grant', null, %s, true)",
-                    (user_id, reason),
-                )
-                cursor.execute(
-                    "insert into admin_audit_logs (actor_id, action, target_type, target_id, detail_redacted) values (null, 'bootstrap_admin', 'profile', %s, jsonb_build_object('environment', %s))",
-                    (user_id, args.env),
+                    "select alea_bootstrap_first_admin(%s, %s, %s)",
+                    (user_id, reason, args.env),
                 )
     print(f"bootstrapped first administrator for {args.email} in {args.env}")
 

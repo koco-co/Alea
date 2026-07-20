@@ -30,12 +30,22 @@ export default function RoundtablePage() {
 
   const quorum = useMemo(() => {
     const selected = INSTANCES.filter(([id]) => instances.includes(id));
-    const providers = new Set(selected.map(([, label]) => label.split(" · ")[0]));
+    const providers = new Set(
+      selected.map(([, label]) => label.split(" · ")[0]),
+    );
     return { instances: selected.length, providers: providers.size };
   }, [instances]);
 
-  const toggle = (id: string, selected: string[], update: (next: string[]) => void) => {
-    update(selected.includes(id) ? selected.filter((item) => item !== id) : [...selected, id]);
+  const toggle = (
+    id: string,
+    selected: string[],
+    update: (next: string[]) => void,
+  ) => {
+    update(
+      selected.includes(id)
+        ? selected.filter((item) => item !== id)
+        : [...selected, id],
+    );
   };
 
   const start = () => {
@@ -58,9 +68,17 @@ export default function RoundtablePage() {
         <div>
           <p className="eyebrow">系统管理 · 发起推演 · PRD 15.1</p>
           <h1>先冻结范围、阵容与规则，再让圆桌开始。</h1>
-          <p>自主推演用于日常全量扫描；指定选场用于聚焦已选比赛。两种模式共用同一审计与法定人数规则。</p>
+          <p>
+            自主推演用于日常全量扫描；指定选场用于聚焦已选比赛。两种模式共用同一审计与法定人数规则。
+          </p>
         </div>
-        <span className={quorum.instances >= 3 && quorum.providers >= 2 ? "status-chip" : "status-chip warning"}>
+        <span
+          className={
+            quorum.instances >= 3 && quorum.providers >= 2
+              ? "status-chip"
+              : "status-chip warning"
+          }
+        >
           {quorum.instances} 个实例 · {quorum.providers} 个厂商
         </span>
       </header>
@@ -74,10 +92,18 @@ export default function RoundtablePage() {
           <span className="status-chip">配置在提交时冻结</span>
         </div>
         <div className="segmented-control" aria-label="推演模式">
-          <button className={mode === "autonomous" ? "active" : ""} type="button" onClick={() => setMode("autonomous")}>
+          <button
+            className={mode === "autonomous" ? "active" : ""}
+            type="button"
+            onClick={() => setMode("autonomous")}
+          >
             自主推演
           </button>
-          <button className={mode === "selected" ? "active" : ""} type="button" onClick={() => setMode("selected")}>
+          <button
+            className={mode === "selected" ? "active" : ""}
+            type="button"
+            onClick={() => setMode("selected")}
+          >
             指定选场
           </button>
         </div>
@@ -107,10 +133,16 @@ export default function RoundtablePage() {
             <div className="switch-stack" aria-label="在售比赛多选">
               {MATCHES.map(([id, competition, teams, cutoff]) => (
                 <label className="switch-row" key={id}>
-                  <input type="checkbox" checked={matches.includes(id)} onChange={() => toggle(id, matches, setMatches)} />
+                  <input
+                    type="checkbox"
+                    checked={matches.includes(id)}
+                    onChange={() => toggle(id, matches, setMatches)}
+                  />
                   <span>
                     <strong>{teams}</strong>
-                    <small>{competition} · {cutoff}</small>
+                    <small>
+                      {competition} · {cutoff}
+                    </small>
                   </span>
                 </label>
               ))}
@@ -125,7 +157,9 @@ export default function RoundtablePage() {
             <p className="eyebrow">02 · 选择阵容</p>
             <h2>仅启用且通过连接测试的实例可参赛</h2>
           </div>
-          <Link className="button secondary" href="/console/admin/lineup">管理模型阵容</Link>
+          <Link className="button secondary" href="/console/admin/lineup">
+            管理模型阵容
+          </Link>
         </div>
         <div className="switch-stack">
           {INSTANCES.map(([id, label, model, availability]) => {
@@ -140,7 +174,9 @@ export default function RoundtablePage() {
                 />
                 <span>
                   <strong>{label}</strong>
-                  <small>{model} · {availability}</small>
+                  <small>
+                    {model} · {availability}
+                  </small>
                 </span>
               </label>
             );
@@ -149,7 +185,9 @@ export default function RoundtablePage() {
         {quorum.instances < 3 || quorum.providers < 2 ? (
           <div className="inline-callout danger" role="status">
             <strong>当前阵容未达到法定人数</strong>
-            <p>任务仍可发起并生成执行审计，但不会写入公证账本，也不能发布预测卡。</p>
+            <p>
+              任务仍可发起并生成执行审计，但不会写入公证账本，也不能发布预测卡。
+            </p>
           </div>
         ) : null}
       </section>
@@ -160,12 +198,20 @@ export default function RoundtablePage() {
             <p className="eyebrow">03 · 参数与定时</p>
             <h2>辩论轮数、入围上限与每日计划</h2>
           </div>
-          <Link className="button secondary" href="/console/admin/settings#settings-automation">打开版本化设置</Link>
+          <Link
+            className="button secondary"
+            href="/console/admin/settings#settings-automation"
+          >
+            打开版本化设置
+          </Link>
         </div>
         <div className="admin-form-grid three">
           <label>
             <span>辩论轮数</span>
-            <select value={rounds} onChange={(event) => setRounds(event.target.value)}>
+            <select
+              value={rounds}
+              onChange={(event) => setRounds(event.target.value)}
+            >
               <option value="1">1 轮（默认）</option>
               <option value="2">2 轮</option>
             </select>
@@ -173,35 +219,67 @@ export default function RoundtablePage() {
           {mode === "autonomous" ? (
             <label>
               <span>入围上限</span>
-              <input min="1" max="20" type="number" value={candidateLimit} onChange={(event) => setCandidateLimit(event.target.value)} />
+              <input
+                min="1"
+                max="20"
+                type="number"
+                value={candidateLimit}
+                onChange={(event) => setCandidateLimit(event.target.value)}
+              />
             </label>
           ) : null}
           <label>
             <span>每日自动发起时间</span>
-            <input type="time" value={scheduleTime} onChange={(event) => setScheduleTime(event.target.value)} />
+            <input
+              type="time"
+              value={scheduleTime}
+              onChange={(event) => setScheduleTime(event.target.value)}
+            />
           </label>
         </div>
         <label className="switch-row">
-          <input type="checkbox" checked={scheduled} onChange={(event) => setScheduled(event.target.checked)} />
+          <input
+            type="checkbox"
+            checked={scheduled}
+            onChange={(event) => setScheduled(event.target.checked)}
+          />
           <span>
             <strong>启用每日定时圆桌</strong>
-            <small>保存后按当前默认范围、阵容、轮数{mode === "autonomous" ? `与 ${candidateLimit} 场上限` : ""}自动创建任务</small>
+            <small>
+              保存后按当前默认范围、阵容、轮数
+              {mode === "autonomous" ? `与 ${candidateLimit} 场上限` : ""}
+              自动创建任务
+            </small>
           </span>
         </label>
       </section>
 
-      {error ? <p className="form-message error" role="alert">{error}</p> : null}
+      {error ? (
+        <p className="form-message error" role="alert">
+          {error}
+        </p>
+      ) : null}
       {status === "created" ? (
         <section className="audit-strip" role="status">
           <p className="eyebrow">任务已创建</p>
           <div>
             <strong>ROUND-20260720-001</strong>
             <span>配置已冻结，执行审计将在首份 AI 结果返回时建立。</span>
-            <Link className="button primary inline" href="/console/admin/roundtable/round-20260720-001">查看推演直播</Link>
+            <Link
+              className="button primary inline"
+              href="/console/admin/roundtable/round-20260720-001"
+            >
+              查看推演直播
+            </Link>
           </div>
         </section>
       ) : (
-        <button className="button primary inline" type="button" disabled={status === "starting"} onClick={start}>
+        <button
+          className="button primary inline"
+          type="button"
+          disabled={status === "starting"}
+          onClick={start}
+        >
           {status === "starting" ? "正在创建圆桌…" : "发起圆桌"}
         </button>
       )}

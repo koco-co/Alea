@@ -17,3 +17,10 @@ begin
   end if;
 end
 $$;
+
+-- The migration operator may assume each isolated runtime role for permission
+-- verification, but never inherits its privileges implicitly.
+grant alea_api to postgres with inherit false, set true;
+grant alea_worker to postgres with inherit false, set true;
+grant alea_dispatcher to postgres with inherit false, set true;
+grant alea_scheduler to postgres with inherit false, set true;

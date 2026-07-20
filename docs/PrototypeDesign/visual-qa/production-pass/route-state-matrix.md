@@ -42,7 +42,7 @@ OpenDesign 项目：`c73b3011-35b7-4a7a-a8e9-a22f12257c20`
 | §15.1 | 管理员 | `alea-admin.html#launch` | 双模式、范围、阵容、轮数、入围、定时、发起 | `desktop/mobile-25-admin-launch.png` | 通过 | 外部数据与任务执行器未连接 |
 | §15.2 | 管理员 | `#live`、`#terminated` | 阶段流、七实例、事实核验、终止归档 | `desktop/mobile-26-admin-live.png`、`34-admin-terminated.png` | 通过 | 运行日志为冻结原型状态 |
 | §15.3 | 管理员 | `#publish`、`#publish-blocked` | 质检、警告/阻断、只读预测、管理员备注 | `desktop/mobile-27–28-admin-publish*.png` | 通过 | 销售数据缺失时保持阻断 |
-| §15.4 | 管理员 | `#lineup` | 6 厂商 / 7 实例、密钥掩码、模型目录、连接失败、1–3 实例、保存失败与重试 | `desktop/mobile-29-admin-lineup.png` | 部分通过 | 厂商标识仅限内部原型；商标授权待产品方确认 |
+| §15.4 | 管理员 | `#lineup` | API 厂商 / CLI 工具双目录、密钥掩码、绝对路径、版本/认证、模型目录、连接测试、1–3 实例、真实保存/删除 | 待生成 Next.js `1440×900` / `390×844` 新鲜证据 | 待验证 | 旧截图只覆盖 API 厂商原型，不能作为双目录验收证据 |
 | §15.5 | 管理员 | `#sync` | 今日/日期/比赛手动同步、部分失败、重试、只追加日志、冲突空态 | `desktop/mobile-30-admin-sync.png` | 通过 | 销售与阵容来源未连接 |
 | §15.6 | 管理员 | `#settings`、`#users` | 5 分组、18 控件、搜索、校验、版本保存、状态筛选、停用二次确认与审计 | `desktop/mobile-31-admin-settings.png`、`33-admin-users.png` | 通过 | 后端持久化未连接 |
 | §15.7 | 管理员 | `#methodology` | 真实提议空态、阈值、OLD/NEW 回测演示、演示发布不改生产版本 | `desktop/mobile-32-admin-methodology.png` | 通过 | 尚无已发布复盘生成真实提议 |

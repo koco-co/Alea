@@ -1,17 +1,24 @@
 from __future__ import annotations
 
-import asyncio
+import ipaddress
 import os
 from enum import StrEnum
 from typing import Annotated, Any, Literal, Mapping, Protocol
-from uuid import UUID
+from urllib.parse import urlsplit
+from uuid import UUID, uuid4
 
-import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from jsonschema import ValidationError, validate
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.security import AuthenticatedPrincipal
-from app.secrets.envelope import EnvelopeEncryption
+from app.providers.catalog import api_catalog_payload, get_api_provider
+from app.providers.cli_catalog import cli_catalog_payload, get_cli_runtime
+from app.providers.cli_executor import probe_cli_runtime, validate_cli_path
+from app.providers.contract import ProviderFailure, ProviderRequest
+from app.runtime import ProviderFactory
+from app.security import AuthenticatedPrincipal, SecurityError, validate_outbound_url
+from app.secrets.envelope import EncryptedSecret, EnvelopeEncryption, EnvelopeError
+from app.sources.importer import ImportPayloadError, parse_import_document
 
 
 router = APIRouter(prefix="/v1/admin", tags=["admin"])
@@ -140,6 +147,12 @@ class TriggerSyncRequest(StrictModel):
     match_id: UUID | None = None
 
 
+class ImportFixtureRequest(StrictModel):
+    content_format: Literal["json", "csv"]
+    content: str = Field(min_length=2, max_length=10_000_000)
+    dry_run: bool = False
+
+
 class AdjudicateResultRequest(StrictModel):
     result_version_id: UUID
     source_record_ids: list[str] = Field(min_length=1)
@@ -156,26 +169,49 @@ class RoundtableControlRequest(StrictModel):
 
 class ProviderExecutionMode(StrEnum):
     API = "api"
-    CODEX_CLI = "codex_cli"
+    CLI = "cli"
 
 
 class SaveProviderRequest(StrictModel):
     provider_id: UUID | None = None
+    provider_key: str = Field(min_length=1, max_length=80)
     connection_id: UUID
     connection_version: int = Field(ge=1)
     display_name: str = Field(min_length=1, max_length=100)
     execution_mode: ProviderExecutionMode
     protocol: str = Field(min_length=1, max_length=80)
     api_url: str | None = None
-    runtime_key: Literal["codex"] | None = None
+    runtime_key: str | None = Field(default=None, min_length=1, max_length=80)
+    executable_path: str | None = Field(default=None, min_length=1, max_length=4096)
     model_id: str = Field(min_length=1, max_length=128)
+    custom_model_ids: list[str] = Field(default_factory=list, max_length=100)
     allowed_api_domains: list[str] = Field(default_factory=list, max_length=20)
     api_key: str | None = Field(default=None, min_length=2, max_length=10_000)
     clear_secret: bool = False
+    previous_connection_id: UUID | None = None
+    previous_connection_version: int | None = Field(default=None, ge=1)
     enabled: bool = False
 
 
+class ProbeCliRuntimeRequest(StrictModel):
+    runtime_key: str = Field(min_length=1, max_length=80)
+    executable_path: str = Field(min_length=1, max_length=4096)
+    timeout_seconds: int = Field(default=15, ge=1, le=60)
+
+
+class TestApiProviderRequest(StrictModel):
+    provider_key: str = Field(min_length=1, max_length=80)
+    api_url: str = Field(min_length=1, max_length=2048)
+    api_key: str | None = Field(default=None, max_length=10_000)
+    model_id: str = Field(min_length=1, max_length=128)
+    allowed_api_domains: list[str] = Field(min_length=1, max_length=20)
+    timeout_seconds: int = Field(default=30, ge=1, le=120)
+    connection_id: UUID | None = None
+    connection_version: int | None = Field(default=None, ge=1)
+
+
 class SaveProviderInstanceRequest(StrictModel):
+    connection_id: UUID
     nickname: str = Field(min_length=1, max_length=100)
     instance_number: int = Field(ge=1, le=3)
     model_id: str = Field(min_length=1, max_length=128)
@@ -539,6 +575,33 @@ async def trigger_sync(
     return await _command(gateway, "trigger_sync", principal, request, body.model_dump(mode="json"))
 
 
+@router.post("/sync/import", status_code=201)
+async def import_fixture_data(
+    body: ImportFixtureRequest,
+    request: Request,
+    principal: AdminPrincipal,
+    gateway: Gateway,
+) -> Mapping[str, Any]:
+    try:
+        document = parse_import_document(body.content, content_format=body.content_format)
+    except ImportPayloadError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    if body.dry_run:
+        return {
+            "dry_run": True,
+            "parser_version": document["parser_version"],
+            "record_count": len(document["records"]),
+            "record_hashes": [record["raw_content_hash"] for record in document["records"]],
+        }
+    return await _command(
+        gateway,
+        "import_fixture_data",
+        principal,
+        request,
+        document,
+    )
+
+
 @router.get("/sync/runs")
 async def list_sync_runs(
     principal: AdminPrincipal,
@@ -620,29 +683,57 @@ async def list_providers(
     return await _query(gateway, "list_providers", principal, {})
 
 
-@router.get("/providers/runtime/codex")
-async def inspect_codex_runtime(principal: AdminPrincipal) -> Mapping[str, Any]:
+@router.get("/providers/catalog")
+async def provider_catalog(principal: AdminPrincipal) -> Mapping[str, Any]:
     del principal
-    runner_url = os.getenv("CODEX_RUNNER_URL", "http://127.0.0.1:8765").rstrip("/")
-    token = os.getenv("ALEA_RUNNER_TOKEN", "")
-    try:
-        async with httpx.AsyncClient(timeout=5) as client:
-            health_response, models_response = await asyncio.gather(
-                client.get(f"{runner_url}/health"),
-                client.get(
-                    f"{runner_url}/models",
-                    headers={"X-Alea-Runner-Token": token},
-                ),
-            )
-        health_response.raise_for_status()
-        models_response.raise_for_status()
-    except httpx.HTTPError as exc:
-        raise HTTPException(status_code=503, detail="codex_runner_unavailable") from exc
     return {
-        "runtime_key": "codex",
-        "health": health_response.json(),
-        "catalog": models_response.json(),
+        "api_providers": api_catalog_payload(),
+        "cli_runtimes": cli_catalog_payload(),
     }
+
+
+@router.post("/providers/runtime/probe")
+async def probe_provider_cli_runtime(
+    body: ProbeCliRuntimeRequest,
+    principal: AdminPrincipal,
+) -> Mapping[str, Any]:
+    del principal
+    try:
+        get_cli_runtime(body.runtime_key)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail="unsupported_cli_runtime") from exc
+    result = await probe_cli_runtime(
+        body.runtime_key,
+        body.executable_path,
+        timeout_seconds=body.timeout_seconds,
+    )
+    return {
+        "runtime_key": result.runtime_key,
+        "executable_path": result.executable_path,
+        "version": result.version,
+        "auth_status": result.auth_status,
+        "models": list(result.models),
+        "status": result.status,
+        "error_code": result.error_code,
+    }
+
+
+@router.post("/providers/runtime/api-test")
+async def test_api_provider_draft(
+    body: TestApiProviderRequest,
+    principal: AdminPrincipal,
+    gateway: Gateway,
+) -> Mapping[str, Any]:
+    api_key = body.api_key
+    if api_key is None and body.connection_id is not None and body.connection_version is not None:
+        api_key = await _load_provider_api_key(
+            gateway,
+            principal,
+            connection_id=body.connection_id,
+            connection_version=body.connection_version,
+            provider_key=body.provider_key,
+        )
+    return await _test_api_configuration(body, api_key=api_key)
 
 
 @router.put("/providers/{connection_id}")
@@ -657,21 +748,69 @@ async def save_provider(
         raise HTTPException(status_code=422, detail="connection_id_mismatch")
     if body.clear_secret and body.api_key:
         raise HTTPException(status_code=422, detail="secret_action_conflict")
-    if body.execution_mode is ProviderExecutionMode.CODEX_CLI:
-        if body.runtime_key != "codex" or body.api_url or body.api_key or body.allowed_api_domains:
-            raise HTTPException(status_code=422, detail="invalid_codex_cli_configuration")
-    elif (
-        body.runtime_key is not None
-        or not body.api_url
-        or not body.api_url.startswith("https://")
-        or not body.allowed_api_domains
-    ):
-        raise HTTPException(status_code=422, detail="invalid_api_provider_configuration")
+    if body.execution_mode is ProviderExecutionMode.CLI:
+        _validate_cli_provider_request(body)
+        assert body.runtime_key is not None
+        assert body.executable_path is not None
+        probe = await probe_cli_runtime(body.runtime_key, body.executable_path)
+        payload_health = {
+            "status": probe.status,
+            "version": probe.version,
+            "auth_status": probe.auth_status,
+            "models": list(probe.models),
+            "error_code": probe.error_code,
+        }
+        if body.enabled and (probe.status != "passed" or probe.auth_status != "authenticated"):
+            raise HTTPException(status_code=422, detail="cli_connection_not_qualified")
+    else:
+        _validate_api_provider_request(body)
+        api_key = body.api_key
+        if (
+            api_key is None
+            and not body.clear_secret
+            and body.previous_connection_id is not None
+            and body.previous_connection_version is not None
+        ):
+            api_key = await _load_provider_api_key(
+                gateway,
+                principal,
+                connection_id=body.previous_connection_id,
+                connection_version=body.previous_connection_version,
+                provider_key=body.provider_key,
+            )
+        if api_key is not None or not get_api_provider(body.provider_key).requires_api_key:
+            api_test = await _test_api_configuration(
+                TestApiProviderRequest(
+                    provider_key=body.provider_key,
+                    api_url=body.api_url or "",
+                    api_key=api_key,
+                    model_id=body.model_id,
+                    allowed_api_domains=body.allowed_api_domains,
+                    timeout_seconds=min(120, 30),
+                ),
+                api_key=api_key,
+            )
+            payload_health = {
+                "status": api_test["status"],
+                "auth_status": "authenticated" if api_test["status"] == "passed" else "error",
+                "models": [body.model_id],
+                "error_code": api_test.get("error_code"),
+            }
+        else:
+            payload_health = {
+                "status": "untested",
+                "auth_status": "unknown",
+                "models": [body.model_id],
+                "error_code": None,
+            }
+        if body.enabled and payload_health["status"] != "passed":
+            raise HTTPException(status_code=422, detail="api_connection_not_qualified")
 
     payload = body.model_dump(mode="json", exclude={"api_key"})
-    if body.api_key is not None:
+    payload["health"] = payload_health
+    if body.execution_mode is ProviderExecutionMode.API and api_key is not None:
         envelope = EnvelopeEncryption().encrypt(
-            body.api_key,
+            api_key,
             connection_id=body.connection_id,
             connection_version=body.connection_version,
         )
@@ -680,22 +819,6 @@ async def save_provider(
             for key, value in envelope.as_record().items()
         }
     return await _command(gateway, "save_provider", principal, request, payload)
-
-
-@router.post("/providers/{connection_id}/test")
-async def test_provider_connection(
-    connection_id: UUID,
-    request: Request,
-    principal: AdminPrincipal,
-    gateway: Gateway,
-) -> Mapping[str, Any]:
-    return await _command(
-        gateway,
-        "test_provider_connection",
-        principal,
-        request,
-        {"connection_id": str(connection_id)},
-    )
 
 
 @router.delete("/providers/{connection_id}/secret")
@@ -711,6 +834,22 @@ async def clear_provider_secret(
         principal,
         request,
         {"connection_id": str(connection_id)},
+    )
+
+
+@router.delete("/providers/{provider_id}")
+async def retire_provider(
+    provider_id: UUID,
+    request: Request,
+    principal: AdminPrincipal,
+    gateway: Gateway,
+) -> Mapping[str, Any]:
+    return await _command(
+        gateway,
+        "retire_provider",
+        principal,
+        request,
+        {"provider_id": str(provider_id)},
     )
 
 
@@ -786,6 +925,238 @@ async def _confirmed_user_command(
         principal,
         request,
         {"user_id": str(user_id), **body.model_dump(mode="json")},
+    )
+
+
+def _validate_cli_provider_request(body: SaveProviderRequest) -> None:
+    if (
+        body.runtime_key is None
+        or body.executable_path is None
+        or body.provider_key != body.runtime_key
+        or body.api_url is not None
+        or body.api_key is not None
+        or body.clear_secret
+        or body.allowed_api_domains
+    ):
+        raise HTTPException(status_code=422, detail="invalid_cli_configuration")
+    try:
+        get_cli_runtime(body.runtime_key)
+        validate_cli_path(body.runtime_key, body.executable_path)
+    except (ValueError, RuntimeError) as exc:
+        code = getattr(exc, "code", "invalid_cli_configuration")
+        raise HTTPException(status_code=422, detail=code) from exc
+
+
+async def _test_api_configuration(
+    body: TestApiProviderRequest,
+    *,
+    api_key: str | None = None,
+) -> Mapping[str, Any]:
+    try:
+        definition = get_api_provider(body.provider_key)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail="unsupported_api_provider") from exc
+    parsed = urlsplit(body.api_url)
+    hostname = parsed.hostname.casefold() if parsed.hostname else ""
+    allowed_domains = {item.casefold() for item in body.allowed_api_domains}
+    if not hostname or hostname not in allowed_domains:
+        raise HTTPException(status_code=422, detail="api_domain_not_allowlisted")
+    resolved_api_key = api_key if api_key is not None else body.api_key
+    if definition.requires_api_key and not (resolved_api_key or "").strip():
+        raise HTTPException(status_code=422, detail="api_key_required")
+    if definition.allow_local_http:
+        if parsed.scheme != "http" or hostname not in {
+            item.casefold() for item in definition.allowed_domains
+        }:
+            raise HTTPException(status_code=422, detail="invalid_local_provider_url")
+    else:
+        try:
+            validate_outbound_url(
+                body.api_url,
+                allowed_hosts=allowed_domains,
+                allow_proxy_synthetic_dns=bool(
+                    os.getenv("HTTPS_PROXY")
+                    or os.getenv("https_proxy")
+                    or os.getenv("ALL_PROXY")
+                    or os.getenv("all_proxy")
+                ),
+            )
+        except SecurityError as exc:
+            raise HTTPException(status_code=422, detail=exc.args[0]) from exc
+
+    configuration: dict[str, Any] = {
+        "api_key": resolved_api_key or "",
+        "base_url": body.api_url,
+    }
+    if definition.adapter == "openai_compat":
+        configuration.update(
+            {
+                "requires_api_key": definition.requires_api_key,
+                "allow_local_http": definition.allow_local_http,
+                "supports_json_schema": definition.supports_json_schema,
+            }
+        )
+    provider = ProviderFactory().create(definition.adapter, **configuration)
+    output_schema = {
+        "type": "object",
+        "additionalProperties": False,
+        "required": ["phase", "payload", "confidence"],
+        "properties": {
+            "phase": {"type": "string", "const": "predict_score"},
+            "payload": {
+                "type": "object",
+                "additionalProperties": False,
+                "required": ["summary"],
+                "properties": {"summary": {"type": "string", "minLength": 1}},
+            },
+            "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+        },
+    }
+    provider_request = ProviderRequest(
+        request_id=uuid4(),
+        business_idempotency_key=f"provider-test:{uuid4()}",
+        input_snapshot_id=None,
+        postmatch_review_context_snapshot_id=None,
+        methodology_review_context_snapshot_id=None,
+        history_context_version_id=None,
+        lesson_set_version_id=None,
+        model_id=body.model_id,
+        connection_version=1,
+        identity_prompt_version=1,
+        core_methodology_version=1,
+        phase_prompt_version=1,
+        output_schema_version=1,
+        tool_contract_version=1,
+        generation_parameter_version=1,
+        timeout_seconds=body.timeout_seconds,
+        max_output_tokens=300,
+    )
+    try:
+        result = await provider.predict_score(
+            {
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": (
+                            "Return only one JSON object that satisfies the supplied JSON Schema. "
+                            "Do not use Markdown."
+                        ),
+                    },
+                    {
+                        "role": "user",
+                        "content": (
+                            "Connection test. Return phase predict_score, a short non-empty "
+                            "payload.summary, and confidence between 0 and 1."
+                        ),
+                    },
+                ],
+                "output_schema": output_schema,
+            },
+            provider_request,
+        )
+        validate(instance=result.output, schema=output_schema)
+    except ProviderFailure as exc:
+        return {"status": "failed", "error_code": exc.code}
+    except ValidationError:
+        return {"status": "failed", "error_code": "schema_validation_failed"}
+    return {
+        "status": "passed",
+        "error_code": None,
+        "model_id": result.model_id,
+        "latency_ms": result.latency_ms,
+        "usage": result.usage.model_dump(mode="json"),
+    }
+
+
+def _validate_api_provider_request(body: SaveProviderRequest) -> None:
+    if body.runtime_key is not None or body.executable_path is not None or not body.api_url:
+        raise HTTPException(status_code=422, detail="invalid_api_provider_configuration")
+    try:
+        definition = get_api_provider(body.provider_key)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail="unsupported_api_provider") from exc
+    parsed = urlsplit(body.api_url)
+    hostname = parsed.hostname.casefold() if parsed.hostname else ""
+    allowed_domains = {item.casefold() for item in body.allowed_api_domains if item}
+    if not hostname or hostname not in allowed_domains:
+        raise HTTPException(status_code=422, detail="api_domain_not_allowlisted")
+    if parsed.username or parsed.password or parsed.query or parsed.fragment:
+        raise HTTPException(status_code=422, detail="invalid_api_provider_url")
+    if definition.allow_local_http:
+        if parsed.scheme != "http" or hostname not in {
+            item.casefold() for item in definition.allowed_domains
+        }:
+            raise HTTPException(status_code=422, detail="invalid_local_provider_url")
+    else:
+        if parsed.scheme != "https" or _is_private_network_host(hostname):
+            raise HTTPException(status_code=422, detail="invalid_api_provider_url")
+    previous_reference_complete = (
+        body.previous_connection_id is not None and body.previous_connection_version is not None
+    )
+    previous_reference_partial = (body.previous_connection_id is None) != (
+        body.previous_connection_version is None
+    )
+    if previous_reference_partial:
+        raise HTTPException(status_code=422, detail="incomplete_previous_connection_reference")
+    if (
+        definition.requires_api_key
+        and body.api_key is None
+        and not body.clear_secret
+        and not previous_reference_complete
+    ):
+        raise HTTPException(status_code=422, detail="api_key_required")
+
+
+async def _load_provider_api_key(
+    gateway: AdminGateway,
+    principal: AuthenticatedPrincipal,
+    *,
+    connection_id: UUID,
+    connection_version: int,
+    provider_key: str,
+) -> str:
+    try:
+        record = await gateway.query(
+            "provider_secret",
+            actor_id=principal.subject,
+            params={
+                "connection_id": str(connection_id),
+                "connection_version": connection_version,
+                "provider_key": provider_key,
+            },
+        )
+        if not isinstance(record, Mapping):
+            raise HTTPException(status_code=422, detail="provider_secret_not_available")
+        envelope = EncryptedSecret(
+            ciphertext=bytes.fromhex(str(record["ciphertext"])),
+            ciphertext_nonce=bytes.fromhex(str(record["ciphertext_nonce"])),
+            wrapped_dek=bytes.fromhex(str(record["wrapped_dek"])),
+            wrapped_dek_nonce=bytes.fromhex(str(record["wrapped_dek_nonce"])),
+            kek_version=int(record["kek_version"]),
+            secret_tail=str(record["secret_tail"]),
+        )
+        return EnvelopeEncryption().decrypt(
+            envelope,
+            connection_id=connection_id,
+            connection_version=connection_version,
+        )
+    except HTTPException:
+        raise
+    except (AdminGatewayError, EnvelopeError, KeyError, TypeError, ValueError) as exc:
+        raise HTTPException(status_code=422, detail="provider_secret_not_available") from exc
+
+
+def _is_private_network_host(hostname: str) -> bool:
+    try:
+        address = ipaddress.ip_address(hostname)
+    except ValueError:
+        return hostname in {"localhost", "host.docker.internal"} or hostname.endswith(".local")
+    return (
+        address.is_private
+        or address.is_loopback
+        or address.is_link_local
+        or address.is_multicast
+        or address.is_reserved
     )
 
 

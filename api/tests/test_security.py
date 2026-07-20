@@ -150,6 +150,38 @@ def test_outbound_url_requires_allowlist_and_public_dns() -> None:
     )
 
 
+def test_outbound_url_allows_allowlisted_proxy_synthetic_dns_only_when_enabled() -> None:
+    def synthetic_resolver(
+        *args: object, **kwargs: object
+    ) -> list[tuple[None, None, None, None, tuple[str, int]]]:
+        return [(None, None, None, None, ("198.18.0.115", 443))]
+
+    with pytest.raises(SecurityError, match="outbound_address_forbidden"):
+        validate_outbound_url(
+            "https://api.deepseek.com/v1",
+            allowed_hosts={"api.deepseek.com"},
+            resolver=synthetic_resolver,
+        )
+
+    assert (
+        validate_outbound_url(
+            "https://api.deepseek.com/v1",
+            allowed_hosts={"api.deepseek.com"},
+            resolver=synthetic_resolver,
+            allow_proxy_synthetic_dns=True,
+        )
+        == "https://api.deepseek.com/v1"
+    )
+
+    with pytest.raises(SecurityError, match="outbound_host_not_allowlisted"):
+        validate_outbound_url(
+            "https://api.deepseek.com/v1",
+            allowed_hosts={"other.example"},
+            resolver=synthetic_resolver,
+            allow_proxy_synthetic_dns=True,
+        )
+
+
 def test_envelope_roundtrip_tamper_aad_and_rotation() -> None:
     cipher = EnvelopeCipher({1: b"a" * 32, 2: b"b" * 32}, active_version=1)
     encrypted = cipher.encrypt("sk-live-secret", connection_id="conn-1", connection_version=3)

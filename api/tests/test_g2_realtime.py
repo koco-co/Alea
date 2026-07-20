@@ -17,7 +17,8 @@ def test_realtime_migration_records_platform_owned_policy_block() -> None:
     sql_text = MIGRATION.read_text(encoding="utf-8")
     assert "after insert on roundtable_events" in sql_text
     assert "supabase_realtime_admin" in sql_text
-    assert "private-channel read policy must therefore be installed" in sql_text
+    assert "create policy alea_roundtable_private_read" in sql_text
+    assert "revoke insert, update, delete on realtime.messages from authenticated" in sql_text
     assert "grant execute on function can_read_roundtable_topic(text) to authenticated" in sql_text
     assert "for insert\nto authenticated" not in sql_text.casefold()
 

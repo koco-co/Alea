@@ -22,11 +22,15 @@ const PHASES = [
 export default function RoundtableLivePage() {
   const params = useParams<{ jobId: string }>();
   const jobId = params.jobId;
-  const { events, connectionState, error, reconnect } = useRoundtableEvents(jobId);
+  const { events, connectionState, error, reconnect } =
+    useRoundtableEvents(jobId);
   const [action, setAction] = useState<"skip" | "terminate" | null>(null);
   const [reason, setReason] = useState("");
   const [actionStatus, setActionStatus] = useState("");
-  const currentPhase = Math.min(Math.max(events.length ? 3 : 0, 0), PHASES.length - 1);
+  const currentPhase = Math.min(
+    Math.max(events.length ? 3 : 0, 0),
+    PHASES.length - 1,
+  );
 
   const confirmAction = () => {
     if (!reason.trim()) {
@@ -44,17 +48,30 @@ export default function RoundtableLivePage() {
 
   return (
     <main className="admin-main">
-      <Link className="button secondary back-link" href="/console/admin/roundtable">
+      <Link
+        className="button secondary back-link"
+        href="/console/admin/roundtable"
+      >
         返回发起推演
       </Link>
       <header className="admin-page-heading">
         <div>
           <p className="eyebrow">系统管理 · 推演直播 · PRD 15.2</p>
           <h1>圆桌 {jobId}</h1>
-          <p>消息只按数据库事件序号追加；重连后先补拉持久事件，再继续接收实时通知。</p>
+          <p>
+            消息只按数据库事件序号追加；重连后先补拉持久事件，再继续接收实时通知。
+          </p>
         </div>
-        <span className={connectionState === "error" ? "status-chip warning" : "status-chip"}>
-          {connectionState === "subscribed" ? "直播已连接" : connectionState === "error" ? "连接失败" : "正在连接"}
+        <span
+          className={
+            connectionState === "error" ? "status-chip warning" : "status-chip"
+          }
+        >
+          {connectionState === "subscribed"
+            ? "直播已连接"
+            : connectionState === "error"
+              ? "连接失败"
+              : "正在连接"}
         </span>
       </header>
 
@@ -106,7 +123,13 @@ export default function RoundtableLivePage() {
         <div className="inline-callout danger" role="alert">
           <strong>事件补拉失败</strong>
           <p>{error.message}。页面不会用静态事件冒充直播数据。</p>
-          <button className="button secondary" type="button" onClick={reconnect}>重新连接</button>
+          <button
+            className="button secondary"
+            type="button"
+            onClick={reconnect}
+          >
+            重新连接
+          </button>
         </div>
       ) : null}
       <DebateTimeline events={events} title="圆桌实时事件" live />
@@ -120,26 +143,70 @@ export default function RoundtableLivePage() {
           <span className="status-chip warning">高风险操作</span>
         </div>
         <div className="flex flex-wrap gap-3">
-          <button className="button secondary" type="button" onClick={() => setAction("skip")}>跳过辩论直接终投</button>
-          <button className="button secondary" type="button" onClick={() => setAction("terminate")}>终止本场圆桌</button>
-          <Link className="button primary inline" href="/console/admin/publish">完成后进入发布审核</Link>
+          <button
+            className="button secondary"
+            type="button"
+            onClick={() => setAction("skip")}
+          >
+            跳过辩论直接终投
+          </button>
+          <button
+            className="button secondary"
+            type="button"
+            onClick={() => setAction("terminate")}
+          >
+            终止本场圆桌
+          </button>
+          <Link className="button primary inline" href="/console/admin/publish">
+            完成后进入发布审核
+          </Link>
         </div>
-        {actionStatus ? <p className="form-message" role="status">{actionStatus}</p> : null}
+        {actionStatus ? (
+          <p className="form-message" role="status">
+            {actionStatus}
+          </p>
+        ) : null}
       </section>
 
       {action ? (
         <div className="confirm-overlay" role="presentation">
-          <section role="dialog" aria-modal="true" aria-labelledby="roundtable-control-title">
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="roundtable-control-title"
+          >
             <p className="eyebrow">二次确认</p>
-            <h2 id="roundtable-control-title">{action === "terminate" ? "终止本场圆桌？" : "跳过辩论直接终投？"}</h2>
-            <p>{action === "terminate" ? "已产生内容会冻结并进入公开审计；不会生成预测卡。" : "未完成的辩论轮次将标记为跳过，随后进入终投。"}</p>
+            <h2 id="roundtable-control-title">
+              {action === "terminate" ? "终止本场圆桌？" : "跳过辩论直接终投？"}
+            </h2>
+            <p>
+              {action === "terminate"
+                ? "已产生内容会冻结并进入公开审计；不会生成预测卡。"
+                : "未完成的辩论轮次将标记为跳过，随后进入终投。"}
+            </p>
             <label>
               <span>操作原因</span>
-              <textarea value={reason} onChange={(event) => setReason(event.target.value)} placeholder="填写原因以写入执行审计" />
+              <textarea
+                value={reason}
+                onChange={(event) => setReason(event.target.value)}
+                placeholder="填写原因以写入执行审计"
+              />
             </label>
             <div>
-              <button className="button secondary" type="button" onClick={() => setAction(null)}>取消</button>
-              <button className="button primary inline" type="button" onClick={confirmAction}>确认操作</button>
+              <button
+                className="button secondary"
+                type="button"
+                onClick={() => setAction(null)}
+              >
+                取消
+              </button>
+              <button
+                className="button primary inline"
+                type="button"
+                onClick={confirmAction}
+              >
+                确认操作
+              </button>
             </div>
           </section>
         </div>

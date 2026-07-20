@@ -1,4 +1,6 @@
-.PHONY: bootstrap env-check env-check-db env-init verify-kek codex-runner dev dev-down format format-fix lint lint-sql typecheck test check generate-types db-push bootstrap-admin gate0
+.PHONY: bootstrap env-check env-check-db env-init verify-kek dev dev-down format format-fix lint lint-sql typecheck test check generate-types db-push bootstrap-admin gate0
+
+SUPABASE_CLI ?= bunx supabase@2.109.1
 
 bootstrap:
 	mkdir -p .uv-cache .bun-install/cache .bun-install/tmp
@@ -19,17 +21,9 @@ env-init:
 	chmod 600 .env
 	test -f web/.env.local || cp web/.env.example web/.env.local
 	test -f api/.env || cp api/.env.example api/.env
-	@echo "supabase CLI must be installed (brew install supabase/tap/supabase or npm i -g supabase)"
-
-codex-runner: env-check
-	@test -n "$(ALEA_RUNNER_TOKEN)" || (echo "ERROR: ALEA_RUNNER_TOKEN is required"; exit 1)
-	cd api && ALEA_RUNNER_TOKEN="$(ALEA_RUNNER_TOKEN)" uv run --locked uvicorn app.codex_runner:app --host 127.0.0.1 --port 8765
+	@echo "Supabase CLI is pinned through bunx; no global install is required."
 
 dev: env-check
-	@token="$$(openssl rand -hex 32)"; \
-	(cd api && ALEA_RUNNER_TOKEN="$$token" uv run --locked uvicorn app.codex_runner:app --host 127.0.0.1 --port 8765 >../.codex-runner.log 2>&1) & runner_pid=$$!; \
-	trap 'kill $$runner_pid 2>/dev/null || true' EXIT INT TERM; \
-	export ALEA_RUNNER_TOKEN="$$token"; \
 	docker compose --env-file .env -f docker-compose.yml -f docker-compose.dev.yml up --build
 
 dev-down:
@@ -69,7 +63,7 @@ db-push:
 	if [ ! -f "$$f" ]; then echo "ERROR: $$f not found"; exit 1; fi; \
 	db_url="$$(grep '^SUPABASE_DB_URL=' "$$f" | cut -d= -f2-)"; \
 	if [ -z "$$db_url" ]; then echo "ERROR: SUPABASE_DB_URL is missing from $$f"; exit 1; fi; \
-	supabase db push --include-all --db-url "$$db_url"
+	$(SUPABASE_CLI) db push --include-all --db-url "$$db_url"
 
 bootstrap-admin:
 	@test -n "$(EMAIL)" || (echo "ERROR: EMAIL is required"; exit 1)

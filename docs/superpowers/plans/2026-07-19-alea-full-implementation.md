@@ -356,10 +356,10 @@ make db-push ENV=local
 - Create: `scripts/bootstrap_admin.py`（首个管理员引导脚本）
 - Create: `docs/evidence/gate-0/g1/README.md`
 
-- [ ] **Step 1: 对 anon、user、admin、alea_api、alea_worker、alea_dispatcher、alea_scheduler 逐项验证权限矩阵**（TECH §10.2）
+- [x] **Step 1: 对 anon、user、admin、alea_api、alea_worker、alea_dispatcher、alea_scheduler 逐项验证权限矩阵**（TECH §10.2）
 - [ ] **Step 2: 验证停售前后公开投影**
-- [ ] **Step 3: 实现首个管理员引导** — `make bootstrap-admin EMAIL=... ENV=local`（TECH §6.1 约束）
-- [ ] **Step 4: 运行并记录证据** — `pytest api/tests/test_g1_auth_rls.py -v`
+- [x] **Step 3: 实现首个管理员引导** — `make bootstrap-admin EMAIL=... ENV=local`（TECH §6.1 约束）
+- [x] **Step 4: 运行并记录证据** — `pytest api/tests/test_g1_auth_rls.py -v`
 
 ---
 
@@ -370,10 +370,10 @@ make db-push ENV=local
 - Create: `api/tests/test_g2_realtime.py`
 - Create: `docs/evidence/gate-0/g2/README.md`
 
-- [ ] **Step 1: Realtime Broadcast trigger 迁移**
-- [ ] **Step 2: 补拉竞态测试** — 验证 TECH §5.1 的顺序：先订阅等待 SUBSCRIBED → 再补拉 → broadcast 按 event_seq 去重。必须覆盖：断网重连后完整恢复、主动制造 event_seq 跳号验证跳号检测与触发补拉
-- [ ] **Step 3: 验证未授权订阅拒绝、客户端 Broadcast INSERT 拒绝**
-- [ ] **Step 4: 运行并记录**
+- [x] **Step 1: Realtime Broadcast trigger 迁移**
+- [x] **Step 2: 补拉竞态测试** — 验证 TECH §5.1 的顺序：先订阅等待 SUBSCRIBED → 再补拉 → broadcast 按 event_seq 去重。必须覆盖：断网重连后完整恢复、主动制造 event_seq 跳号验证跳号检测与触发补拉
+- [x] **Step 3: 验证未授权订阅拒绝、客户端 Broadcast INSERT 拒绝**
+- [x] **Step 4: 运行并记录**
 
 ---
 
@@ -432,7 +432,7 @@ make db-push ENV=local
 - [ ] **Step 1: 选定生产 Supabase/Redis/运行平台套餐**
 - [ ] **Step 2: 估算峰值任务、tokens、事件量、直播并发数**
 - [ ] **Step 3: 压测** — 在目标负载下验证 Realtime/Worker/DB 有余量；确认告警阈值
-- [ ] **Step 4: 执行一次隔离恢复与 runbook**（TECH §11.2）
+- [x] **Step 4: 执行一次隔离恢复与 runbook**（TECH §11.2）
 - [ ] **Step 5: 产品确认 RPO/RTO/预算**
 
 ---

@@ -15,6 +15,7 @@ from app.providers.openai_compat import (
     _object_output,
     _optional_int,
     _optional_string,
+    _validate_output_schema,
 )
 
 
@@ -64,6 +65,7 @@ class AnthropicProvider(HTTPProvider):
         output = _object_output(
             block.get("input") if block.get("type") == "tool_use" else block.get("text")
         )
+        _validate_output_schema(output, ctx)
         usage = _mapping(body.get("usage", {}), "usage")
         input_tokens = _optional_int(usage.get("input_tokens"))
         output_tokens = _optional_int(usage.get("output_tokens"))

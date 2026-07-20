@@ -24,6 +24,8 @@ from app.providers.capabilities import (
     can_enable,
     recommend_attempts_per_instance,
 )
+from app.providers.catalog import API_PROVIDER_CATALOG
+from app.providers.cli_catalog import CLI_RUNTIME_CATALOG
 from app.providers.contract import ProviderFailure, ProviderRequest, isolate_untrusted_text
 from app.providers.fake import FakeMode, FakeProvider
 
@@ -135,3 +137,21 @@ def test_variance_experiment_requires_five_repetitions_and_sets_attempt_count() 
     assert recommend_attempts_per_instance(stable) == 2
     volatile = VarianceExperiment(("a", "b", "c", "d", "e"), (0.1, 0.9, 0.2, 0.8, 0.5))
     assert recommend_attempts_per_instance(volatile) == 5
+
+
+def test_all_api_and_cli_catalog_entries_share_the_provider_contract() -> None:
+    assert len(API_PROVIDER_CATALOG) >= 11
+    assert len(CLI_RUNTIME_CATALOG) >= 11
+    assert set(REQUIRED_METHODS) == {
+        "nominate_matches",
+        "selection_debate",
+        "vote_matches",
+        "predict_score",
+        "debate_response",
+        "vote_score",
+        "form_bet",
+        "debate_bet",
+        "vote_bet",
+        "review_prediction",
+        "review_methodology",
+    }

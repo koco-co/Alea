@@ -7,7 +7,7 @@ from typing import Any
 
 from app.datasources.contract import DataSourceAdapter, DeploymentMode, MatchDataService
 from app.providers.anthropic import AnthropicProvider
-from app.providers.codex_cli import CodexCliProvider
+from app.providers.cli import CliProvider
 from app.providers.google import GoogleProvider
 from app.providers.openai import OpenAIProvider
 from app.providers.openai_compat import OpenAICompatProvider
@@ -34,7 +34,8 @@ class ProviderFactory:
     def create(self, provider_type: str, **configuration: Any) -> Any:
         providers = {
             "anthropic": AnthropicProvider,
-            "codex_cli": CodexCliProvider,
+            "cli": CliProvider,
+            "codex_cli": CliProvider,
             "google": GoogleProvider,
             "openai": OpenAIProvider,
             "openai_compat": OpenAICompatProvider,
@@ -108,6 +109,8 @@ class BusinessGateway:
     def _read_internal_events(
         self, job_id: str, after_seq: int, limit: int
     ) -> list[Mapping[str, Any]]:
+        if self.privileged_supabase is None:
+            raise RuntimeError("privileged_supabase_not_configured")
         response = (
             self.privileged_supabase.table("roundtable_events")
             .select("id,job_id,event_seq,event_type,payload,created_at")
@@ -158,12 +161,8 @@ class BusinessGateway:
             raise TypeError("invalid_match_page_projection")
         return value
 
-    async def get_match(
-        self, match_id: str, *, viewer_id: str
-    ) -> Mapping[str, Any] | None:
-        value = await self.query(
-            "get_match", viewer_id=viewer_id, params={"match_id": match_id}
-        )
+    async def get_match(self, match_id: str, *, viewer_id: str) -> Mapping[str, Any] | None:
+        value = await self.query("get_match", viewer_id=viewer_id, params={"match_id": match_id})
         if value is None or isinstance(value, Mapping):
             return value
         raise TypeError("invalid_match_projection")
@@ -209,6 +208,7 @@ class BusinessGateway:
         if not _OPERATION_NAME.fullmatch(operation):
             raise ValueError("invalid_business_operation")
         function_name = f"alea_{kind}_{operation}"
+        parameters: Sequence[Any]
         if kind == "query":
             statement = f"select {function_name}(%s, %s::jsonb) as value"
             parameters = (identity, _json_payload(payload))

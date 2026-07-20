@@ -655,10 +655,10 @@ These values are content fixtures for cross-screen consistency, not claims about
 
 ## Provider Execution Settings
 
-- `/console/admin/lineup` uses a two-option segmented control: `CLI 运行时` and `API 密钥`. The selected mode is always visible above connection fields and does not reuse Local CLI/BYOK product wording from the Open Design reference.
-- CLI mode shows runtime identity, availability, operator-configured model source, rescan, model, reasoning level, connection test, and 1–3 instance controls. It never renders an API URL or secret field.
-- API mode shows HTTPS endpoint, allowlisted domain, masked secret tail, replace/clear states, model search/custom ID, connection test, and 1–3 instance controls.
-- Loading, saved, dirty, failed, disabled, missing-secret, runner-unavailable and no-quorum states use existing neutral/warning/danger status tokens. Errors remain adjacent to the affected section on desktop and mobile; the sticky save bar never obscures the last control.
+- `/console/admin/lineup` uses a two-option segmented control: `API 厂商` and `CLI 工具`. Both are first-class configuration directories; the selected tab remains visible above the connection editor.
+- API mode shows official provider identity, protocol, HTTPS endpoint (or approved local Ollama HTTP), allowlisted domain, masked secret tail, replace/clear states, model search/custom ID, connection test, and 1–3 instance controls.
+- CLI mode shows official tool identity, manually entered absolute executable path, detected version, authentication status, discovered/fallback models, re-probe, connection test, and 1–3 instance controls. It never renders an API URL or secret field and does not imply PATH scanning or a daemon.
+- Loading, saved, dirty, failed, disabled, missing-secret, CLI-not-installed, CLI-not-authenticated, path-permission, model-invalid and no-quorum states use existing neutral/warning/danger status tokens. Errors remain adjacent to the affected section on desktop and mobile; the sticky save bar never obscures the last control.
 
 ## Iteration Guide
 

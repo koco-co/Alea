@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+import asyncio
+import os
+import signal
+import socket
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Any, Protocol
 from uuid import NAMESPACE_URL, uuid5
 
@@ -155,3 +159,146 @@ def _utc(value: datetime | None) -> datetime:
     if timestamp.tzinfo is None:
         raise ValueError("timestamps must be timezone-aware")
     return timestamp.astimezone(UTC)
+
+
+class PostgresOutboxRepository:
+    """Minimal dispatcher-owned database boundary."""
+
+    def __init__(self, connection: Any) -> None:
+        self.connection = connection
+
+    @classmethod
+    async def connect(cls, database_url: str) -> PostgresOutboxRepository:
+        import psycopg
+        from psycopg.rows import dict_row
+
+        connection = await psycopg.AsyncConnection.connect(
+            database_url,
+            autocommit=True,
+            row_factory=dict_row,
+        )
+        return cls(connection)
+
+    async def close(self) -> None:
+        await self.connection.close()
+
+    async def claim_batch(
+        self,
+        *,
+        lease_owner: str,
+        limit: int,
+        lease_seconds: int,
+        now: datetime,
+    ) -> Sequence[OutboxEvent]:
+        lease_until = now + timedelta(seconds=lease_seconds)
+        statement = """
+            with candidates as (
+              select id
+              from outbox_events
+              where available_at <= %s
+                and (
+                  status in ('pending', 'failed')
+                  or (status = 'leased' and lease_until < %s)
+                )
+              order by available_at, created_at, id
+              for update skip locked
+              limit %s
+            )
+            update outbox_events event
+            set status = 'leased',
+                lease_owner = %s,
+                lease_until = %s,
+                attempt = event.attempt + 1,
+                error_code = null,
+                error_detail_redacted = null
+            from candidates
+            where event.id = candidates.id
+            returning event.id::text as event_id, event.topic,
+                      event.business_idempotency_key, event.payload, event.attempt
+        """
+        async with self.connection.transaction():
+            async with self.connection.cursor() as cursor:
+                await cursor.execute(
+                    statement,
+                    (now, now, limit, lease_owner, lease_until),
+                )
+                rows = await cursor.fetchall()
+        return [
+            OutboxEvent(
+                event_id=str(row["event_id"]),
+                topic=str(row["topic"]),
+                business_idempotency_key=str(row["business_idempotency_key"]),
+                payload=dict(row["payload"]),
+                attempt=int(row["attempt"]),
+            )
+            for row in rows
+        ]
+
+    async def mark_published(
+        self,
+        event_id: str,
+        *,
+        broker_message_id: str,
+        published_at: datetime,
+    ) -> None:
+        async with self.connection.cursor() as cursor:
+            await cursor.execute(
+                """
+                update outbox_events
+                set status = 'published', broker_message_id = %s,
+                    published_at = %s, lease_owner = null, lease_until = null
+                where id = %s::uuid and status = 'leased'
+                """,
+                (broker_message_id, published_at, event_id),
+            )
+
+    async def mark_failed(
+        self,
+        event_id: str,
+        *,
+        error_code: str,
+        detail_redacted: str,
+        dead: bool,
+    ) -> None:
+        async with self.connection.cursor() as cursor:
+            await cursor.execute(
+                """
+                update outbox_events
+                set status = %s::outbox_status, error_code = %s,
+                    error_detail_redacted = %s, lease_owner = null, lease_until = null
+                where id = %s::uuid and status = 'leased'
+                """,
+                ("dead" if dead else "failed", error_code[:100], detail_redacted[:500], event_id),
+            )
+
+
+async def run_dispatcher() -> None:
+    database_url = os.getenv("DATABASE_URL_ALEA_DISPATCHER")
+    if not database_url:
+        raise RuntimeError("DATABASE_URL_ALEA_DISPATCHER is required")
+    interval = max(0.1, float(os.getenv("DISPATCHER_POLL_SECONDS", "1")))
+    batch_size = max(1, min(500, int(os.getenv("DISPATCHER_BATCH_SIZE", "100"))))
+    lease_owner = f"dispatcher:{socket.gethostname()}:{os.getpid()}"
+    repository = await PostgresOutboxRepository.connect(database_url)
+    stop = asyncio.Event()
+    loop = asyncio.get_running_loop()
+    for signal_name in (signal.SIGINT, signal.SIGTERM):
+        loop.add_signal_handler(signal_name, stop.set)
+    try:
+        while not stop.is_set():
+            stats = await dispatch_once(
+                repository,
+                lease_owner=lease_owner,
+                limit=batch_size,
+            )
+            if stats.claimed == 0:
+                try:
+                    await asyncio.wait_for(stop.wait(), timeout=interval)
+                except TimeoutError:
+                    pass
+    finally:
+        await repository.close()
+
+
+if __name__ == "__main__":
+    asyncio.run(run_dispatcher())
