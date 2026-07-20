@@ -52,13 +52,18 @@
     .preview-actions{display:flex;justify-content:flex-end;gap:8px;padding:14px 18px;border-top:1px solid var(--border-soft)}
     .compact-icon-button{position:relative;width:44px;min-width:44px;height:44px;min-height:44px;padding:0;border:0;border-radius:var(--radius-md);background:transparent;box-shadow:none}.compact-icon-button::before{content:"";position:absolute;inset:4px;border:1px solid var(--border-soft);border-radius:var(--radius-sm);background:var(--surface);box-shadow:var(--elev-ring)}.compact-icon-button img{position:relative;z-index:1;width:18px;height:18px;margin:auto;object-fit:contain}.compact-icon-button:disabled{cursor:not-allowed}.compact-icon-button:disabled img{opacity:.4}
     .status-sample{margin-top:14px;padding:12px;border:1px solid var(--border-soft);border-radius:var(--radius-md);background:var(--surface-warm);font-size:10px;line-height:1.55}.status-sample strong{display:block;margin-bottom:3px}
+    .calculator-mode{display:flex;gap:6px;width:max-content;max-width:100%;margin-top:18px;padding:5px;border:1px solid var(--border-soft);border-radius:var(--radius-md);background:var(--surface)}.calculator-mode button{min-height:44px;padding:8px 13px;border:0;border-radius:9px;background:transparent;color:var(--muted);font-weight:600;cursor:pointer}.calculator-mode button.active{background:var(--fg);color:var(--surface)}
+    .sample-banner{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-top:18px;padding:15px 16px;border:1px solid color-mix(in oklab,var(--accent) 34%,var(--border-soft));border-radius:var(--radius-lg);background:color-mix(in oklab,var(--accent) 7%,var(--surface))}.sample-banner h2{font-size:22px}.sample-banner p{max-width:68ch;margin-top:5px;color:var(--muted);font-size:11px;line-height:1.55}
+    .sample-option-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}.sample-option{min-height:58px;padding:9px;border:1px solid var(--border-soft);border-radius:var(--radius-sm);background:var(--surface);cursor:pointer}.sample-option span,.sample-option strong{display:block}.sample-option span{color:var(--muted);font-size:9px}.sample-option strong{margin-top:5px;font:600 15px var(--font-mono)}.sample-option[aria-pressed="true"]{background:var(--fg);color:var(--surface)}.sample-option[aria-pressed="true"] span{color:color-mix(in oklab,var(--surface) 62%,transparent)}
+    .sample-controls{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}.sample-controls label{font-size:10px}.sample-controls input,.sample-controls select{width:100%;min-height:44px;margin-top:5px;padding:8px 10px;border:1px solid var(--border-soft);border-radius:var(--radius-sm);background:var(--surface);color:var(--fg)}
+    .sample-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}.sample-actions .btn{min-height:44px}.sample-preview-card{border-color:color-mix(in oklab,var(--accent) 30%,var(--border-soft))}.sample-preview-card .preview-card-header{background:var(--accent)}
     .toast{position:fixed;right:18px;bottom:18px;z-index:100;padding:10px 13px;border-radius:var(--radius-sm);background:var(--fg);color:var(--surface);font-size:11px;opacity:0;transform:translateY(8px);pointer-events:none;transition:.18s ease}.toast.show{opacity:1;transform:none}
     @media(max-width:760px){
       .calculator-head .container{min-height:64px}.calculator-head .brand-lockup{height:29px}.sales-status{max-width:190px;white-space:normal}
       .calculator-page{padding-top:20px}.calculator-intro{grid-template-columns:minmax(0,1fr)}.calculator-intro h1{font-size:34px}.source-stack{justify-content:flex-start}
       .calc-stepper{display:flex;overflow-x:auto;padding-bottom:3px;scrollbar-width:none}.calc-step-button{min-width:168px}
       .calculator-grid{grid-template-columns:minmax(0,1fr)}.fixture-card{grid-template-columns:82px minmax(0,1fr)}.fixture-flags img{width:48px;height:32px}.fixture-score{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;text-align:left}.fixture-score strong{font-size:24px}
-      .data-grid,.disabled-controls{grid-template-columns:minmax(0,1fr)}.preview-card{position:static}.calc-panel{padding:15px}
+      .data-grid,.disabled-controls,.sample-controls{grid-template-columns:minmax(0,1fr)}.sample-option-grid{grid-template-columns:1fr}.sample-banner{display:block}.sample-banner .tag{margin-top:10px}.preview-card{position:static}.calc-panel{padding:15px}
     }
   </style>
 </head>
@@ -68,9 +73,10 @@
     <header class="calculator-head">
       <div class="container">
         <a class="brand" href="alea-predictions.html"><img class="brand-lockup" src="assets/brand/alea-lockup.png" alt="Alea"></a>
-        <span class="sales-status">待竞彩销售数据确认</span>
+        <div class="header-actions"><span class="sales-status">待竞彩销售数据确认</span><button class="mobile-console-menu-button" id="calculatorMenuButton" type="button" aria-label="打开全部控制台导航" aria-controls="calculatorMobileDrawer" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button></div>
       </div>
     </header>
+    <section class="mobile-console-drawer" id="calculatorMobileDrawer" aria-label="全部控制台模块" hidden><div class="mobile-console-drawer-head"><strong>Alea 控制台</strong><button class="mobile-console-drawer-close" type="button" aria-label="关闭控制台导航">×</button></div><nav><a href="alea-console.html#overview"><strong>每日总览</strong><small>今日简报</small></a><a href="alea-console.html#fixtures"><strong>竞猜赛程</strong><small>赛程日历</small></a><a href="alea-predictions.html#today"><strong>太玄问机</strong><small>今日推演</small></a><a href="alea-console.html#rankings"><strong>预测排行</strong><small>综合榜</small></a><a href="alea-console.html#pnl"><strong>盈亏账本</strong><small>模拟账户</small></a><a href="alea-console.html#reviews"><strong>赛后复盘</strong><small>复盘记录</small></a><a href="#sample" aria-current="page"><strong>竞彩方案</strong><small>采用与出图</small></a><a href="alea-console.html#wiki"><strong>赛事资料</strong><small>球队资料</small></a></nav></section>
     <main class="calculator-page container" id="calculatorContent">
       <section class="calculator-intro">
         <div>
@@ -81,6 +87,9 @@
         <div class="source-stack"><span class="tag">AI 推演数据</span><span class="tag">来源：FIFA · 采集 2026-07-19</span></div>
       </section>
 
+      <div class="calculator-mode" role="tablist" aria-label="竞彩方案数据状态"><button class="active" type="button" data-calculator-mode="locked" aria-selected="true">当前事实态</button><button type="button" data-calculator-mode="sample" aria-selected="false">P0 交互样例</button></div>
+
+      <div id="lockedFlow">
       <section class="calc-notice" role="status" aria-live="polite">
         <span class="calc-notice-mark" aria-hidden="true">!</span>
         <div><strong>销售数据缺失，采纳、出图与下载保持禁用</strong><p>不生成场次编号、赔率、固定奖金、理论回报或结算结果。数据接入后仍需重新核验销售状态与规则版本。</p></div>
@@ -111,7 +120,7 @@
 
           <section class="calc-panel" data-panel="2" hidden>
             <header class="calc-panel-head"><div><p class="eyebrow">步骤 2 · 玩法配置</p><h2>销售数据未就绪，配置入口已锁定。</h2><p>AI 结论可以查看，但不能替代竞彩玩法、让球值、固定奖金与停售状态。</p></div><span class="tag">禁用</span></header>
-            <div class="blocked-card"><h3>西班牙 2:1 阿根廷 · 半场 1:0</h3><p>5/7 原始票、71% 冻结加权共识。以上均为 AI 推演数据，不代表官方赛果，也不自动映射为可售玩法。</p></div>
+            <div class="blocked-card"><h3>西班牙 2:1 阿根廷 · 半场 1:0</h3><p>5/7 原始票、71% 冻结加权共识；七个启用实例与冻结阵容一致。以上均为 AI 推演数据，不代表官方赛果，也不自动映射为可售玩法。</p></div>
             <div class="disabled-controls">
               <label>竞彩玩法<select disabled aria-label="竞彩玩法，待销售数据确认"><option>待竞彩销售数据确认</option></select></label>
               <label>固定奖金<input disabled value="待竞彩销售数据确认" aria-label="固定奖金，待销售数据确认"></label>
@@ -147,6 +156,20 @@
           </footer>
         </aside>
       </div>
+      </div>
+
+      <section id="sampleFlow" hidden data-od-id="calculator-interaction-sample">
+        <div class="sample-banner" role="status"><div><h2>交互样例 · 非体彩 SP</h2><p>本状态只验证“采用 → 配置 → 预览 → 复制 / 下载 / 分享”。所有参数均为固定非官方交互样例，无官方场次编号，不与 Match 104 的事实、公证或销售记录混合。</p></div><span class="tag">独立状态</span></div>
+        <nav class="calc-stepper" aria-label="交互样例步骤"><button class="calc-step-button active" type="button" data-sample-step="1" aria-current="step"><b>1</b><span>采用推演<small>加入本地样例</small></span></button><button class="calc-step-button" type="button" data-sample-step="2"><b>2</b><span>配置玩法<small>非官方参数</small></span></button><button class="calc-step-button" type="button" data-sample-step="3"><b>3</b><span>方案预览<small>复制、下载、分享</small></span></button></nav>
+        <div class="calculator-grid">
+          <div>
+            <section class="calc-panel" data-sample-panel="1"><header class="calc-panel-head"><div><p class="eyebrow">步骤 1 · 采用固定推演</p><h2>把模型结论加入本地交互样例。</h2><p>不读取、不覆盖当前事实态的任何销售字段；样例关闭或刷新后即可重新开始。</p></div><span class="tag">无官方编号</span></header><article class="fixture-card"><div class="fixture-flags"><img src="assets/flag-spain.png" alt="西班牙国旗"><img src="assets/flag-argentina.png" alt="阿根廷国旗"></div><div><h3>西班牙 vs 阿根廷</h3><p>固定推演：西班牙 2 : 1 阿根廷 · 半场 1 : 0</p><div class="fixture-labels"><span class="tag">交互样例</span><span class="tag">非体彩 SP</span></div></div><div class="fixture-score"><strong>5 / 7</strong><span>71% 加权共识</span></div></article><div class="sample-actions"><button class="btn btn-primary" id="sampleAdopt" type="button">采用到交互样例</button></div></section>
+            <section class="calc-panel" data-sample-panel="2" hidden><header class="calc-panel-head"><div><p class="eyebrow">步骤 2 · 配置非官方参数</p><h2>选择方向与本地倍数。</h2><p>下列数字只服务交互与算式验证，不是中国体育彩票 SP、赔率或销售状态。</p></div><span class="tag">样例参数 A</span></header><div class="sample-option-grid" aria-label="样例方向"><button class="sample-option" type="button" data-sample-option="主胜" data-sample-value="1.92" aria-pressed="true"><span>主胜 · 非官方参数</span><strong>1.92</strong></button><button class="sample-option" type="button" data-sample-option="平" data-sample-value="3.30" aria-pressed="false"><span>平 · 非官方参数</span><strong>3.30</strong></button><button class="sample-option" type="button" data-sample-option="客胜" data-sample-value="3.80" aria-pressed="false"><span>客胜 · 非官方参数</span><strong>3.80</strong></button></div><div class="sample-controls"><label>样例玩法<select id="samplePlay"><option>胜平负 · 单关样例</option><option>比分 · 单关样例</option></select></label><label>倍数（1–99）<input id="sampleMultiple" type="number" min="1" max="99" value="2"></label></div><div class="sample-actions"><button class="btn btn-secondary" type="button" data-sample-back="1">返回采用</button><button class="btn btn-primary" id="samplePreview" type="button">生成方案预览</button></div></section>
+            <section class="calc-panel" data-sample-panel="3" hidden><header class="calc-panel-head"><div><p class="eyebrow">步骤 3 · 已生成</p><h2>方案卡可复制、下载与分享。</h2><p>导出内容持续携带“非彩票、非投注凭证”和交互样例标签。</p></div><span class="status status-good">预览就绪</span></header><div class="blocked-card"><h3>本地导出已就绪</h3><p id="sampleSummary">主胜 · 非官方参数 1.92 · 2 倍 · 样例金额 4 元 · 理论样例值 7.68 元。</p></div></section>
+          </div>
+          <aside class="preview-card sample-preview-card" id="sampleCard" aria-label="交互样例方案卡"><header class="preview-card-header"><div class="row"><h2>Alea 方案样例</h2><span class="tag">非体彩 SP</span></div><p>交互样例 · 无官方场次编号</p></header><div class="preview-body"><h3>西班牙 vs 阿根廷</h3><p>固定 AI 推演：西班牙 2 : 1 阿根廷，半场 1 : 0；不是官方赛果。</p><div class="preview-fields"><div class="preview-field"><span>样例玩法</span><strong id="sampleCardPlay">胜平负 · 单关样例</strong></div><div class="preview-field"><span>样例方向 / 参数</span><strong id="sampleCardOption">主胜 · 1.92</strong></div><div class="preview-field"><span>倍数 / 样例金额</span><strong id="sampleCardStake">2 倍 / 4 元</strong></div><div class="preview-field"><span>理论样例值</span><strong id="sampleCardReturn">7.68 元</strong></div></div><div class="status-sample"><strong>非彩票、非投注凭证</strong>固定非官方参数仅用于交互验证，不构成投注建议，不代表竞彩在售数据或理论奖金。</div></div><footer class="preview-actions"><button class="compact-icon-button" id="sampleCopy" type="button" aria-label="复制交互样例方案卡"><img src="assets/icons/lucide-copy.svg" alt="" aria-hidden="true"></button><button class="compact-icon-button" id="sampleDownload" type="button" aria-label="下载交互样例方案卡 PNG"><img src="assets/icons/lucide-download.svg" alt="" aria-hidden="true"></button><button class="btn btn-primary" id="sampleShare" type="button">分享</button></footer></aside>
+        </div>
+      </section>
     </main>
   </div>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -160,7 +183,63 @@
       if(target!=='1'){toast.textContent=target==='2'?'销售数据未确认：玩法配置保持禁用':'销售数据未确认：方案预览与出图保持禁用';toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),1800)}
     }
     stepButtons.forEach(button=>button.addEventListener('click',()=>showStep(button.dataset.step)));
-    const initialStep=location.hash.match(/^#step-([123])$/)?.[1]||'1';showStep(initialStep);
+    const modeButtons=[...document.querySelectorAll('[data-calculator-mode]')],lockedFlow=document.getElementById('lockedFlow'),sampleFlow=document.getElementById('sampleFlow');
+    const sampleStepButtons=[...document.querySelectorAll('[data-sample-step]')],samplePanels=[...document.querySelectorAll('[data-sample-panel]')];
+    const sampleState={step:1,option:'主胜',value:1.92,play:'胜平负 · 单关样例',multiple:2};
+    let toastTimer;
+    function notify(message){clearTimeout(toastTimer);toast.textContent=message;toast.classList.add('show');toastTimer=setTimeout(()=>toast.classList.remove('show'),1800)}
+    function setMode(mode,{updateHash=true}={}){
+      const sample=mode==='sample';
+      lockedFlow.hidden=sample;sampleFlow.hidden=!sample;
+      modeButtons.forEach(button=>{const active=button.dataset.calculatorMode===mode;button.classList.toggle('active',active);button.setAttribute('aria-selected',String(active))});
+      document.querySelector('.sales-status').textContent=sample?'交互样例 · 非体彩 SP':'待竞彩销售数据确认';
+      if(updateHash)history.replaceState(null,'',sample?'#sample':`#step-${document.querySelector('[data-step].active')?.dataset.step||1}`);
+      window.scrollTo({top:0,left:0,behavior:'auto'});
+    }
+    function showSampleStep(step){
+      sampleState.step=Number(step);
+      sampleStepButtons.forEach(button=>{const active=button.dataset.sampleStep===String(step);button.classList.toggle('active',active);active?button.setAttribute('aria-current','step'):button.removeAttribute('aria-current')});
+      samplePanels.forEach(panel=>panel.hidden=panel.dataset.samplePanel!==String(step));
+      history.replaceState(null,'','#sample');
+    }
+    function sampleText(){
+      const amount=sampleState.multiple*2,exampleReturn=(amount*sampleState.value).toFixed(2);
+      return `Alea 交互样例 · 非体彩 SP\n西班牙 vs 阿根廷\n固定 AI 推演：西班牙 2 : 1 阿根廷，半场 1 : 0（非官方赛果）\n${sampleState.play}\n${sampleState.option} · 非官方参数 ${sampleState.value.toFixed(2)}\n${sampleState.multiple} 倍 · 样例金额 ${amount} 元 · 理论样例值 ${exampleReturn} 元\n非彩票、非投注凭证；无官方场次编号。`;
+    }
+    function updateSamplePreview(){
+      const raw=Number(document.getElementById('sampleMultiple').value),multiple=Math.min(99,Math.max(1,Number.isFinite(raw)?Math.round(raw):1));
+      document.getElementById('sampleMultiple').value=multiple;sampleState.multiple=multiple;sampleState.play=document.getElementById('samplePlay').value;
+      const amount=multiple*2,exampleReturn=(amount*sampleState.value).toFixed(2);
+      document.getElementById('sampleCardPlay').textContent=sampleState.play;
+      document.getElementById('sampleCardOption').textContent=`${sampleState.option} · ${sampleState.value.toFixed(2)}`;
+      document.getElementById('sampleCardStake').textContent=`${multiple} 倍 / ${amount} 元`;
+      document.getElementById('sampleCardReturn').textContent=`${exampleReturn} 元`;
+      document.getElementById('sampleSummary').textContent=`${sampleState.option} · 非官方参数 ${sampleState.value.toFixed(2)} · ${multiple} 倍 · 样例金额 ${amount} 元 · 理论样例值 ${exampleReturn} 元。`;
+    }
+    async function copySample(){
+      try{await navigator.clipboard.writeText(sampleText());notify('交互样例内容已复制')}catch{const area=document.createElement('textarea');area.value=sampleText();area.style.position='fixed';area.style.opacity='0';document.body.appendChild(area);area.select();document.execCommand('copy');area.remove();notify('交互样例内容已复制')}
+    }
+    function downloadSample(){
+      const canvas=document.createElement('canvas'),ctx=canvas.getContext('2d'),styles=getComputedStyle(document.documentElement);canvas.width=1200;canvas.height=720;
+      const bg=styles.getPropertyValue('--bg').trim(),surface=styles.getPropertyValue('--surface').trim(),fg=styles.getPropertyValue('--fg').trim(),muted=styles.getPropertyValue('--muted').trim(),accent=styles.getPropertyValue('--accent').trim();
+      ctx.fillStyle=bg;ctx.fillRect(0,0,1200,720);ctx.fillStyle=surface;ctx.beginPath();ctx.roundRect(70,60,1060,600,28);ctx.fill();ctx.fillStyle=accent;ctx.beginPath();ctx.roundRect(70,60,1060,140,[28,28,0,0]);ctx.fill();
+      ctx.fillStyle=surface;ctx.font='500 46px Georgia,serif';ctx.fillText('Alea 方案样例',120,132);ctx.font='22px sans-serif';ctx.fillText('交互样例 · 非体彩 SP · 无官方场次编号',120,170);
+      ctx.fillStyle=fg;ctx.font='500 42px Georgia,serif';ctx.fillText('西班牙 vs 阿根廷',120,270);ctx.font='26px sans-serif';ctx.fillText(`${sampleState.play}　${sampleState.option} · ${sampleState.value.toFixed(2)}`,120,335);ctx.fillText(`${sampleState.multiple} 倍　样例金额 ${sampleState.multiple*2} 元　理论样例值 ${(sampleState.multiple*2*sampleState.value).toFixed(2)} 元`,120,390);
+      ctx.fillStyle=muted;ctx.font='22px sans-serif';ctx.fillText('固定 AI 推演：西班牙 2 : 1 阿根廷，半场 1 : 0（非官方赛果）',120,465);ctx.fillText('非彩票、非投注凭证；固定非官方参数仅用于交互验证。',120,520);ctx.fillText('不构成投注建议，不代表竞彩在售数据或理论奖金。',120,555);
+      const link=document.createElement('a');link.download='alea-interaction-sample.png';link.href=canvas.toDataURL('image/png');link.click();notify('PNG 已生成并下载');
+    }
+    modeButtons.forEach(button=>button.addEventListener('click',()=>setMode(button.dataset.calculatorMode)));
+    sampleStepButtons.forEach(button=>button.addEventListener('click',()=>showSampleStep(button.dataset.sampleStep)));
+    document.getElementById('sampleAdopt').addEventListener('click',()=>{showSampleStep(2);notify('固定推演已采用到本地样例')});
+    document.querySelectorAll('[data-sample-option]').forEach(button=>button.addEventListener('click',()=>{document.querySelectorAll('[data-sample-option]').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));sampleState.option=button.dataset.sampleOption;sampleState.value=Number(button.dataset.sampleValue)}));
+    document.querySelector('[data-sample-back]').addEventListener('click',()=>showSampleStep(1));
+    document.getElementById('samplePreview').addEventListener('click',()=>{updateSamplePreview();showSampleStep(3);notify('交互样例方案卡已生成')});
+    document.getElementById('sampleCopy').addEventListener('click',copySample);document.getElementById('sampleDownload').addEventListener('click',downloadSample);
+    document.getElementById('sampleShare').addEventListener('click',async()=>{const text=sampleText();if(navigator.share){try{await navigator.share({title:'Alea 交互样例 · 非体彩 SP',text});notify('已打开系统分享');return}catch(error){if(error.name==='AbortError')return}}await copySample();notify('当前环境不支持系统分享，内容已复制')});
+    const drawer=document.getElementById('calculatorMobileDrawer'),drawerButton=document.getElementById('calculatorMenuButton');
+    function setDrawer(open){drawer.hidden=!open;drawerButton.setAttribute('aria-expanded',String(open));document.body.classList.toggle('mobile-console-menu-open',open);if(open)drawer.querySelector('a')?.focus()}
+    drawerButton.addEventListener('click',()=>setDrawer(drawer.hidden));drawer.querySelector('.mobile-console-drawer-close').addEventListener('click',()=>{setDrawer(false);drawerButton.focus()});drawer.addEventListener('click',event=>{if(event.target.closest('a'))setDrawer(false)});window.addEventListener('keydown',event=>{if(event.key==='Escape'&&!drawer.hidden){setDrawer(false);drawerButton.focus()}});
+    function applyCalculatorHash(){if(location.hash==='#sample'){setMode('sample',{updateHash:false});return}setMode('locked',{updateHash:false});showStep(location.hash.match(/^#step-([123])$/)?.[1]||'1')}window.addEventListener('hashchange',applyCalculatorHash);applyCalculatorHash();
   </script>
 </body>
 </html>

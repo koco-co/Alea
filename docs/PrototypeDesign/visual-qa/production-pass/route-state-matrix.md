@@ -1,58 +1,81 @@
-# Alea OpenDesign 生产验收路由/状态矩阵
+# Alea PRD v1.9 路由 / 状态追踪矩阵
 
 基线日期：2026-07-19
-产品真源：`docs/产品需求文档.md` v1.7
-视觉真源：`DESIGN.md`
-原型项目：`d99abbfa-a8d0-440e-a1aa-2b18b9926643`
 
-状态说明：
+产品真源：`docs/产品需求文档.md` v1.9
 
-- `未验收`：尚无本轮同视口、同状态的新截图和交互证据。
-- `失败`：已确认缺页、空壳、死控件、错误语义或视觉问题。
-- `通过`：本轮在 1440×900 与 390×844 均完成渲染、交互和截图检查。
-- 当前表同时记录本轮修改前基线和已完成的正式验收；不复用 OpenDesign 项目中的旧 `qa/` 或 `.tmp/shots/` 截图作为本轮证据。
+视觉真源：`DESIGN.md`（Alea Production Prototype Content 及其后续规则优先）
 
-| PRD | 角色 | 路由/原型文件 | 入口 | 关键状态与交互 | 参考 | 本轮截图 | 结果 | 修改前剩余问题 |
-|---|---|---|---|---|---|---|---|---|
-| §6 | 游客 | `/` · `alea.html` | 直接访问 | 首屏动画四阶段、CTA、证据叙事、reduced motion | PRD §6、DESIGN | `screenshots/001-baseline-opendesign-home.jpeg` | 失败 | 全站仍使用“澜城竞技 vs 赤湾联”等玩具式赛事；与用户指定世界杯决赛语境不符 |
-| §7 | 游客 | `/login` · `alea-auth.html#login` | 首页登录 | OAuth、邮箱密码、错误、回跳来源 | PRD §7 | 待截 | 未验收 | 暴露“填入演示账户”产品控件；需验证错误、加载和键盘路径 |
-| §7 | 游客 | `/signup` · `alea-auth.html#signup` | 首页注册 | OAuth、18 岁、条款、校验、成功 | PRD §7 | 待截 | 未验收 | 暴露“演示：填入有效资料”；需验证双确认门槛 |
-| §7 | 游客 | `/forgot` · `alea-auth.html#forgot` | 登录页 | 邮箱校验、发送中、成功、错误 | PRD §7 | 待截 | 未验收 | 未有本轮视觉证据 |
-| §4、§16 | 用户/管理员 | 控制台框架 · `alea-console.html` | 登录回跳 | 九项一级导航、8 个 hover 副标题、默认落地、路由标题、消息中心、头像菜单、个人设置、角色差异 | PRD §3–4、§16 | `docs/PrototypeDesign/open-design/qa/shell-user-after-desktop.png`；`docs/PrototypeDesign/open-design/qa/shell-admin-after-desktop.png`；`docs/PrototypeDesign/open-design/qa/shell-navigation-functional.png`；`docs/PrototypeDesign/open-design/qa/shell-user-after-mobile.png`（旧移动证据） | 未验收 | 新增桌面用户/管理员壳层 1440×900 对比证据；聚焦报告图片显示其生成器范围 112/112，但本轮没有可重跑脚本，不能据此代表全站 E2E。管理员移动证据仍需重截，个人设置与完整角色外壳仍需逐项核验 |
-| §4、§5.3 | 用户/管理员 | `/console` · `alea-console.html#overview` | 控制台默认入口/主导航“每日总览” | 赛前简报、赛事事实、固定 AI 原型输出、来源未连接、样本不足、桌面/移动导航、移动滚动末尾 | PRD §4、§5.3、DESIGN | `screenshots/007-console-overview-desktop-final.png`；`screenshots/006-console-overview-mobile-final.png`；`screenshots/005-console-overview-mobile-end-opendesign.jpeg` | 未验收 | 已有内容证据；导航改名后需重新截取桌面与移动证据 |
-| §8.1–8.2 | 用户/管理员 | `/console/fixtures` · `alea-console.html#fixtures` | 主导航“竞猜赛程” | 日期、状态、赛事、搜索、空态、重置、Escape、管理员多选、键盘进入/返回 | PRD §8 | `screenshots/010-console-fixtures-desktop-final.png`；`screenshots/011-console-fixtures-mobile-final.png`；`screenshots/012-console-fixtures-functional-15-of-15.png` | 未验收 | 列表与筛选闭环已通过 15/15；导航改名后需重新截取桌面与移动证据 |
-| §8.3 | 用户/管理员 | `/console/fixtures/:id` · `alea-console.html#detail-final` | 比赛行 | 竞彩、情报、预测、赛果、复盘 Tab；键盘左右/Home/End；返回/深链；移动首屏/末屏 | PRD §8.3 | `screenshots/015-console-fixture-detail-desktop-final.png`；`screenshots/016-console-fixture-detail-mobile-final.png`；`screenshots/017-console-fixture-detail-mobile-end-final.png` | 通过 | 五个 Tab、诚实数据空态、固定原型预测、赛果/复盘锁定态、桌面与移动净空已通过；不代表其他控制台路由通过 |
-| §9.1–9.2 | 用户/管理员 | `/console/predictions` · `alea-predictions.html#today` | 主导航“太玄问机” | 今日推演、单场推演、关注、采用、停售、no-quorum | PRD §9 | `docs/evidence/2026-07-20-provider-qa/web-predictions-no-quorum-1440x900.png`；`docs/evidence/2026-07-20-provider-qa/web-predictions-no-quorum-state-390x844.png` | 未验收 | Next.js 实际页已移除固定 2:1、5/7 与 71% 成功态；当前仅 1 个真实 Provider 时显示 `NO-QUORUM`，不生成公证记录，并禁用圆桌/共识动作。1440×900 与 390×844 已通过；OpenDesign 源码已同步阻断态，但本轮浏览器会话结束后尚未补拍其新截图，因此整行不能标通过 |
-| §9.3 | 用户/管理员 | `/console/predictions/:id` · `alea-predictions.html#debateReplay` | 展开辩论 | 选场、独立预测、匿名辩论、事实来源、终投、组单 | PRD §9.3 | `screenshots/037-predictions-worldcup-mobile-final.png` | 未验收 | OpenDesign 真实点击已展开五阶段回放；FIFA 事实与 AI 判断分层，首发/伤停/裁判/技术统计均排除并显示待官方确认，组单阶段因竞彩销售数据缺失不生成方案。精确桌面证据待补 |
-| §9.4 | 用户/管理员 | 串关卡 · `alea-predictions.html` | 今日预测 | 待开/部分结算/命中/未中/无效 | PRD §9.4 | `screenshots/037-predictions-worldcup-mobile-final.png` | 未验收 | 今日页明确显示“暂无可核验的串关组合”，没有为单场决赛伪造第二场、赔率或串关；独立生命周期组件仍需桌面证据 |
-| §9.2 | 用户/管理员 | 预测七生命周期 · `alea-predictions.html` | 历史归档 | 已发布、未发布、已撤回、已终止、失败、未达法定人数、结算态 | PRD §9、§17 | `screenshots/037-predictions-worldcup-mobile-final.png` | 未验收 | OpenDesign 已真实点击“历史推演/生命周期状态/已结算记录”；历史与结算均为诚实空态，生命周期明确为“组件状态样例 · 非当前赛况”，最终赛果显示待确认。尚缺各状态独立截图与精确桌面证据 |
-| §10.1 | 用户/管理员 | `/console/rankings` · `alea-console.html#rankings` | 主导航“预测排行” | 维度、时间、赛事筛选、准入标记 | PRD §10 | 待截 | 失败 | 排名和战绩数据无 provenance，部分文案仍称“情景演示” |
-| §10.3 | 用户/管理员 | `/console/rankings/:aiId` · `alea-console.html#rankings-*` | 排行行 | 校准图、盈亏、历史、教训 | PRD §10.3 | 待截 | 失败 | AI 头像存在文字降级逻辑；历史数据为虚构球队 |
-| §11.1 | 用户/管理员 | `/console/pnl` · `alea-console.html#pnl` | 主导航“盈亏账本” | 圆桌账户、模型曲线、范围、图例、空态 | PRD §11.1 | 待截 | 未验收 | 模拟盈亏数据无明确原型标签和来源边界 |
-| §11.2 | 管理员 | `/console/pnl?tab=real` | 盈亏页管理员 Tab | 录入、编辑、删除、日志、空态 | PRD §11.2 | 待截 | 失败 | 当前原型未发现完整真实盘交互面 |
-| §12.1 | 用户/管理员 | `/console/reviews` · `alea-console.html#reviews` | 主导航“赛后复盘” | 筛选、命中/未中、空态 | PRD §12 | 待截 | 失败 | 复盘比赛与原因均为虚构演示数据 |
-| §12.2–12.3 | 用户/管理员 | `/console/reviews/:id` · `alea-console.html#reviews-*` | 复盘卡 | 推演对照、模型复盘、共性偏差、改进要点、关联证据 | PRD §12 | 待截 | 未验收 | 管理员审核/发布流程尚未定位为完整交互 |
-| §13.1–13.5 | 用户/管理员 | `/console/calculator` · `alea-calculator.html` | 主导航“竞彩方案”/采用 | 比赛身份、销售数据边界、玩法/出图禁用、紧凑复制/下载 | PRD §13、DESIGN `button-icon-compact` | `screenshots/038-calculator-worldcup-mobile-final.png` | 未验收 | 已移除 3 场虚构联赛、场次号、赔率、规则版本、注数/金额与理论回报；唯一比赛为 Match 104 西班牙 vs 阿根廷。复制/下载保持 44×44 紧凑图标且因销售数据未确认禁用。390×844 视觉通过，精确 1440×900 待补 |
-| §13.6 | 用户/管理员 | `/console/calculator` 移动 · `alea-calculator.html#step-*` | 移动导航 | 核对比赛→配置锁定→预览锁定 | PRD §13.6 | `screenshots/038-calculator-worldcup-mobile-final.png` | 未验收 | OpenDesign 390×844 真实点击三步：步骤 1 显示比赛事实；步骤 2 四类配置控件均 disabled 且有原因；步骤 3 明确“不展示伪造票面”并提示出图禁用。尚缺步骤 2/3 独立图片证据 |
-| §14.1 | 用户/管理员 | `/console/wiki` · `alea-console.html#wiki` | 主导航“赛事资料” | 四 Tab、搜索、筛选、空态 | PRD §14 | 待截 | 失败 | 使用虚构球队和 W/D/L 字母圆片；无人物资产 |
-| §14.2 | 用户/管理员 | `/console/wiki/:type/:id` | 资料卡 | 球队/国家队/球员/教练/裁判详情 | PRD §14.2 | 待截 | 失败 | 未发现完整资料详情路由与页面 |
-| §15.1 | 管理员 | `/console/admin/roundtable` · `alea-admin.html#launch` | 系统管理“发起推演” | 双模式、范围、阵容、参数、定时、发起、禁用 | PRD §5.3、§15.1、DESIGN 赛事身份规范 | `screenshots/024-admin-launch-desktop-final.png`；`screenshots/025-admin-launch-mobile-final.png`；`screenshots/026-admin-launch-functional-final.png`；`screenshots/033-admin-header-desktop-final.png`；`screenshots/034-admin-header-mobile-final.png` | 失败 | Match 104、西班牙 vs 阿根廷、FIFA 已确认事实/固定原型配置/未连接数据三层边界和全部核心输入已完成双端渲染与真实交互；独立复核捕获“正在创建执行…”禁用态并确认 1.4 秒后到达 `#live`。Alea 共享锁定图和 390px 页头溢出已修复。该页仍展示 AI 厂商标识，相关官方来源/许可未全部完成，故资产台账 P0 仍阻断整行“通过” |
-| §15.2 | 管理员 | `/console/admin/roundtable/:jobId` · `alea-admin.html#live` | 发起推演后 | 阶段、消息、事实核验、缺席、跳过、终止原因 | PRD §15.2 | 待截 | 未验收 | 需逐状态实际操作和截图 |
-| §15.3 | 管理员 | `/console/admin/publish` · `alea-admin.html#publish*` | 推演完成 | 质检、阻断、备注、确认、撤回 | PRD §15.3 | 待截 | 未验收 | 需验证红/黄项、发布锁定和撤回原因 |
-| §15.4 | 管理员 | `/console/admin/lineup` · `web/src/app/console/admin/lineup/page.tsx` · `alea-admin.html#lineup` | 系统管理“模型阵容” | CLI/API 模式、runner 探测/重扫、模型、推理强度、连接测试、密钥替换/清除、1–3 实例、保存失败、no-quorum | PRD §15.4、Open Design commit `3447f60` SettingsDialog/Codex runtime | `docs/evidence/2026-07-20-provider-qa/web-lineup-cli-1440x900.png`；`web-lineup-api-1440x900.png`；`web-lineup-cli-390x844.png`；`opendesign-lineup-cli-1440x900.png`；`opendesign-lineup-api-1440x900.png`；`opendesign-lineup-api-390x844.png` | 未验收 | 内置浏览器实际验证 CLI 探测/测试、API 切换、密钥替换/清除、1/3 实例、保存失败与 no-quorum；OpenDesign 重扫/严格 Schema 测试已操作，双视口渲染通过，移动保存栏遮挡已修复。Provider 数据库 gateway 尚未接入，实例 CRUD 与密钥落库未验证，因此不能标通过 |
-| §15.5 | 管理员 | `/console/admin/sync` | 系统管理导航 | 手动同步、日志、部分失败、重试、冲突 | PRD §15.5 | 待截 | 失败 | 当前 `alea-admin.html` 未发现数据管理页面 |
-| §15.6 | 管理员 | `/console/admin/settings` | 系统管理导航 | 九类设置、版本、搜索、脏数据、保存、权限、竞彩规则历史 | PRD §15.6 | `docs/evidence/2026-07-20-provider-qa/web-settings-sporttery-1440x900.png` | 未验收 | 初次截图证实死控件；随后已实现可展开的 `SPORTTERY-2026.07` 历史、4 项官方来源台账、实时复核待接入与安全回退状态。该修复尚缺新的双视口浏览器截图，且 OpenDesign 系统设置页面仍缺，因此不能标通过 |
-| §16.1 | 用户/管理员 | 消息中心 | 顶栏铃铛 | 20 条、已读、关注触发、串关终态 | PRD §16.1 | 待截 | 未验收 | 需核对消息类型与直达链接 |
-| §16.2 | 用户/管理员 | 个人设置 | 头像菜单 | 消息偏好、关注、密码、OAuth、注销 | PRD §16.2 | 待截 | 失败 | 当前面板未确认覆盖完整个人设置 |
-| §5.2、§18 #17 | 全角色 | 全局状态规范 · `alea-design-system.html` | 设计系统 | loading/empty/stale/partial/error/permission/后端/AI 不可用 | PRD §5.2 | 待截 | 未验收 | 需验证产品页面实际复用而非只存在于规范页 |
+仓库镜像：`docs/PrototypeDesign/open-design/`
 
-## 本轮验收记录格式
+OpenDesign 项目：`c73b3011-35b7-4a7a-a8e9-a22f12257c20`
 
-每次将一行改为“通过”时，必须同时记录：
+正式证据：`docs/visual-qa/prd-v1.9-final-20260719/`
 
-1. 精确入口或操作；
-2. 观察结果；
-3. 1440×900 截图；
-4. 390×844 截图；
-5. 键盘、状态保持、错误恢复等非截图证据；
-6. 未验证余项（如有则不能标“通过”）。
+最终全量复核：`docs/visual-qa/prd-v1.9-final-20260719/final-production-20260719/`
+
+结果定义：
+
+- `通过`：本轮在 1440×900 与 390×844 均重新渲染，无页面级横向溢出，并有对应的新截图与交互证据。
+- `部分通过`：页面与主要路径通过，但仍有明确的外部依赖、资产来源或未覆盖细节。
+- `不适用 / 诚实空态`：PRD 路由存在，但由于可信业务数据尚未接入，当前正确结果是可恢复的空态或锁定态。
+
+| PRD | 角色 | 路由 / 文件 | 关键状态与本轮操作 | 桌面 / 移动证据 | 结果 | 剩余边界 |
+|---|---|---|---|---|---|---|
+| §6 | 游客 | `/` · `index.html` | 入口、CTA、证据叙事、响应式 | `desktop/mobile-01-launcher.png` | 通过 | 无 |
+| §6 | 游客 | 营销首页 · `alea.html` | 四阶段首屏、固定决赛身份、5/7 与 71% 一致性 | `desktop/mobile-02-marketing.png` | 通过 | 主视觉为生成资产，见资产台账 |
+| §7 | 游客 | `alea-auth.html#login` | 邮箱密码、OAuth、无效凭据、回跳；产品界面隐藏测试填充按钮 | `desktop/mobile-03-auth-login.png` | 通过 | 外部 OAuth 仅原型反馈 |
+| §7 | 游客 | `alea-auth.html#signup` | 18 岁与条款门槛、密码一致性、成功态 | `desktop/mobile-04-auth-signup.png` | 通过 | 外部注册服务未连接 |
+| §7 | 游客 | `alea-auth.html#forgot` | 邮箱校验、发送成功、重新发送 | `desktop/mobile-05-auth-forgot.png` | 通过 | 邮件服务未连接 |
+| §4、§5.3 | 用户 | `alea-console.html#overview` | 赛前简报、赛事事实、数据边界、移动导航 | `desktop/mobile-06-console-overview.png` | 通过 | 实时数据源未连接 |
+| §8.1–8.2 | 用户 / 管理员 | `#fixtures` | 日期、状态、赛事、搜索、空态、重置 | `desktop/mobile-07-console-fixtures.png` | 通过 | 当前可信候选仅 Match 104 |
+| §8.3 | 用户 / 管理员 | `#detail-final` | 深链、返回、5 个详情 Tab、销售/阵容/赛果锁定态 | `desktop/mobile-08-console-fixture-detail.png` | 通过 | 未接入字段保持空 |
+| §9.1–9.3 | 用户 / 管理员 | `alea-predictions.html#today` | 七实例、5/7、5/1/1 票分布、Qwen 证据、五阶段回放 | `desktop/mobile-19-predictions-today.png` | 通过 | AI 内容为冻结原型输出 |
+| §9.2、§9.4 | 用户 / 管理员 | `#history`、`#states`、`#settled` | 历史诚实空态、七生命周期组件、未赛赛事不生成结算 | `desktop/mobile-20–22-*.png` | 通过 | 实际历史与结算待公证账本 |
+| §10.1–10.3 | 用户 / 管理员 | `#rankings`、`#rankings-claude-1` | 维度、范围、AI 详情、校准、历史/教训空态 | `desktop/mobile-09–10-*.png` | 通过 | 所有数值标明“AI 推演数据 / 非真实战绩” |
+| §11.1 | 用户 / 管理员 | `#pnl` | 模拟账户、图例、范围、空态、角色隔离 | `desktop/mobile-11-console-pnl-user.png` | 通过 | 模拟曲线为交互规格演示 |
+| §11.2 | 管理员 | `?role=admin#pnl` | 真实盘 Tab、空态、录入校验、新增、编辑入口、删除确认、只追加审计 | `desktop/mobile-12-console-pnl-admin.png` | 通过 | 初始无真实记录，不预填业务数据 |
+| §12.1–12.3 | 用户 / 管理员 | `#reviews`、`#reviews-*` | 筛选、赛果未确认空态、无效深链恢复 | `desktop/mobile-13-console-reviews.png` | 不适用 / 诚实空态 | 官方赛果与真实复盘尚未产生 |
+| §13 | 用户 / 管理员 | `alea-calculator.html`、`#sample` | 当前事实锁定、P0 样例深链、采用、玩法、预览、复制、PNG 下载 | `desktop/mobile-23–24-calculator-*.png` | 通过 | P0 样例明确非体彩 SP |
+| §14.1 | 用户 / 管理员 | `#wiki` | 已确认身份列表；人物、积分、战绩 Tab 禁用并说明来源 | `desktop/mobile-14-console-wiki.png` | 通过 | 扩展资料源未接入 |
+| §14.2 | 用户 / 管理员 | `#wiki-team-spain`、`#wiki-team-argentina` | 双队深链、返回、身份来源、名单/教练/战绩缺失卡 | `desktop/mobile-15–16-console-wiki-*.png` | 通过 | 国旗不冒充足协队徽 |
+| §15.1 | 管理员 | `alea-admin.html#launch` | 双模式、范围、阵容、轮数、入围、定时、发起 | `desktop/mobile-25-admin-launch.png` | 通过 | 外部数据与任务执行器未连接 |
+| §15.2 | 管理员 | `#live`、`#terminated` | 阶段流、七实例、事实核验、终止归档 | `desktop/mobile-26-admin-live.png`、`34-admin-terminated.png` | 通过 | 运行日志为冻结原型状态 |
+| §15.3 | 管理员 | `#publish`、`#publish-blocked` | 质检、警告/阻断、只读预测、管理员备注 | `desktop/mobile-27–28-admin-publish*.png` | 通过 | 销售数据缺失时保持阻断 |
+| §15.4 | 管理员 | `#lineup` | 6 厂商 / 7 实例、密钥掩码、模型目录、连接失败、1–3 实例、保存失败与重试 | `desktop/mobile-29-admin-lineup.png` | 部分通过 | 厂商标识仅限内部原型；商标授权待产品方确认 |
+| §15.5 | 管理员 | `#sync` | 今日/日期/比赛手动同步、部分失败、重试、只追加日志、冲突空态 | `desktop/mobile-30-admin-sync.png` | 通过 | 销售与阵容来源未连接 |
+| §15.6 | 管理员 | `#settings`、`#users` | 5 分组、18 控件、搜索、校验、版本保存、状态筛选、停用二次确认与审计 | `desktop/mobile-31-admin-settings.png`、`33-admin-users.png` | 通过 | 后端持久化未连接 |
+| §15.7 | 管理员 | `#methodology` | 真实提议空态、阈值、OLD/NEW 回测演示、演示发布不改生产版本 | `desktop/mobile-32-admin-methodology.png` | 通过 | 尚无已发布复盘生成真实提议 |
+| §16 | 用户 / 管理员 | `#messages`、`#account`、顶栏弹层、移动抽屉 | 消息筛选/已读/空态；通知偏好、关注、密码、OAuth、删除；头像默认/上传/失败/无头像；角色入口隔离、Escape 焦点返回 | `desktop/mobile-17–18-*.png`、`35–50-*.png` | 通过 | 外部消息、密码、OAuth 与注销服务未连接，页面明确为本地原型反馈 |
+| §5.2、§18 | 全角色 | 全局状态 | loading、empty、partial、error、permission、disabled、retry、焦点与 44px 触控 | `desktop/mobile-01–34-*.png`、`a11y-control-audit.json` | 通过 | 不代表真实读屏器组合或完整 WCAG 合规 |
+
+## 本轮汇总
+
+- 正式路由 / 页面：34 个（补入消息中心、账户设置与阿根廷身份详情）。
+- OpenDesign 最终任务：`dc3a58ed-6778-462d-833b-bd9987f91c03`；自然结束，耗时 17 分 27 秒；结束后无活动任务、无排队消息。
+- 双端新鲜路由截图：68 张（34 个路由 × 1440×900 / 390×844）；另有 16 张消息、账户、弹层、抽屉与焦点交互证据。
+- 34/34 桌面与 34/34 移动页面级横向溢出：0。
+- 34/34 桌面与 34/34 移动空白 / 加载卡死 / broken image：0。
+- 当前可见表单缺失标签：0；当前可见无名按钮：0；小于 44×44px 的当前可见按钮：0。
+- 冷启动路由标题错误聚焦：0；认证页与控制台的主动导航后标题聚焦均通过。
+- 5 张桌面联系表、5 张移动联系表与 2 张触控修正检查表已逐张人工打开检查。
+- 静态验证：仓库镜像为 `PASS 106 / FAIL 0`、退出码 `0`；OpenDesign 项目同步后的同值见最终审计。
+- 关键一致性：发起推演显示 `7 个配置实例 · 7 个已启用`，不存在 `6 个已启用` 残留；预测页分列展示 `原始票 5/7` 与 `加权共识 71%`。
+- 保存栏：模型阵容与系统设置在移动端均为文档流 `position: static`，不覆盖目录、表单或错误提示。
+
+## 未验证或外部阻断
+
+1. 真实 OAuth、邮件、厂商 API、赛事 / 竞彩 / 阵容数据源、任务执行器、服务端持久化、系统分享最终发送和外部通知服务未连接；原型保持明确空态、失败态或本地反馈。
+2. AI 厂商标识的官方来源 / 商标使用边界尚未全部确认，详见 `asset-ledger.md`；因此不作“对外资产合规完成”或“可直接商业发布”声明。
+3. 本轮完成了可见名称、标签、焦点、键盘路径与双视口检查，但没有执行真实读屏器组合测试，也不宣称完整 WCAG 合规。
+
+## Next.js 前端实现增量（2026-07-20）
+
+下表只记录 `web/` 实现状态；OpenDesign 既有截图不冒充 Next.js 实现截图。`docs/evidence/frontend-visual-20260720/` 为服务器静态渲染 HTML，仅用于结构检查，不构成浏览器视觉验收。
+
+| PRD | 路由 / 入口文件 | 关键状态与交互 | 参考 | 本轮验证 | 剩余缺口 |
+|---|---|---|---|---|---|
+| §6 | `/` · `web/src/app/(marketing)/page.tsx` | 首屏动画、四段滚动叙事、CTA、页脚与风险文案 | `alea.html` | TypeScript、单测、生产构建、静态渲染通过 | 1440×900 与 390×844 新鲜截图及动画 / 锚点浏览器检查被本地端口权限阻断 |
+| §9 | `/console/predictions`、`/console/predictions/[id]` | 四层推演卡、原始票与加权共识分列、七实例投票、五阶段辩论回放 | `alea-predictions.html` | TypeScript、单测、生产构建、静态渲染通过 | 双视口、hover / focus、详情导航与时间线浏览器检查待补 |
+| §8 | `/console/fixtures`、`/console/fixtures/[id]` | 日期 / 状态 / 赛事 / 搜索筛选、重置、诚实空态、详情五 Tab | `alea-console.html` | TypeScript、单测、生产构建、静态渲染通过 | 双视口、筛选组合、5 Tab 与恢复路径浏览器检查待补 |
+| §13 | `/console/calculator` | 事实态锁定、P0 非官方样例、三栏桌面、三步移动、复制、PNG 下载、声明区 | `alea-calculator.html` | TypeScript、单测、生产构建、静态渲染通过 | 双视口、移动三步、复制 / 下载与 Canvas 成图浏览器检查待补 |

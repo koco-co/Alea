@@ -1,7 +1,7 @@
 ---
-version: alpha
-name: Claude-design-analysis
-description: A warm-canvas editorial interface for Anthropic's Claude product. The system anchors on a tinted cream canvas with serif display headlines, warm coral CTAs, and dark navy product surfaces (code editor mockups, model showcase cards). Brand voltage comes from the cream/coral pairing — deliberately warm and humanist where most AI brands use cool blue + slate. Type voice runs a slab-serif display ("Copernicus" / Tiempos Headline) for h1/h2 and a humanist sans for body. The signature Anthropic black-radial-spike mark anchors the wordmark.
+version: 1.9
+name: Alea-design-system
+description: Alea 的暖纸张编辑式产品界面。奶油色画布、暖陶色主操作、深墨色证据与赛事身份面共同构成视觉层级；所有赛事事实、AI 推演、销售数据与缺失来源必须在视觉和文案上明确分层。
 
 colors:
   primary: "#cc785c"
@@ -458,6 +458,14 @@ Claude's hero rarely uses photography. Instead it uses:
 
 When photography is used (rare — mostly testimonials), avatars crop to perfect circles at 40px diameter.
 
+### Identity Assets
+
+**`account-avatar`** — Account portraits are 1:1 raster assets with a minimum source size of 512×512. Use `object-fit: cover` inside a circular mask; keep the eyes and face inside the central 70% safe area. Header avatars are 44px, account summaries are 48–56px, and the personal-settings preview is 88–96px. The current fictional prototype identities use `assets/accounts/lin-zhou.png` and `assets/accounts/admin.png`; they must not be reused for players, coaches, referees, or real people.
+
+The personal-settings route must expose four explicit avatar states: generated default, successful local upload preview, load failure, and no avatar. Load failure and no-avatar states use the fixed Lucide `user-round` asset plus a visible status label; they never fall back to a letter, initial, emoji, broken-image glyph, CSS drawing, or invented person photo. Upload, remove, restore-default, and failure simulation are prototype-local interactions and must not imply server persistence.
+
+**`vendor-mark`** — AI vendor identity uses the vendor-provided mark or wordmark at its original aspect ratio inside a shared optical container. Do not recolor, stretch, crop, add effects, or replace the mark with `GPT`, `DS`, `C`, or other text initials. Multiple instances share one vendor mark and add only the Alea instance-number badge and nickname. Each asset must retain a source/usage record in the asset ledger.
+
 ## Components
 
 ### Top Navigation
@@ -580,6 +588,8 @@ When photography is used (rare — mostly testimonials), avatars crop to perfect
 
 ## Alea Production Prototype Content
 
+本节及其后的 Alea 规则为当前规范；文档前部保留的 Claude/Anthropic 风格分析只作为最初视觉参考，若与本节冲突，以 Alea 规则为准。
+
 The production prototype uses the 2026 FIFA World Cup final, Spain vs Argentina, as its primary demonstration fixture. This content layer must feel like a credible match-research product while remaining honest about which fields are confirmed facts and which are fixed prototype outputs.
 
 ### Match Identity
@@ -606,6 +616,30 @@ The production prototype uses the 2026 FIFA World Cup final, Spain vs Argentina,
 - Match score or prediction is the single numerical focal point. Supporting odds, confidence, provenance, and timestamps stay in the mono data hierarchy and must not compete with it.
 - Use real-world match terminology. Remove internal/test-facing labels such as “填入演示账户”, “模拟数据过期”, “情景演示”, or “演示：填入有效资料” from visible product controls.
 - Test-only state reproduction remains available through documented prototype URLs or internal controls that are not visible in the product surface.
+
+### Administration And Dense Workspaces
+
+- 管理端使用左侧流程导航 + 右侧工作区。桌面内容优先保持在首个 900px 内可识别，长表单按业务边界分卡，不用标题空壳代替内容。
+- 系统设置固定为五组：评分与规则、模拟盘与风控、数据与自动化、用户管理、提示词与方法论；提供搜索/快速定位、分组保存入口、全局版本状态和未保存离开确认。
+- 数据表、同步日志、真实盘与用户目录采用紧凑行式结构。移动端改为单栏，不保留会裁切第二张卡的横向轮播。
+- 厂商配置与实例编辑在移动端为单栏；测试连接、保存、失败、重试和校验反馈必须保持可见。
+- 桌面可使用底部粘性保存栏；在 390×844 移动视口中，保存栏回到文档流，避免覆盖表单、错误信息或厂商目录。每个设置分组仍保留可见保存入口。
+- 真实盘只在管理员角色入口显示；普通用户不得看到真实盘 Tab 或系统管理入口。
+
+### State And Source-Boundary Components
+
+- 空状态必须说明“为什么为空、何时出现内容、当前还能做什么”，并占据所属内容区的完整宽度，不缩成孤立小卡。
+- Loading、saving、saved、failed、retry、disabled、permission denied 和 stale/partial data 都使用可读文本状态；颜色只作辅助，不是唯一提示。
+- 未连接来源不得用演示数字、虚构队伍、W/D/L、积分、伤停、赔率或实际赛果补齐。身份详情可以展示已确认国旗与赛事身份，其余字段使用来源缺失卡。
+- 方法论组件演示不得修改生产版本；真实提议为空时显示生产空态，隔离的 OLD/NEW 演示必须明确标记为非生产数据。
+- 所有可操作按钮和表单控件的触控热区至少 44×44px；图标按钮必须具有可访问名称、键盘焦点和禁用原因。
+
+### Responsive Acceptance
+
+- 正式验收视口为桌面 1440×900、移动 390×844。
+- 任一路由不得产生页面级横向滚动；密集表格在移动端重排为单列或卡片，不通过缩小字体硬塞。
+- 移动端主导航、管理流程导航和设置分组允许局部横向滚动，但必须显示完整当前项，不得裁切关键操作。
+- 全屏或长页弹层必须限制在 `100dvh` 内并可滚动；打开后焦点进入弹层，关闭后回到触发控件。
 
 ### Fixed Prototype Prediction
 

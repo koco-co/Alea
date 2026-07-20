@@ -123,7 +123,7 @@
               <div class="field"><label for="loginEmail">邮箱</label><input id="loginEmail" type="email" autocomplete="email" required value="researcher@example.com"></div>
               <div class="field"><label for="loginPassword">密码</label><input id="loginPassword" type="password" autocomplete="current-password" required></div>
               <div class="form-row"><label class="auth-check" style="min-height:44px;padding-block:10px"><input id="rememberLogin" type="checkbox"><span>在此设备保持登录</span></label><a class="text-link" href="#forgot">忘记密码</a></div>
-              <button class="btn btn-secondary" id="fillLoginDemo" type="button">填入演示账户</button>
+              <button class="btn btn-secondary" id="fillLoginDemo" type="button" hidden>填入演示账户</button>
               <button class="btn btn-primary" type="submit" data-od-id="login-submit-button">登录并返回今日推演</button>
             </form>
           </section>
@@ -147,7 +147,7 @@
                 <label class="auth-check"><input id="ageConfirm" type="checkbox" required><span>我确认已年满 18 周岁。</span></label>
                 <label class="auth-check"><input id="termsConfirm" type="checkbox" required><span>我已阅读并同意风险声明与隐私条款，理解 Alea 仅提供预测研究、不提供购彩服务。</span></label>
               </div>
-              <button class="btn btn-secondary" id="fillSignupDemo" type="button">演示：填入有效资料</button>
+              <button class="btn btn-secondary" id="fillSignupDemo" type="button" hidden>演示：填入有效资料</button>
               <button class="btn btn-primary" id="signupSubmit" type="button" disabled data-od-id="signup-submit-button">创建研究账户</button>
               <div class="auth-success" id="signupSuccess" role="status" aria-live="polite" tabindex="-1" hidden>
                 <span class="status status-good">账户已创建</span>
@@ -180,6 +180,7 @@
 
   <div class="auth-toast" id="authToast" role="status" aria-live="polite">操作已更新</div>
   <script>
+    if('scrollRestoration' in history)history.scrollRestoration='manual';
     const routes=['login','signup','forgot'];
     const views=[...document.querySelectorAll('.auth-view')];
     const routeTabs=[...document.querySelectorAll('.auth-tab[data-route]')];
@@ -193,7 +194,8 @@
       toastTimer=setTimeout(()=>authToast.classList.remove('show'),1800);
     }
 
-    function syncRoute(){
+    let routeFocusRequested=false;
+    function syncRoute(focusHeading=false){
       const requested=location.hash.slice(1);
       const route=routes.includes(requested)?requested:'login';
       if(requested&&requested!==route){
@@ -207,21 +209,28 @@
         tab.tabIndex=active?0:-1;
       });
       const heading=document.querySelector(`#${route} h2`);
-      if(requested&&heading)heading.focus({preventScroll:true});
+      const resetScroll=()=>window.scrollTo({top:0,left:0,behavior:'auto'});
+      resetScroll();
+      requestAnimationFrame(resetScroll);
+      window.setTimeout(resetScroll,120);
+      window.setTimeout(resetScroll,360);
+      if(focusHeading&&heading)heading.focus({preventScroll:true});
     }
 
-    window.addEventListener('hashchange',syncRoute);
+    window.addEventListener('hashchange',()=>{syncRoute(routeFocusRequested);routeFocusRequested=false});
     routeTabs.forEach((tab,index)=>{
-      tab.addEventListener('click',()=>{location.hash=tab.dataset.route});
+      tab.addEventListener('click',()=>{routeFocusRequested=true;if(location.hash===`#${tab.dataset.route}`)syncRoute(true);else location.hash=tab.dataset.route});
       tab.addEventListener('keydown',event=>{
         if(!['ArrowLeft','ArrowRight'].includes(event.key))return;
         event.preventDefault();
         const nextIndex=(index+(event.key==='ArrowRight'?1:-1)+routeTabs.length)%routeTabs.length;
+        routeFocusRequested=true;
         location.hash=routeTabs[nextIndex].dataset.route;
         routeTabs[nextIndex].focus({preventScroll:true});
       });
     });
-    syncRoute();
+    syncRoute(false);
+    window.addEventListener('pageshow',()=>syncRoute(false));
 
     function resolveReturnTarget(){
       const fallback='alea-predictions.html#today';
