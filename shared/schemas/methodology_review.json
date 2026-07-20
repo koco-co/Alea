@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://alea.local/schemas/methodology_review.json",
+  "title": "MethodologyReview",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["proposal_understanding", "evidence_assessment", "backtest_assessment", "risks", "decision", "reason", "evidence_record_ids", "proposed_revision"],
+  "properties": {
+    "proposal_understanding": {"type": "string", "minLength": 1, "maxLength": 500},
+    "evidence_assessment": {"type": "string", "minLength": 1, "maxLength": 1500},
+    "backtest_assessment": {"type": "string", "minLength": 1, "maxLength": 1500},
+    "risks": {"type": "array", "minItems": 1, "maxItems": 8, "items": {"type": "string", "minLength": 1, "maxLength": 500}},
+    "decision": {"type": "string", "enum": ["support", "oppose", "revise_and_review"]},
+    "reason": {"type": "string", "minLength": 1, "maxLength": 1000},
+    "evidence_record_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "proposed_revision": {"type": ["string", "null"], "maxLength": 2000}
+  },
+  "allOf": [
+    {"if": {"properties": {"decision": {"const": "revise_and_review"}}, "required": ["decision"]}, "then": {"properties": {"proposed_revision": {"type": "string", "minLength": 1}}}},
+    {"if": {"properties": {"decision": {"enum": ["support", "oppose"]}}, "required": ["decision"]}, "then": {"properties": {"proposed_revision": {"type": "null"}}}}
+  ]
+}

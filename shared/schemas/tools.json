@@ -1,0 +1,351 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://alea.local/schemas/tools.json",
+  "title": "AleaToolCall",
+  "oneOf": [
+    {"$ref": "#/$defs/list_selection_candidates"},
+    {"$ref": "#/$defs/get_match_data"},
+    {"$ref": "#/$defs/get_team_current_season_stats"},
+    {"$ref": "#/$defs/check_weather"},
+    {"$ref": "#/$defs/calculate_ticket"}
+  ],
+  "$defs": {
+    "no_tools": {"not": {}},
+    "selection_tools": {"$ref": "#/$defs/list_selection_candidates"},
+    "match_tools": {
+      "oneOf": [
+        {"$ref": "#/$defs/get_match_data"},
+        {"$ref": "#/$defs/get_team_current_season_stats"},
+        {"$ref": "#/$defs/check_weather"}
+      ]
+    },
+    "bet_tools": {"$ref": "#/$defs/calculate_ticket"},
+    "list_selection_candidates": {
+      "title": "ListSelectionCandidatesCall",
+      "description": "按稳定游标读取本桌冻结的选场候选池摘要",
+      "x-result-schema-ref": "#/$defs/selection_candidate_page",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "arguments"],
+      "properties": {
+        "name": {"const": "list_selection_candidates"},
+        "arguments": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["selection_scope_snapshot_id", "page_cursor"],
+          "properties": {
+            "selection_scope_snapshot_id": {"type": "string", "format": "uuid"},
+            "page_cursor": {"type": ["string", "null"]}
+          }
+        }
+      }
+    },
+    "get_match_data": {
+      "title": "GetMatchDataCall",
+      "description": "读取指定冻结输入快照中的赛前数据，不发起实时刷新",
+      "x-result-schema-ref": "#/$defs/match_snapshot_view",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "arguments"],
+      "properties": {
+        "name": {"const": "get_match_data"},
+        "arguments": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["input_snapshot_id", "match_id"],
+          "properties": {
+            "input_snapshot_id": {"type": "string", "format": "uuid"},
+            "match_id": {"type": "string", "format": "uuid"}
+          }
+        }
+      }
+    },
+    "get_team_current_season_stats": {
+      "title": "GetTeamCurrentSeasonStatsCall",
+      "description": "从冻结输入快照读取球队当前赛季数据",
+      "x-result-schema-ref": "#/$defs/sourced_team_stats",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "arguments"],
+      "properties": {
+        "name": {"const": "get_team_current_season_stats"},
+        "arguments": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["input_snapshot_id", "team_id"],
+          "properties": {
+            "input_snapshot_id": {"type": "string", "format": "uuid"},
+            "team_id": {"type": "string", "format": "uuid"}
+          }
+        }
+      }
+    },
+    "check_weather": {
+      "title": "CheckWeatherCall",
+      "description": "从冻结输入快照读取该场开赛时段天气，不接受任意地点或日期",
+      "x-result-schema-ref": "#/$defs/sourced_weather",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "arguments"],
+      "properties": {
+        "name": {"const": "check_weather"},
+        "arguments": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["input_snapshot_id", "match_id"],
+          "properties": {
+            "input_snapshot_id": {"type": "string", "format": "uuid"},
+            "match_id": {"type": "string", "format": "uuid"}
+          }
+        }
+      }
+    },
+    "calculate_ticket": {
+      "title": "CalculateTicketCall",
+      "description": "按冻结可售项计算注数、金额和理论奖金，模型不得提交赔率",
+      "x-result-schema-ref": "#/$defs/ticket_calculation",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "arguments"],
+      "properties": {
+        "name": {"const": "calculate_ticket"},
+        "arguments": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["bet_context_snapshot_id", "selections", "pass_types", "multiplier"],
+          "properties": {
+            "bet_context_snapshot_id": {"type": "string", "format": "uuid"},
+            "selections": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {"$ref": "#/$defs/ticket_selection"}
+            },
+            "pass_types": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {"type": "string", "minLength": 1}
+            },
+            "multiplier": {"type": "integer", "minimum": 1, "maximum": 50}
+          }
+        }
+      }
+    },
+    "ticket_selection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["match_id", "play", "offer_option_ids"],
+      "properties": {
+        "match_id": {"type": "string", "format": "uuid"},
+        "play": {"type": "string", "enum": ["had", "hhad", "crs", "ttg", "hafu"]},
+        "offer_option_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "source_metadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_record_ids",
+        "observed_at",
+        "valid_from",
+        "expires_at",
+        "confidence",
+        "missing_fields"
+      ],
+      "properties": {
+        "source_record_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "observed_at": {"type": "string", "format": "date-time"},
+        "valid_from": {"type": ["string", "null"], "format": "date-time"},
+        "expires_at": {"type": ["string", "null"], "format": "date-time"},
+        "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+        "missing_fields": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "selection_candidate_page": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["selection_scope_snapshot_id", "candidates", "next_page_cursor"],
+      "properties": {
+        "selection_scope_snapshot_id": {"type": "string", "format": "uuid"},
+        "candidates": {"type": "array", "items": {"$ref": "#/$defs/selection_candidate"}},
+        "next_page_cursor": {"type": ["string", "null"]}
+      }
+    },
+    "selection_candidate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "match_id",
+        "competition",
+        "stage",
+        "round",
+        "kickoff_at",
+        "sales_cutoff_at",
+        "home_team",
+        "away_team",
+        "data_completeness",
+        "offer_summary",
+        "single_available",
+        "source_record_ids",
+        "observed_at",
+        "valid_from",
+        "expires_at",
+        "confidence",
+        "missing_fields"
+      ],
+      "properties": {
+        "match_id": {"type": "string", "format": "uuid"},
+        "competition": {"type": "string", "minLength": 1},
+        "stage": {"type": ["string", "null"]},
+        "round": {"type": ["string", "null"]},
+        "kickoff_at": {"type": "string", "format": "date-time"},
+        "sales_cutoff_at": {"type": ["string", "null"], "format": "date-time"},
+        "home_team": {"type": "string", "minLength": 1},
+        "away_team": {"type": "string", "minLength": 1},
+        "data_completeness": {"type": "number", "minimum": 0, "maximum": 1},
+        "offer_summary": {"type": "object"},
+        "single_available": {"type": "boolean"},
+        "source_record_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "observed_at": {"type": "string", "format": "date-time"},
+        "valid_from": {"type": ["string", "null"], "format": "date-time"},
+        "expires_at": {"type": ["string", "null"], "format": "date-time"},
+        "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+        "missing_fields": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "match_snapshot_view": {"$ref": "match.json"},
+    "sourced_team_stats": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "input_snapshot_id",
+        "team_id",
+        "season",
+        "stats",
+        "source_record_ids",
+        "observed_at",
+        "valid_from",
+        "expires_at",
+        "confidence",
+        "missing_fields"
+      ],
+      "properties": {
+        "input_snapshot_id": {"type": "string", "format": "uuid"},
+        "team_id": {"type": "string", "format": "uuid"},
+        "season": {"type": "string", "minLength": 1},
+        "stats": {"type": "object"},
+        "source_record_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "observed_at": {"type": "string", "format": "date-time"},
+        "valid_from": {"type": ["string", "null"], "format": "date-time"},
+        "expires_at": {"type": ["string", "null"], "format": "date-time"},
+        "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+        "missing_fields": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "sourced_weather": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "input_snapshot_id",
+        "match_id",
+        "weather",
+        "source_record_ids",
+        "observed_at",
+        "valid_from",
+        "expires_at",
+        "confidence",
+        "missing_fields"
+      ],
+      "properties": {
+        "input_snapshot_id": {"type": "string", "format": "uuid"},
+        "match_id": {"type": "string", "format": "uuid"},
+        "weather": {"type": "object"},
+        "source_record_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "observed_at": {"type": "string", "format": "date-time"},
+        "valid_from": {"type": ["string", "null"], "format": "date-time"},
+        "expires_at": {"type": ["string", "null"], "format": "date-time"},
+        "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+        "missing_fields": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "ticket_calculation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bet_context_snapshot_id",
+        "sporttery_rule_version_id",
+        "bet_count",
+        "stake",
+        "theoretical_payout",
+        "resolved_offer_option_ids",
+        "validation_errors"
+      ],
+      "properties": {
+        "bet_context_snapshot_id": {"type": "string", "format": "uuid"},
+        "sporttery_rule_version_id": {"type": "string", "format": "uuid"},
+        "bet_count": {"type": "integer", "minimum": 0},
+        "stake": {"type": "number", "minimum": 0},
+        "theoretical_payout": {"type": "number", "minimum": 0},
+        "resolved_offer_option_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "validation_errors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["code", "message"],
+            "properties": {
+              "code": {"type": "string", "minLength": 1},
+              "message": {"type": "string", "minLength": 1}
+            }
+          }
+        }
+      }
+    }
+  }
+}

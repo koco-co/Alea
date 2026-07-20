@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://alea.local/schemas/review.json",
+  "title": "ReviewAndLessons",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["prediction_assessment", "root_causes", "lesson_candidates"],
+  "properties": {
+    "prediction_assessment": {"type": "string", "minLength": 1, "maxLength": 2000},
+    "root_causes": {"type": "array", "maxItems": 8, "items": {"type": "string", "minLength": 1, "maxLength": 500}},
+    "lesson_candidates": {
+      "type": "array",
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["rule", "evidence", "category", "severity", "evidence_record_ids"],
+        "properties": {
+          "rule": {"type": "string", "minLength": 1, "maxLength": 500},
+          "evidence": {"type": "string", "minLength": 1, "maxLength": 1000},
+          "category": {"type": "string", "enum": ["opponent_type", "motivation", "style_interaction", "data_completeness", "odds_reasoning", "position_management"]},
+          "severity": {"type": "string", "enum": ["high", "medium", "low"]},
+          "evidence_record_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+        }
+      }
+    }
+  }
+}

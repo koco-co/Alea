@@ -1,0 +1,149 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://alea.local/schemas/match.json",
+  "title": "MatchSnapshotView",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "input_snapshot_id",
+    "match_id",
+    "competition",
+    "stage",
+    "round",
+    "kickoff_at",
+    "sales_cutoff_at",
+    "venue",
+    "venue_neutral",
+    "referee",
+    "leg_number",
+    "first_leg_score",
+    "aggregate_score",
+    "home_team",
+    "away_team",
+    "offers",
+    "facts",
+    "source_record_ids",
+    "observed_at",
+    "valid_from",
+    "expires_at",
+    "confidence",
+    "missing_fields",
+    "frozen_at"
+  ],
+  "properties": {
+    "input_snapshot_id": {"type": "string", "format": "uuid"},
+    "match_id": {"type": "string", "format": "uuid"},
+    "competition": {"type": "string", "minLength": 1},
+    "stage": {"type": ["string", "null"]},
+    "round": {"type": ["string", "null"]},
+    "kickoff_at": {"type": "string", "format": "date-time"},
+    "sales_cutoff_at": {"type": ["string", "null"], "format": "date-time"},
+    "venue": {"type": ["string", "null"]},
+    "venue_neutral": {"type": "boolean"},
+    "referee": {"type": ["string", "null"]},
+    "leg_number": {"type": ["integer", "null"], "minimum": 1},
+    "first_leg_score": {"oneOf": [{"$ref": "#/$defs/score"}, {"type": "null"}]},
+    "aggregate_score": {"oneOf": [{"$ref": "#/$defs/score"}, {"type": "null"}]},
+    "home_team": {"$ref": "#/$defs/team"},
+    "away_team": {"$ref": "#/$defs/team"},
+    "offers": {"type": "array", "items": {"$ref": "#/$defs/offer"}},
+    "facts": {"type": "array", "items": {"$ref": "#/$defs/sourced_fact"}},
+    "source_record_ids": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "observed_at": {"type": "string", "format": "date-time"},
+    "valid_from": {"type": ["string", "null"], "format": "date-time"},
+    "expires_at": {"type": ["string", "null"], "format": "date-time"},
+    "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+    "missing_fields": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string", "minLength": 1}
+    },
+    "frozen_at": {"type": "string", "format": "date-time"}
+  },
+  "$defs": {
+    "score": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["home", "away"],
+      "properties": {
+        "home": {"type": "integer", "minimum": 0, "maximum": 20},
+        "away": {"type": "integer", "minimum": 0, "maximum": 20}
+      }
+    },
+    "team": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name"],
+      "properties": {
+        "id": {"type": "string", "format": "uuid"},
+        "name": {"type": "string", "minLength": 1}
+      }
+    },
+    "offer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "offer_option_id",
+        "play",
+        "selection",
+        "fixed_odds",
+        "single_available",
+        "source_record_id",
+        "observed_at",
+        "valid_from",
+        "expires_at",
+        "confidence"
+      ],
+      "properties": {
+        "offer_option_id": {"type": "string", "minLength": 1},
+        "play": {"type": "string", "enum": ["had", "hhad", "crs", "ttg", "hafu"]},
+        "selection": {"type": "string", "minLength": 1},
+        "fixed_odds": {"type": "number", "exclusiveMinimum": 1},
+        "single_available": {"type": "boolean"},
+        "source_record_id": {"type": "string", "minLength": 1},
+        "observed_at": {"type": "string", "format": "date-time"},
+        "valid_from": {"type": ["string", "null"], "format": "date-time"},
+        "expires_at": {"type": ["string", "null"], "format": "date-time"},
+        "confidence": {"type": "number", "minimum": 0, "maximum": 1}
+      }
+    },
+    "sourced_fact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "field",
+        "value",
+        "source_record_ids",
+        "observed_at",
+        "valid_from",
+        "expires_at",
+        "confidence",
+        "missing_fields"
+      ],
+      "properties": {
+        "field": {"type": "string", "minLength": 1},
+        "value": {},
+        "source_record_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "observed_at": {"type": "string", "format": "date-time"},
+        "valid_from": {"type": ["string", "null"], "format": "date-time"},
+        "expires_at": {"type": ["string", "null"], "format": "date-time"},
+        "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+        "missing_fields": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://alea.local/schemas/bet_plan.json",
+  "title": "BetPhaseOutput",
+  "oneOf": [{"$ref": "#/$defs/bet_proposal"}, {"$ref": "#/$defs/bet_debate"}, {"$ref": "#/$defs/bet_vote"}],
+  "$defs": {
+    "plan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "type", "legs", "pass_types", "multiplier", "stake_percent", "reasoning", "verified_fact_claim_ids"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1, "maxLength": 100},
+        "type": {"type": "string", "enum": ["single", "parlay"]},
+        "legs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["match_id", "play", "offer_option_ids"],
+            "properties": {
+              "match_id": {"type": "string", "minLength": 1},
+              "play": {"type": "string", "enum": ["had", "hhad", "crs", "ttg", "hafu"]},
+              "offer_option_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+            }
+          }
+        },
+        "pass_types": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "multiplier": {"type": "integer", "minimum": 1},
+        "stake_percent": {"type": "number", "minimum": 1, "maximum": 5},
+        "reasoning": {"type": "string", "minLength": 1, "maxLength": 1500},
+        "verified_fact_claim_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "bet_proposal": {
+      "title": "BetProposal",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["decision", "plan_confidence", "plan", "no_bet_reason"],
+      "properties": {
+        "decision": {"type": "string", "enum": ["bet", "no_bet"]},
+        "plan_confidence": {"type": "integer", "minimum": 0, "maximum": 100},
+        "plan": {"oneOf": [{"$ref": "#/$defs/plan"}, {"type": "null"}]},
+        "no_bet_reason": {"type": ["string", "null"], "minLength": 1, "maxLength": 500}
+      },
+      "allOf": [
+        {"if": {"properties": {"decision": {"const": "no_bet"}}, "required": ["decision"]}, "then": {"properties": {"plan": {"type": "null"}, "no_bet_reason": {"type": "string"}}}},
+        {"if": {"properties": {"decision": {"const": "bet"}}, "required": ["decision"]}, "then": {"properties": {"plan": {"$ref": "#/$defs/plan"}, "no_bet_reason": {"type": "null"}}}}
+      ]
+    },
+    "bet_debate": {
+      "title": "BetDebate",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["decision", "plan_confidence", "plan", "no_bet_reason", "target_candidate_ids"],
+      "properties": {
+        "decision": {"type": "string", "enum": ["bet", "no_bet"]},
+        "plan_confidence": {"type": "integer", "minimum": 0, "maximum": 100},
+        "plan": {"oneOf": [{"$ref": "#/$defs/plan"}, {"type": "null"}]},
+        "no_bet_reason": {"type": ["string", "null"], "minLength": 1, "maxLength": 500},
+        "target_candidate_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+      },
+      "allOf": [
+        {"if": {"properties": {"decision": {"const": "no_bet"}}, "required": ["decision"]}, "then": {"properties": {"plan": {"type": "null"}, "no_bet_reason": {"type": "string"}}}},
+        {"if": {"properties": {"decision": {"const": "bet"}}, "required": ["decision"]}, "then": {"properties": {"plan": {"$ref": "#/$defs/plan"}, "no_bet_reason": {"type": "null"}}}}
+      ]
+    },
+    "bet_vote": {
+      "title": "BetVote",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["candidate_id", "decision", "plan_confidence", "reason", "verified_fact_claim_ids"],
+      "properties": {
+        "candidate_id": {"type": "string", "minLength": 1},
+        "decision": {"type": "string", "enum": ["bet", "no_bet"]},
+        "plan_confidence": {"type": "integer", "minimum": 0, "maximum": 100},
+        "reason": {"type": "string", "minLength": 1, "maxLength": 500},
+        "verified_fact_claim_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+      }
+    }
+  }
+}

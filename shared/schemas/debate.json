@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://alea.local/schemas/debate.json",
+  "title": "DebateOutput",
+  "oneOf": [{"$ref": "#/$defs/score_debate"}, {"$ref": "#/$defs/score_vote"}],
+  "$defs": {
+    "score": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["home", "away"],
+      "properties": {"home": {"type": "integer", "minimum": 0, "maximum": 20}, "away": {"type": "integer", "minimum": 0, "maximum": 20}}
+    },
+    "fact_claim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["claim_id", "text", "fact_type", "source_record_ids"],
+      "properties": {
+        "claim_id": {"type": "string", "minLength": 1},
+        "text": {"type": "string", "minLength": 1, "maxLength": 500},
+        "fact_type": {"type": "string", "enum": ["odds", "form", "standing", "injury", "lineup", "h2h", "weather", "competition_state", "other"]},
+        "source_record_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "argument": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["argument_id", "text", "fact_claim_ids"],
+      "properties": {
+        "argument_id": {"type": "string", "minLength": 1},
+        "text": {"type": "string", "minLength": 1, "maxLength": 1000},
+        "fact_claim_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "score_debate": {
+      "title": "ScoreDebate",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["responses", "revised_full_time_score", "revised_half_time_score", "revised_direction_confidence", "arguments", "fact_claims"],
+      "properties": {
+        "responses": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["target_codename", "stance", "argument_ids"],
+            "properties": {
+              "target_codename": {"type": "string", "minLength": 1},
+              "stance": {"type": "string", "enum": ["hold", "change", "question", "supplement"]},
+              "argument_ids": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}
+            }
+          }
+        },
+        "revised_full_time_score": {"oneOf": [{"$ref": "#/$defs/score"}, {"type": "null"}]},
+        "revised_half_time_score": {"oneOf": [{"$ref": "#/$defs/score"}, {"type": "null"}]},
+        "revised_direction_confidence": {"type": ["integer", "null"], "minimum": 0, "maximum": 100},
+        "arguments": {"type": "array", "items": {"$ref": "#/$defs/argument"}},
+        "fact_claims": {"type": "array", "items": {"$ref": "#/$defs/fact_claim"}}
+      }
+    },
+    "score_vote": {
+      "title": "ScoreVote",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["match_id", "full_time_score", "half_time_score", "direction", "direction_confidence", "reason", "verified_fact_claim_ids"],
+      "properties": {
+        "match_id": {"type": "string", "minLength": 1},
+        "full_time_score": {"$ref": "#/$defs/score"},
+        "half_time_score": {"$ref": "#/$defs/score"},
+        "direction": {"type": "string", "enum": ["home", "draw", "away"]},
+        "direction_confidence": {"type": "integer", "minimum": 0, "maximum": 100},
+        "reason": {"type": "string", "minLength": 1, "maxLength": 500},
+        "verified_fact_claim_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+      }
+    }
+  }
+}

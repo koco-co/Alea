@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://alea.local/schemas/selection.json",
+  "title": "SelectionPhaseOutput",
+  "oneOf": [
+    {"$ref": "#/$defs/selection_nomination"},
+    {"$ref": "#/$defs/selection_debate"},
+    {"$ref": "#/$defs/selection_vote"}
+  ],
+  "$defs": {
+    "fact_claim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["claim_id", "text", "fact_type", "source_record_ids"],
+      "properties": {
+        "claim_id": {"type": "string", "minLength": 1},
+        "text": {"type": "string", "minLength": 1, "maxLength": 500},
+        "fact_type": {"type": "string", "enum": ["odds", "form", "standing", "injury", "lineup", "h2h", "weather", "competition_state", "other"]},
+        "source_record_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "argument": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["argument_id", "text", "fact_claim_ids"],
+      "properties": {
+        "argument_id": {"type": "string", "minLength": 1},
+        "text": {"type": "string", "minLength": 1, "maxLength": 1000},
+        "fact_claim_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "selection_nomination": {
+      "title": "SelectionNomination",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["nominations", "arguments", "fact_claims"],
+      "properties": {
+        "nominations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["match_id", "direction", "direction_confidence", "argument_ids", "missing_fields"],
+            "properties": {
+              "match_id": {"type": "string", "minLength": 1},
+              "direction": {"type": "string", "enum": ["home", "draw", "away"]},
+              "direction_confidence": {"type": "integer", "minimum": 0, "maximum": 100},
+              "argument_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+              "missing_fields": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+            }
+          }
+        },
+        "arguments": {"type": "array", "items": {"$ref": "#/$defs/argument"}},
+        "fact_claims": {"type": "array", "items": {"$ref": "#/$defs/fact_claim"}}
+      }
+    },
+    "selection_debate": {
+      "title": "SelectionDebate",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["responses", "arguments", "fact_claims"],
+      "properties": {
+        "responses": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["target_codename", "match_id", "stance", "argument_ids"],
+            "properties": {
+              "target_codename": {"type": "string", "minLength": 1},
+              "match_id": {"type": "string", "minLength": 1},
+              "stance": {"type": "string", "enum": ["support", "oppose", "supplement"]},
+              "argument_ids": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}
+            }
+          }
+        },
+        "arguments": {"type": "array", "items": {"$ref": "#/$defs/argument"}},
+        "fact_claims": {"type": "array", "items": {"$ref": "#/$defs/fact_claim"}}
+      }
+    },
+    "selection_vote": {
+      "title": "SelectionVote",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["votes"],
+      "properties": {
+        "votes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["match_id", "decision", "direction_confidence", "reason", "verified_fact_claim_ids"],
+            "properties": {
+              "match_id": {"type": "string", "minLength": 1},
+              "decision": {"type": "string", "enum": ["yes", "no"]},
+              "direction_confidence": {"type": "integer", "minimum": 0, "maximum": 100},
+              "reason": {"type": "string", "minLength": 1, "maxLength": 500},
+              "verified_fact_claim_ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+            }
+          }
+        }
+      }
+    }
+  }
+}
