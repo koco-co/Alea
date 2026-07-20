@@ -1,0 +1,414 @@
+{
+  "desktop": [
+    {
+      "slug": "01-launcher",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "02-marketing",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "03-auth-login",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "04-auth-signup",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "05-auth-forgot",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "06-console-overview",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "07-console-fixtures",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "08-console-fixture-detail",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "09-console-rankings",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "10-console-model-profile",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "11-console-pnl-user",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "12-console-pnl-admin",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "13-console-reviews",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "14-console-wiki",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "15-console-wiki-spain",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "16-console-wiki-argentina",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "17-console-messages",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "18-console-account",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "19-predictions-today",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "20-predictions-history",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "21-predictions-states",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "22-predictions-settled",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "23-calculator-fact",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "24-calculator-sample",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "25-admin-launch",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "26-admin-live",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "27-admin-publish",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "28-admin-publish-blocked",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "29-admin-lineup",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "30-admin-sync",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "31-admin-settings",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "32-admin-methodology",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "33-admin-users",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "34-admin-terminated",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    }
+  ],
+  "mobile": [
+    {
+      "slug": "01-launcher",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "02-marketing",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "03-auth-login",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "04-auth-signup",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "05-auth-forgot",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "06-console-overview",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "07-console-fixtures",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "08-console-fixture-detail",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "09-console-rankings",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "10-console-model-profile",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "11-console-pnl-user",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "12-console-pnl-admin",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "13-console-reviews",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "14-console-wiki",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "15-console-wiki-spain",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "16-console-wiki-argentina",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "17-console-messages",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "18-console-account",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "19-predictions-today",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "20-predictions-history",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "21-predictions-states",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "22-predictions-settled",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "23-calculator-fact",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "24-calculator-sample",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "25-admin-launch",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "26-admin-live",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "27-admin-publish",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "28-admin-publish-blocked",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "29-admin-lineup",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "30-admin-sync",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "31-admin-settings",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "32-admin-methodology",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "33-admin-users",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    },
+    {
+      "slug": "34-admin-terminated",
+      "smallButtons": [],
+      "unlabeledButtons": [],
+      "unlabeledInputs": []
+    }
+  ]
+}

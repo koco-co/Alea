@@ -1,90 +1,7 @@
 import Link from "next/link";
 
-import { DebateTimeline } from "@/components/prediction/debate-timeline";
 import { PredictionCard } from "@/components/prediction/prediction-card";
-import type { RoundtableEvent } from "@/lib/realtime";
-
-const events: RoundtableEvent[] = [
-  {
-    job_id: "n8c4-02",
-    event_seq: 1,
-    event_type: "selection_verified",
-    created_at: "2026-07-19T12:00:00+08:00",
-    payload: {
-      phase: "selection",
-      message: "FIFA Match 104 入围；赛事身份与开球时间已核验。",
-      sources: ["FIFA · 采集 2026-07-19"],
-    },
-  },
-  {
-    job_id: "n8c4-02",
-    event_seq: 2,
-    event_type: "prediction",
-    created_at: "2026-07-19T12:03:00+08:00",
-    payload: {
-      phase: "prediction",
-      speaker_codename: "选手 B",
-      message: "初稿预测 1:1（半场 0:1），置信度 61%。",
-    },
-  },
-  {
-    job_id: "n8c4-02",
-    event_seq: 3,
-    event_type: "claim_verified",
-    created_at: "2026-07-19T12:06:00+08:00",
-    payload: {
-      phase: "debate",
-      speaker_codename: "选手 C",
-      message: "西班牙为欧洲冠军；阿根廷为卫冕世界冠军与南美冠军。",
-      sources: ["FIFA · 采集 2026-07-19"],
-    },
-  },
-  {
-    job_id: "n8c4-02",
-    event_seq: 4,
-    event_type: "vote_changed",
-    created_at: "2026-07-19T12:09:00+08:00",
-    payload: {
-      phase: "debate",
-      speaker_codename: "选手 D",
-      message: "零封假设过强，改为保留阿根廷一球。",
-      previous_vote: "2:0",
-      new_vote: "2:1",
-    },
-  },
-  {
-    job_id: "n8c4-02",
-    event_seq: 5,
-    event_type: "score_vote",
-    created_at: "2026-07-19T12:12:00+08:00",
-    payload: {
-      phase: "score_vote",
-      message: "比分终投完成：西班牙 2:1 阿根廷，半场 1:0。",
-      consensus: 71,
-    },
-  },
-  {
-    job_id: "n8c4-02",
-    event_seq: 6,
-    event_type: "bet_vote",
-    created_at: "2026-07-19T12:15:00+08:00",
-    payload: {
-      phase: "bet_vote",
-      message: "竞彩销售数据待确认，本场仅推演，未形成竞猜方案。",
-      consensus: 71,
-    },
-  },
-  {
-    job_id: "n8c4-02",
-    event_seq: 7,
-    event_type: "notarization",
-    created_at: "2026-07-19T12:16:00+08:00",
-    payload: {
-      phase: "notarization",
-      message: "公证示例 N8C4-02 已冻结；发布与否不改变本记录。",
-    },
-  },
-];
+import { RoundtableEventReplay } from "@/components/prediction/roundtable-event-replay";
 
 export default async function PredictionDetailPage({
   params,
@@ -107,7 +24,7 @@ export default async function PredictionDetailPage({
       </header>
       <PredictionCard compact />
       <div className="debate-detail-grid">
-        <DebateTimeline events={events} title="匿名交锋改变了最终结论" />
+        <RoundtableEventReplay jobId={id} />
         <aside className="notary-panel">
           <p className="eyebrow">公证摘要</p>
           <strong>N8C4-02</strong>

@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { getAccessContext } from "@/lib/supabase/access";
 
 const adminLinks = [
+  ["发起推演", "自主与指定选场", "/console/admin/roundtable"],
+  ["发布审核", "质检与公证", "/console/admin/publish"],
   ["模型阵容", "厂商与实例", "/console/admin/lineup"],
   ["数据管理", "同步与冲突", "/console/admin/sync"],
   ["系统设置", "版本化参数", "/console/admin/settings"],

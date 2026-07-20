@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Alea 高保真响应式产品原型入口">
+  <title>Alea · 产品原型总览</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="alea.css">
+</head>
+<body>
+  <a class="skip-link" href="#content">跳到原型入口</a>
+  <main class="launcher" id="content" data-od-id="prototype-launcher">
+    <div class="container launcher-panel" data-od-id="prototype-launcher-panel">
+      <header class="launcher-top row-between" data-od-id="launcher-header">
+        <a class="brand" href="alea.html" aria-label="打开 Alea 营销首页">
+          <img class="brand-lockup brand-on-dark" src="assets/brand/alea-lockup.png" alt="Alea">
+        </a>
+        <span class="tag">PRD v1.9 · 响应式高保真</span>
+      </header>
+
+      <div class="launcher-hero">
+        <div class="launcher-copy">
+          <p class="eyebrow">产品原型总览</p>
+          <h1>从圆桌推演，<br>到证据留痕。</h1>
+          <p class="launcher-lead">统一演示 2026 世界杯决赛“西班牙 vs 阿根廷”。比分、投票与共识均标记为 AI 推演数据；赛果和竞彩销售数据保持待确认。</p>
+          <div class="launcher-actions" data-od-id="launcher-primary-actions">
+            <a class="btn btn-primary" href="alea-predictions.html#today" data-od-id="launcher-primary-prediction">进入太玄问机</a>
+            <a class="btn launcher-secondary-action" href="PROTOTYPE-AUDIT.md" data-od-id="launcher-secondary-audit">查看覆盖说明</a>
+          </div>
+        </div>
+
+        <aside class="launcher-brief" aria-labelledby="launcher-brief-title" data-od-id="launcher-acceptance-brief">
+          <p class="eyebrow">验收锚点</p>
+          <h2 id="launcher-brief-title">一条可完整走通、可被验证的产品路径。</h2>
+          <dl class="launcher-facts">
+            <div><dt>当前场景</dt><dd>西班牙 vs 阿根廷</dd></div>
+            <div><dt>数据边界</dt><dd>AI 推演 · 赛果待确认</dd></div>
+            <div><dt>自动检查</dt><dd><span class="num">106</span> 项通过 · <span class="num">0</span> 项失败</dd></div>
+          </dl>
+        </aside>
+      </div>
+
+      <section class="launcher-route-section" aria-labelledby="launcher-routes-title" data-od-id="launcher-primary-routes">
+        <div class="launcher-section-head">
+          <div>
+            <p class="eyebrow">主体验路径</p>
+            <h2 id="launcher-routes-title">按任务进入，而不是按文件寻找。</h2>
+          </div>
+          <p>先验证核心推演，再检查用户工作台与后台审计闭环。</p>
+        </div>
+
+        <div class="launcher-grid" data-od-id="prototype-screen-grid">
+          <a class="launcher-card launcher-card-featured" href="alea-predictions.html#today" data-od-id="launcher-predictions">
+            <span class="tag">产品核心</span>
+            <div><h3>太玄问机</h3><p>单场推演、投票依据、辩论回放、公证版本与生命周期样例。</p></div>
+            <span class="launcher-card-action">开始核心体验 <span aria-hidden="true">→</span></span>
+          </a>
+          <a class="launcher-card launcher-card-admin" href="alea-admin.html#launch" data-od-id="launcher-admin">
+            <span class="tag">管理员</span>
+            <div><h3>系统管理</h3><p>发起、直播、阵容、审核、撤回与终止审计闭环。</p></div>
+            <span class="launcher-card-action">验证后台流程 <span aria-hidden="true">→</span></span>
+          </a>
+          <a class="launcher-card" href="alea-console.html#overview" data-od-id="launcher-console">
+            <span class="tag">用户工作台</span>
+            <div><h3>每日总览</h3><p>赛事事实、同步状态、研究边界、排行与账户模块。</p></div>
+            <span class="launcher-card-action">打开工作台 <span aria-hidden="true">→</span></span>
+          </a>
+          <a class="launcher-card" href="alea-calculator.html" data-od-id="launcher-calculator">
+            <span class="tag">本地工具</span>
+            <div><h3>竞彩方案</h3><p>响应式三步流程，以及销售数据缺失时的安全锁定状态。</p></div>
+            <span class="launcher-card-action">检查锁定状态 <span aria-hidden="true">→</span></span>
+          </a>
+          <a class="launcher-card" href="alea.html" data-od-id="launcher-marketing">
+            <span class="tag">游客入口</span>
+            <div><h3>营销首页</h3><p>圆桌辩论动画、证据链叙事、风险边界与注册入口。</p></div>
+            <span class="launcher-card-action">查看首屏叙事 <span aria-hidden="true">→</span></span>
+          </a>
+        </div>
+      </section>
+
+      <section class="launcher-utility-section" aria-labelledby="launcher-tools-title" data-od-id="launcher-supporting-routes">
+        <div class="launcher-section-head launcher-section-head-compact">
+          <div><p class="eyebrow">辅助入口</p><h2 id="launcher-tools-title">账户、规范与交付记录。</h2></div>
+        </div>
+        <div class="launcher-utility-list">
+          <a class="launcher-utility-row" href="alea-auth.html#login" data-od-id="launcher-auth">
+            <span class="launcher-utility-index num">01</span><span><strong>登录与注册</strong><small>OAuth、18 岁确认、风险条款与找回密码</small></span><span aria-hidden="true">→</span>
+          </a>
+          <a class="launcher-utility-row" href="alea-design-system.html" data-od-id="launcher-design-system">
+            <span class="launcher-utility-index num">02</span><span><strong>设计系统</strong><small>Token、身份组件、页面状态、异常与无障碍规范</small></span><span aria-hidden="true">→</span>
+          </a>
+          <a class="launcher-utility-row" href="PROTOTYPE-AUDIT.md" data-od-id="launcher-audit">
+            <span class="launcher-utility-index num">03</span><span><strong>覆盖与边界</strong><small>页面映射、迁移范围、数据诚实边界与后续联调项</small></span><span aria-hidden="true">→</span>
+          </a>
+        </div>
+      </section>
+
+      <section class="launcher-state-section" aria-labelledby="launcher-state-title" data-od-id="launcher-state-coverage">
+        <div class="launcher-section-head launcher-section-head-compact">
+          <div><p class="eyebrow">状态覆盖</p><h2 id="launcher-state-title">不隐藏缺失，也不伪造完成。</h2></div>
+        </div>
+        <div class="launcher-state-grid">
+          <article data-od-id="launcher-state-ready"><span class="status status-good">核心路径已就绪</span><p>游客、认证、用户、推演与管理员入口均可独立访问。</p></article>
+          <article data-od-id="launcher-state-loading"><span class="status status-neutral">同步过程可感知</span><p>加载与数据同步使用静态状态文案反馈，并支持减少动态效果。</p></article>
+          <article data-od-id="launcher-state-empty"><span class="status status-warn">空数据安全锁定</span><p>授权销售数据缺失时，计算、复制与下载动作保持禁用。</p></article>
+          <article data-od-id="launcher-state-error"><span class="status status-bad">异常明确留痕</span><p>权限、校验与终止场景提供错误说明；真实 OAuth 与鉴权仍待联调。</p></article>
+        </div>
+      </section>
+
+      <div class="banner warn launcher-notice" data-od-id="launcher-risk-notice">
+        <span>说明</span>
+        <div><strong>当前是产品交互原型，不是投注或出票工具。</strong><p>未取得授权销售数据前，采纳、计算、出图、复制与下载保持禁用。</p></div>
+      </div>
+    </div>
+  </main>
+</body>
+</html>

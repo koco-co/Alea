@@ -1,0 +1,716 @@
+[
+  {
+    "slug": "01-launcher",
+    "route": "",
+    "file": "/Users/aa/WorkSpace/Projects/Alea/docs/visual-qa/prd-v1.9-final-20260719/final-production-20260719/desktop-01-launcher.png",
+    "blank": false,
+    "broken": [],
+    "focus": null,
+    "overflowX": false,
+    "scroll": {
+      "h": 2699,
+      "w": 1425,
+      "x": 0,
+      "y": 0
+    },
+    "title": "Alea · 产品原型总览",
+    "url": "http://127.0.0.1:8765/",
+    "viewport": {
+      "h": 900,
+      "w": 1440
+    }
+  },
+  {
+    "slug": "02-marketing",
+    "route": "alea.html",
+    "file": "/Users/aa/WorkSpace/Projects/Alea/docs/visual-qa/prd-v1.9-final-20260719/final-production-20260719/desktop-02-marketing.png",
+    "blank": false,
+    "broken": [],
+    "focus": null,
+    "overflowX": false,
+    "scroll": {
+      "h": 4852,
+      "w": 1425,
+      "x": 0,
+      "y": 0
+    },
+    "title": "Alea · 让七个 AI，为你吵一场球",
+    "url": "http://127.0.0.1:8765/alea.html",
+    "viewport": {
+      "h": 900,
+      "w": 1440
+    }
+  },
+  {
+    "slug": "03-auth-login",
+    "route": "alea-auth.html#login",
+    "file": "/Users/aa/WorkSpace/Projects/Alea/docs/visual-qa/prd-v1.9-final-20260719/final-production-20260719/desktop-03-auth-login.png",
+    "blank": false,
+    "broken": [],
+    "focus": null,
+    "overflowX": false,
+    "scroll": {
+      "h": 908,
+      "w": 1425,
+      "x": 0,
+      "y": 0
+    },
+    "title": "Alea · 账户认证",
+    "url": "http://127.0.0.1:8765/alea-auth.html#login",
+    "viewport": {
+      "h": 900,
+      "w": 1440
+    }
+  },
+  {
+    "slug": "04-auth-signup",
+    "route": "alea-auth.html#signup",
+    "file": "/Users/aa/WorkSpace/Projects/Alea/docs/visual-qa/prd-v1.9-final-20260719/final-production-20260719/desktop-04-auth-signup.png",
+    "blank": false,
+    "broken": [],
+    "focus": null,
+    "overflowX": false,
+    "scroll": {
+      "h": 1054,
+      "w": 1425,
+      "x": 0,
+      "y": 0
+    },
+    "title": "Alea · 账户认证",
+    "url": "http://127.0.0.1:8765/alea-auth.html#signup",
+    "viewport": {
+      "h": 900,
+      "w": 1440
+    }
+  },
+  {
+    "slug": "05-auth-forgot",
+    "route": "alea-auth.html#forgot",
+    "file": "/Users/aa/WorkSpace/Projects/Alea/docs/visual-qa/prd-v1.9-final-20260719/final-production-20260719/desktop-05-auth-forgot.png",
+    "blank": false,
+    "broken": [],
+    "focus": null,
+    "overflowX": false,
+    "scroll": {
+      "h": 900,
+      "w": 1440,
+      "x": 0,
+      "y": 0
+    },
+    "title": "Alea · 账户认证",
+    "url": "http://127.0.0.1:8765/alea-auth.html#forgot",
+    "viewport": {
+      "h": 900,
+      "w": 1440
+    }
+  },
+  {
+    "slug": "06-console-overview",
+    "route": "alea-console.html#overview",
+    "file": "/Users/aa/WorkSpace/Projects/Alea/docs/visual-qa/prd-v1.9-final-20260719/final-production-20260719/desktop-06-console-overview.png",
+    "blank": false,
+    "broken": [],
+    "focus": null,
+    "overflowX": false,
+    "scroll": {
+      "h": 1630,
+      "w": 1425,
+      "x": 0,
+      "y": 0
+    },
+    "title": "Alea · 每日总览",
+    "url": "http://127.0.0.1:8765/alea-console.html#overview",
+    "viewport": {
+      "h": 900,
+      "w": 1440
+    }
+  },
+  {
+    "slug": "07-console-fixtures",
+    "route": "alea-console.html#fixtures",
+    "file": "/Users/aa/WorkSpace/Projects/Alea/docs/visual-qa/prd-v1.9-final-20260719/final-production-20260719/desktop-07-console-fixtures.png",
+    "blank": false,
+    "broken": [],
+    "focus": null,
+    "overflowX": false,
+    "scroll": {
+      "h": 900,
+      "w": 1440,
+      "x": 0,
+      "y": 0
+    },
+    "title": "Alea · 竞猜赛程",
+    "url": "http://127.0.0.1:8765/alea-console.html#fixtures",
+    "viewport": {
+      "h": 900,
+      "w": 1440
+    }
+  },
+  {
+    "slug": "08-console-fixture-detail",
+    "route": "alea-console.html#detail-final",
+    "file": "/Users/aa/WorkSpace/Projects/Alea/docs/visual-qa/prd-v1.9-final-20260719/final-production-20260719/desktop-08-console-fixture-detail.png",
+    "blank": false,
+    "broken": [],
+    "focus": null,
+    "overflowX": false,
+    "scroll": {
+      "h": 1043,
+      "w": 1425,
+      "x": 0,
+      "y": 0
+    },
+    "title": "Alea · 比赛详情",
+    "url": "http://127.0.0.1:8765/alea-console.html#detail-final",
+    "viewport": {
+      "h": 900,
+      "w": 1440
+    }
+  },
+  {
+    "slug": "09-console-rankings",
+    "route": "alea-console.html#rankings",
+    "file": "/Users/aa/WorkSpace/Projects/Alea/docs/visual-qa/prd-v1.9-final-20260719/final-production-20260719/desktop-09-console-rankings.png",
+    "blank": false,
+    "broken": [],
+    "focus": null,
+    "overflowX": false,
+    "scroll": {
+      "h": 900,
+      "w": 1440,
+      "x": 0,
+      "y": 0
+    },
+    "title": "Alea · 预测排行",
+    "url": "http://127.0.0.1:8765/alea-console.html#rankings",
+    "viewport": {
+      "h": 900,
+      "w": 1440
+    }
+  },
+  {
+    "slug": "10-console-model-profile",
+    "route": "alea-console.html#rankings-claude-1",
+    "file": "/Users/aa/WorkSpace/Projects/Alea/docs/visual-qa/prd-v1.9-final-20260719/final-production-20260719/desktop-10-console-model-profile.png",
+    "blank": false,
+    "broken": [],
+    "focus": null,
+    "overflowX": false,
+    "scroll": {
+      "h": 1267,
+      "w": 1425,
+      "x": 0,
+      "y": 0
+    },
+    "title": "Alea · 模型档案",
+    "url": "http://127.0.0.1:8765/alea-console.html#rankings-claude-1",
+    "viewport": {
+      "h": 900,
+      "w": 1440
+    }
+  },
+  {
+    "slug": "11-console-pnl-user",
+    "route": "alea-console.html#pnl",
+    "file": "/Users/aa/WorkSpace/Projects/Alea/docs/visual-qa/prd-v1.9-final-20260719/final-production-20260719/desktop-11-console-pnl-user.png",
+    "blank": false,
+    "broken": [],
+    "focus": null,
+    "overflowX": false,
+    "scroll": {
+      "h": 1577,
+      "w": 1425,
+      "x": 0,
+      "y": 0
+    },
+    "title": "Alea · 盈亏账本",
+    "url": "http://127.0.0.1:8765/alea-console.html#pnl",
+    "viewport": {
+      "h": 900,
+      "w": 1440
+    }
+  },
+  {
+    "slug": "12-console-pnl-admin",
+    "route": "alea-console.html?role=admin#pnl",
+    "file": "/Users/aa/WorkSpace/Projects/Alea/docs/visual-qa/prd-v1.9-final-20260719/final-production-20260719/desktop-12-console-pnl-admin.png",
+    "blank": false,
+    "broken": [],
+    "focus": null,
+    "overflowX": false,
+    "scroll": {
+      "h": 1649,
+      "w": 1425,
+      "x": 0,
+      "y": 0
+    },
+    "title": "Alea · 盈亏账本",
+    "url": "http://127.0.0.1:8765/alea-console.html?role=admin#pnl",
+    "viewport": {
+      "h": 900,
+      "w": 1440
+    }
+  },
+  {
+    "slug": "13-console-reviews",
+    "route": "alea-console.html#reviews",
+    "file": "/Users/aa/WorkSpace/Projects/Alea/docs/visual-qa/prd-v1.9-final-20260719/final-production-20260719/desktop-13-console-reviews.png",
+    "blank": false,
+    "broken": [],
+    "focus": null,
+    "overflowX": false,
+    "scroll": {
+      "h": 900,
+      "w": 1440,
+      "x": 0,
+      "y": 0
+    },
+    "title": "Alea · 赛后复盘",
+    "url": "http://127.0.0.1:8765/alea-console.html#reviews",
+    "viewport": {
+      "h": 900,
+      "w": 1440
+    }
+  },
+  {
+    "slug": "14-console-wiki",
+    "route": "alea-console.html#wiki",
+    "file": "/Users/aa/WorkSpace/Projects/Alea/docs/visual-qa/prd-v1.9-final-20260719/final-production-20260719/desktop-14-console-wiki.png",
+    "blank": false,
+    "broken": [],
+    "focus": null,
+    "overflowX": false,
+    "scroll": {
+      "h": 900,
+      "w": 1440,
+      "x": 0,
+      "y": 0
+    },
+    "title": "Alea · 赛事资料",
+    "url": "http://127.0.0.1:8765/alea-console.html#wiki",
+    "viewport": {
+      "h": 900,
+      "w": 1440
+    }
+  },
+  {
+    "slug": "15-console-wiki-spain",
+    "route": "alea-console.html#wiki-team-spain",
+    "file": "/Users/aa/WorkSpace/Projects/Alea/docs/visual-qa/prd-v1.9-final-20260719/final-production-20260719/desktop-15-console-wiki-spain.png",
+    "blank": false,
+    "broken": [],
+    "focus": null,
+    "overflowX": false,
+    "scroll": {
+      "h": 900,
+      "w": 1440,
+      "x": 0,
+      "y": 0
+    },
+    "title": "Alea · 西班牙资料",
+    "url": "http://127.0.0.1:8765/alea-console.html#wiki-team-spain",
+    "viewport": {
+      "h": 900,
+      "w": 1440
+    }
+  },
+  {
+    "slug": "16-console-wiki-argentina",
+    "route": "alea-console.html#wiki-team-argentina",
+    "file": "/Users/aa/WorkSpace/Projects/Alea/docs/visual-qa/prd-v1.9-final-20260719/final-production-20260719/desktop-16-console-wiki-argentina.png",
+    "blank": false,
+    "broken": [],
+    "focus": null,
+    "overflowX": false,
+    "scroll": {
+      "h": 900,
+      "w": 1440,
+      "x": 0,
+      "y": 0
+    },
+    "title": "Alea · 阿根廷资料",
+    "url": "http://127.0.0.1:8765/alea-console.html#wiki-team-argentina",
+    "viewport": {
+      "h": 900,
+      "w": 1440
+    }
+  },
+  {
+    "slug": "17-console-messages",
+    "route": "alea-console.html#messages",
+    "file": "/Users/aa/WorkSpace/Projects/Alea/docs/visual-qa/prd-v1.9-final-20260719/final-production-20260719/desktop-17-console-messages.png",
+    "blank": false,
+    "broken": [],
+    "focus": null,
+    "overflowX": false,
+    "scroll": {
+      "h": 900,
+      "w": 1440,
+      "x": 0,
+      "y": 0
+    },
+    "title": "Alea · 消息中心",
+    "url": "http://127.0.0.1:8765/alea-console.html#messages",
+    "viewport": {
+      "h": 900,
+      "w": 1440
+    }
+  },
+  {
+    "slug": "18-console-account",
+    "route": "alea-console.html#account",
+    "file": "/Users/aa/WorkSpace/Projects/Alea/docs/visual-qa/prd-v1.9-final-20260719/final-production-20260719/desktop-18-console-account.png",
+    "blank": false,
+    "broken": [],
+    "focus": null,
+    "overflowX": false,
+    "scroll": {
+      "h": 1345,
+      "w": 1425,
+      "x": 0,
+      "y": 0
+    },
+    "title": "Alea · 账户设置",
+    "url": "http://127.0.0.1:8765/alea-console.html#account",
+    "viewport": {
+      "h": 900,
+      "w": 1440
+    }
+  },
+  {
+    "slug": "19-predictions-today",
+    "route": "alea-predictions.html#today",
+    "file": "/Users/aa/WorkSpace/Projects/Alea/docs/visual-qa/prd-v1.9-final-20260719/final-production-20260719/desktop-19-predictions-today.png",
+    "blank": false,
+    "broken": [],
+    "focus": null,
+    "overflowX": false,
+    "scroll": {
+      "h": 1272,
+      "w": 1425,
+      "x": 0,
+      "y": 0
+    },
+    "title": "Alea · 太玄问机",
+    "url": "http://127.0.0.1:8765/alea-predictions.html#today",
+    "viewport": {
+      "h": 900,
+      "w": 1440
+    }
+  },
+  {
+    "slug": "20-predictions-history",
+    "route": "alea-predictions.html#history",
+    "file": "/Users/aa/WorkSpace/Projects/Alea/docs/visual-qa/prd-v1.9-final-20260719/final-production-20260719/desktop-20-predictions-history.png",
+    "blank": false,
+    "broken": [],
+    "focus": null,
+    "overflowX": false,
+    "scroll": {
+      "h": 900,
+      "w": 1440,
+      "x": 0,
+      "y": 0
+    },
+    "title": "Alea · 太玄问机",
+    "url": "http://127.0.0.1:8765/alea-predictions.html#history",
+    "viewport": {
+      "h": 900,
+      "w": 1440
+    }
+  },
+  {
+    "slug": "21-predictions-states",
+    "route": "alea-predictions.html#states",
+    "file": "/Users/aa/WorkSpace/Projects/Alea/docs/visual-qa/prd-v1.9-final-20260719/final-production-20260719/desktop-21-predictions-states.png",
+    "blank": false,
+    "broken": [],
+    "focus": null,
+    "overflowX": false,
+    "scroll": {
+      "h": 1174,
+      "w": 1425,
+      "x": 0,
+      "y": 0
+    },
+    "title": "Alea · 太玄问机",
+    "url": "http://127.0.0.1:8765/alea-predictions.html#states",
+    "viewport": {
+      "h": 900,
+      "w": 1440
+    }
+  },
+  {
+    "slug": "22-predictions-settled",
+    "route": "alea-predictions.html#settled",
+    "file": "/Users/aa/WorkSpace/Projects/Alea/docs/visual-qa/prd-v1.9-final-20260719/final-production-20260719/desktop-22-predictions-settled.png",
+    "blank": false,
+    "broken": [],
+    "focus": null,
+    "overflowX": false,
+    "scroll": {
+      "h": 900,
+      "w": 1440,
+      "x": 0,
+      "y": 0
+    },
+    "title": "Alea · 太玄问机",
+    "url": "http://127.0.0.1:8765/alea-predictions.html#settled",
+    "viewport": {
+      "h": 900,
+      "w": 1440
+    }
+  },
+  {
+    "slug": "23-calculator-fact",
+    "route": "alea-calculator.html",
+    "file": "/Users/aa/WorkSpace/Projects/Alea/docs/visual-qa/prd-v1.9-final-20260719/final-production-20260719/desktop-23-calculator-fact.png",
+    "blank": false,
+    "broken": [],
+    "focus": null,
+    "overflowX": false,
+    "scroll": {
+      "h": 1127,
+      "w": 1425,
+      "x": 0,
+      "y": 0
+    },
+    "title": "Alea · 竞彩方案",
+    "url": "http://127.0.0.1:8765/alea-calculator.html#step-1",
+    "viewport": {
+      "h": 900,
+      "w": 1440
+    }
+  },
+  {
+    "slug": "24-calculator-sample",
+    "route": "alea-calculator.html#sample",
+    "file": "/Users/aa/WorkSpace/Projects/Alea/docs/visual-qa/prd-v1.9-final-20260719/final-production-20260719/desktop-24-calculator-sample.png",
+    "blank": false,
+    "broken": [],
+    "focus": null,
+    "overflowX": false,
+    "scroll": {
+      "h": 1109,
+      "w": 1425,
+      "x": 0,
+      "y": 0
+    },
+    "title": "Alea · 竞彩方案",
+    "url": "http://127.0.0.1:8765/alea-calculator.html#sample",
+    "viewport": {
+      "h": 900,
+      "w": 1440
+    }
+  },
+  {
+    "slug": "25-admin-launch",
+    "route": "alea-admin.html#launch",
+    "file": "/Users/aa/WorkSpace/Projects/Alea/docs/visual-qa/prd-v1.9-final-20260719/final-production-20260719/desktop-25-admin-launch.png",
+    "blank": false,
+    "broken": [],
+    "focus": null,
+    "overflowX": false,
+    "scroll": {
+      "h": 1416,
+      "w": 1425,
+      "x": 0,
+      "y": 0
+    },
+    "title": "Alea · 系统管理",
+    "url": "http://127.0.0.1:8765/alea-admin.html#launch",
+    "viewport": {
+      "h": 900,
+      "w": 1440
+    }
+  },
+  {
+    "slug": "26-admin-live",
+    "route": "alea-admin.html#live",
+    "file": "/Users/aa/WorkSpace/Projects/Alea/docs/visual-qa/prd-v1.9-final-20260719/final-production-20260719/desktop-26-admin-live.png",
+    "blank": false,
+    "broken": [],
+    "focus": null,
+    "overflowX": false,
+    "scroll": {
+      "h": 1056,
+      "w": 1425,
+      "x": 0,
+      "y": 0
+    },
+    "title": "Alea · 系统管理",
+    "url": "http://127.0.0.1:8765/alea-admin.html#live",
+    "viewport": {
+      "h": 900,
+      "w": 1440
+    }
+  },
+  {
+    "slug": "27-admin-publish",
+    "route": "alea-admin.html#publish",
+    "file": "/Users/aa/WorkSpace/Projects/Alea/docs/visual-qa/prd-v1.9-final-20260719/final-production-20260719/desktop-27-admin-publish.png",
+    "blank": false,
+    "broken": [],
+    "focus": null,
+    "overflowX": false,
+    "scroll": {
+      "h": 900,
+      "w": 1440,
+      "x": 0,
+      "y": 0
+    },
+    "title": "Alea · 系统管理",
+    "url": "http://127.0.0.1:8765/alea-admin.html#publish",
+    "viewport": {
+      "h": 900,
+      "w": 1440
+    }
+  },
+  {
+    "slug": "28-admin-publish-blocked",
+    "route": "alea-admin.html#publish-blocked",
+    "file": "/Users/aa/WorkSpace/Projects/Alea/docs/visual-qa/prd-v1.9-final-20260719/final-production-20260719/desktop-28-admin-publish-blocked.png",
+    "blank": false,
+    "broken": [],
+    "focus": null,
+    "overflowX": false,
+    "scroll": {
+      "h": 900,
+      "w": 1440,
+      "x": 0,
+      "y": 0
+    },
+    "title": "Alea · 系统管理",
+    "url": "http://127.0.0.1:8765/alea-admin.html#publish-blocked",
+    "viewport": {
+      "h": 900,
+      "w": 1440
+    }
+  },
+  {
+    "slug": "29-admin-lineup",
+    "route": "alea-admin.html#lineup",
+    "file": "/Users/aa/WorkSpace/Projects/Alea/docs/visual-qa/prd-v1.9-final-20260719/final-production-20260719/desktop-29-admin-lineup.png",
+    "blank": false,
+    "broken": [],
+    "focus": null,
+    "overflowX": false,
+    "scroll": {
+      "h": 1878,
+      "w": 1425,
+      "x": 0,
+      "y": 0
+    },
+    "title": "Alea · 系统管理",
+    "url": "http://127.0.0.1:8765/alea-admin.html#lineup",
+    "viewport": {
+      "h": 900,
+      "w": 1440
+    }
+  },
+  {
+    "slug": "30-admin-sync",
+    "route": "alea-admin.html#sync",
+    "file": "/Users/aa/WorkSpace/Projects/Alea/docs/visual-qa/prd-v1.9-final-20260719/final-production-20260719/desktop-30-admin-sync.png",
+    "blank": false,
+    "broken": [],
+    "focus": null,
+    "overflowX": false,
+    "scroll": {
+      "h": 1186,
+      "w": 1425,
+      "x": 0,
+      "y": 0
+    },
+    "title": "Alea · 系统管理",
+    "url": "http://127.0.0.1:8765/alea-admin.html#sync",
+    "viewport": {
+      "h": 900,
+      "w": 1440
+    }
+  },
+  {
+    "slug": "31-admin-settings",
+    "route": "alea-admin.html#settings",
+    "file": "/Users/aa/WorkSpace/Projects/Alea/docs/visual-qa/prd-v1.9-final-20260719/final-production-20260719/desktop-31-admin-settings.png",
+    "blank": false,
+    "broken": [],
+    "focus": null,
+    "overflowX": false,
+    "scroll": {
+      "h": 2464,
+      "w": 1425,
+      "x": 0,
+      "y": 0
+    },
+    "title": "Alea · 系统管理",
+    "url": "http://127.0.0.1:8765/alea-admin.html#settings",
+    "viewport": {
+      "h": 900,
+      "w": 1440
+    }
+  },
+  {
+    "slug": "32-admin-methodology",
+    "route": "alea-admin.html#methodology",
+    "file": "/Users/aa/WorkSpace/Projects/Alea/docs/visual-qa/prd-v1.9-final-20260719/final-production-20260719/desktop-32-admin-methodology.png",
+    "blank": false,
+    "broken": [],
+    "focus": null,
+    "overflowX": false,
+    "scroll": {
+      "h": 1339,
+      "w": 1425,
+      "x": 0,
+      "y": 0
+    },
+    "title": "Alea · 系统管理",
+    "url": "http://127.0.0.1:8765/alea-admin.html#methodology",
+    "viewport": {
+      "h": 900,
+      "w": 1440
+    }
+  },
+  {
+    "slug": "33-admin-users",
+    "route": "alea-admin.html#users",
+    "file": "/Users/aa/WorkSpace/Projects/Alea/docs/visual-qa/prd-v1.9-final-20260719/final-production-20260719/desktop-33-admin-users.png",
+    "blank": false,
+    "broken": [],
+    "focus": null,
+    "overflowX": false,
+    "scroll": {
+      "h": 900,
+      "w": 1440,
+      "x": 0,
+      "y": 0
+    },
+    "title": "Alea · 系统管理",
+    "url": "http://127.0.0.1:8765/alea-admin.html#users",
+    "viewport": {
+      "h": 900,
+      "w": 1440
+    }
+  },
+  {
+    "slug": "34-admin-terminated",
+    "route": "alea-admin.html#terminated",
+    "file": "/Users/aa/WorkSpace/Projects/Alea/docs/visual-qa/prd-v1.9-final-20260719/final-production-20260719/desktop-34-admin-terminated.png",
+    "blank": false,
+    "broken": [],
+    "focus": null,
+    "overflowX": false,
+    "scroll": {
+      "h": 900,
+      "w": 1440,
+      "x": 0,
+      "y": 0
+    },
+    "title": "Alea · 系统管理",
+    "url": "http://127.0.0.1:8765/alea-admin.html#terminated",
+    "viewport": {
+      "h": 900,
+      "w": 1440
+    }
+  }
+]

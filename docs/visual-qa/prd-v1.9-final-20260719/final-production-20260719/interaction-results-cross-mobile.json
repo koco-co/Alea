@@ -1,0 +1,90 @@
+[
+  {
+    "test": "console-notification-popover",
+    "state": {
+      "links": [
+        "#messages"
+      ],
+      "open": true
+    }
+  },
+  {
+    "test": "console-notification-escape",
+    "state": {
+      "focus": "notificationButton",
+      "hidden": true
+    }
+  },
+  {
+    "test": "predictions-account-links",
+    "state": {
+      "links": [
+        "alea-console.html#account",
+        "alea-console.html#account",
+        "alea.html"
+      ],
+      "natural": 512,
+      "open": true
+    }
+  },
+  {
+    "test": "admin-account-links",
+    "state": {
+      "links": [
+        "alea-console.html",
+        "alea-console.html?role=admin#account",
+        "alea.html"
+      ],
+      "natural": 512,
+      "open": true
+    }
+  },
+  {
+    "test": "mobile-console-drawer",
+    "state": {
+      "expanded": "true",
+      "open": true,
+      "overflow": 0
+    }
+  },
+  {
+    "test": "mobile-drawer-escape",
+    "state": {
+      "focus": "consoleMenuButton",
+      "hidden": true
+    }
+  },
+  {
+    "test": "mobile-messages-empty",
+    "state": {
+      "empty": true,
+      "overflow": 0,
+      "scrollY": 0
+    }
+  },
+  {
+    "test": "mobile-avatar-failure",
+    "state": {
+      "overflow": 0,
+      "scrollY": 255,
+      "state": "load-failure"
+    }
+  },
+  {
+    "test": "mobile-delete-dialog",
+    "state": {
+      "open": true,
+      "overflow": 0,
+      "rect": {
+        "bottom": 602.5234375,
+        "height": 361.046875,
+        "left": 14,
+        "right": 376,
+        "top": 241.4765625,
+        "width": 362,
+        "x": 14,
+        "y": 241.4765625
+      }
+    }
+  }
+]

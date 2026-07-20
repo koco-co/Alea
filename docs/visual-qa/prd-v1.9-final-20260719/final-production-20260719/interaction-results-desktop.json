@@ -1,0 +1,93 @@
+[
+  {
+    "test": "messages-unread-filter",
+    "state": {
+      "empty": false,
+      "pressed": "true",
+      "visible": 2
+    }
+  },
+  {
+    "test": "messages-mark-all",
+    "state": {
+      "bell": "通知，无未读",
+      "empty": true,
+      "visible": 0
+    }
+  },
+  {
+    "test": "avatar-load-failure",
+    "state": {
+      "fallbackHidden": false,
+      "imageHidden": true,
+      "label": "加载失败",
+      "state": "load-failure"
+    }
+  },
+  {
+    "test": "avatar-no-avatar",
+    "state": {
+      "label": "无头像",
+      "state": "no-avatar"
+    }
+  },
+  {
+    "test": "avatar-upload",
+    "state": {
+      "label": "上传成功",
+      "natural": [
+        512,
+        512
+      ],
+      "src": true,
+      "state": "uploaded-success"
+    }
+  },
+  {
+    "test": "password-invalid",
+    "state": {
+      "feedback": "请填写当前密码，新密码至少 8 位且两次输入一致。",
+      "invalid": [
+        "currentPassword",
+        "newPassword"
+      ]
+    }
+  },
+  {
+    "test": "password-valid-local",
+    "state": "本地验证通过；未请求服务器，密码没有实际修改。"
+  },
+  {
+    "test": "oauth-bind-local",
+    "state": {
+      "feedback": "GitHub 绑定仅为本地原型反馈，未联系服务商。",
+      "pressed": "true",
+      "status": "原型本地已绑定"
+    }
+  },
+  {
+    "test": "follow-empty",
+    "state": {
+      "count": "0 项",
+      "empty": true
+    }
+  },
+  {
+    "test": "delete-invalid",
+    "state": {
+      "feedback": "请输入“删除”后再确认。",
+      "invalid": "true"
+    }
+  },
+  {
+    "test": "delete-escape-focus",
+    "state": {
+      "focus": "openDeleteAccount",
+      "hidden": true
+    }
+  },
+  {
+    "test": "delete-valid-local",
+    "state": "原型本地删除流程已验证；未删除服务器账户。"
+  }
+]

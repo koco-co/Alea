@@ -12,6 +12,7 @@ from fastapi.responses import JSONResponse
 from app.auth import SignupFailure, SignupRequest, SupabaseAuthGateway
 from app.middleware import configure_security
 from app.routers import admin, ledger, matches, real_ledger, roundtable, settings
+from app.runtime import BusinessGateway, DatasourceFactory, ProviderFactory
 
 
 DEFAULT_SUPABASE_URL = "https://qevyqgociclrqhglhqux.supabase.co"
@@ -42,7 +43,13 @@ async def _connect_database() -> Any | None:
         raise RuntimeError(
             "DATABASE_URL_ALEA_API is configured but psycopg is not installed"
         ) from exc
-    return await psycopg.AsyncConnection.connect(database_url, autocommit=True)
+    from psycopg.rows import dict_row
+
+    return await psycopg.AsyncConnection.connect(
+        database_url,
+        autocommit=True,
+        row_factory=dict_row,
+    )
 
 
 async def _close_resource(resource: Any | None) -> None:
@@ -58,19 +65,55 @@ async def _close_resource(resource: Any | None) -> None:
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     supabase_client = None
     database = None
+    gateway = None
+    datasource_factory = DatasourceFactory()
+    provider_factory = ProviderFactory()
     app.state.supabase = None
     app.state.database = None
+    app.state.datasource_factory = datasource_factory
+    app.state.provider_factory = provider_factory
+    for attribute in (
+        "admin_gateway",
+        "roundtable_event_gateway",
+        "match_gateway",
+        "ledger_gateway",
+        "real_ledger_gateway",
+        "settings_gateway",
+    ):
+        setattr(app.state, attribute, None)
     try:
         supabase_client = _create_supabase_client()
         database = await _connect_database()
+        if database is not None:
+            gateway = BusinessGateway(
+                database,
+                datasource_factory=datasource_factory,
+                provider_factory=provider_factory,
+            )
         app.state.supabase = supabase_client
         app.state.database = database
+        if gateway is not None:
+            app.state.admin_gateway = gateway
+            app.state.roundtable_event_gateway = gateway
+            app.state.match_gateway = gateway
+            app.state.ledger_gateway = gateway
+            app.state.real_ledger_gateway = gateway
+            app.state.settings_gateway = gateway
         yield
     finally:
         await _close_resource(database)
         await _close_resource(supabase_client)
         app.state.database = None
         app.state.supabase = None
+        for attribute in (
+            "admin_gateway",
+            "roundtable_event_gateway",
+            "match_gateway",
+            "ledger_gateway",
+            "real_ledger_gateway",
+            "settings_gateway",
+        ):
+            setattr(app.state, attribute, None)
 
 
 app = FastAPI(title="Alea API", version="0.1.0", lifespan=lifespan)

@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "verified_by": null,
+  "verified_at": null,
+  "effective_at": null,
+  "source_urls": [
+    "https://www.sporttery.cn/bzzx/20210118/3060333.html?gid=3",
+    "https://www.sporttery.cn/bzzx/20210118/3060334.html?gid=3",
+    "https://www.sporttery.cn/bzzx/20210118/3003197.html?gid=3",
+    "https://www.sporttery.cn/bzzx/20210118/3003195.html?gid=3",
+    "https://www.sporttery.cn/bzzx/20210118/3003194.html?gid=3",
+    "https://www.sporttery.cn/bzzx/20210207/3040217.html?gid=3",
+    "https://www.sporttery.cn/bzzx/20210207/3249715.html?gid=3",
+    "https://www.sporttery.cn/bzzx/20210207/3273604.html?gid=3"
+  ],
+  "unit_stake_cny": null,
+  "base_multiplier": null,
+  "maximum_multiplier": null,
+  "maximum_ticket_amount_cny": null,
+  "maximum_single_prize_by_pass_size_cny": {},
+  "play_rules": {
+    "had": {"maximum_pass_size": null, "allowed_pass_types": []},
+    "hhad": {"maximum_pass_size": null, "allowed_pass_types": []},
+    "crs": {"maximum_pass_size": null, "allowed_pass_types": []},
+    "ttg": {"maximum_pass_size": null, "allowed_pass_types": []},
+    "hafu": {"maximum_pass_size": null, "allowed_pass_types": []}
+  },
+  "mixed_pass": {
+    "same_match_cross_play_allowed": null,
+    "maximum_pass_size_rule": null
+  },
+  "banker_rules": null,
+  "rounding": null,
+  "void_match": {
+    "single": null,
+    "parlay": null,
+    "all_legs_void": null
+  },
+  "official_correction": null,
+  "license": {
+    "automated_access": null,
+    "cache": null,
+    "public_display": null,
+    "historical_storage": null,
+    "redistribution": null,
+    "evidence_path": null
+  },
+  "notes": null
+}
