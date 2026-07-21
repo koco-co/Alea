@@ -132,7 +132,10 @@ function secureRedirect(
 }
 
 function applySecurityHeaders(response: NextResponse, nonce: string): void {
-  response.headers.set("Content-Security-Policy", contentSecurityPolicy(nonce));
+  response.headers.set(
+    "Content-Security-Policy",
+    contentSecurityPolicy(nonce, getSupabasePublicConfig()?.url),
+  );
   response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
   response.headers.set("X-Content-Type-Options", "nosniff");
   response.headers.set("X-Frame-Options", "DENY");

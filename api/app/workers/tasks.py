@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import asyncio
 import inspect
+import json
+import os
 from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass
 from enum import StrEnum
@@ -10,6 +12,41 @@ from typing import Any, Protocol
 from celery import Task
 
 from app.workers.celery_app import celery_app
+
+
+@celery_app.task(
+    name="app.workers.tasks.run_roundtable_lifecycle",
+    acks_late=True,
+    reject_on_worker_lost=True,
+)
+def run_roundtable_lifecycle(payload: Mapping[str, Any]) -> dict[str, Any]:
+    """Persist the worker receipt for a newly created roundtable.
+
+    Starting a roundtable is a database transaction. The first worker hop is kept
+    deliberately small and idempotent so the UI can prove that Dispatcher and
+    Worker consumed the durable outbox row before provider phases are scheduled.
+    Provider phase execution remains behind the existing PhaseExecutor contract.
+    """
+
+    job_id = str(payload.get("job_id", "")).strip()
+    event_type = str(payload.get("event_type", "")).strip()
+    event_payload = payload.get("payload", {})
+    if not job_id or not event_type or not isinstance(event_payload, Mapping):
+        raise ValueError("invalid roundtable lifecycle payload")
+    database_url = os.getenv("DATABASE_URL_ALEA_WORKER")
+    if not database_url:
+        raise RuntimeError("DATABASE_URL_ALEA_WORKER is required")
+    import psycopg
+    from psycopg.rows import dict_row
+
+    with psycopg.connect(database_url, autocommit=True, row_factory=dict_row) as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "select alea_worker_append_roundtable_event(%s::uuid, %s, %s::jsonb) as value",
+                (job_id, event_type, json.dumps(dict(event_payload), ensure_ascii=False)),
+            )
+            row = cursor.fetchone()
+    return {"status": "succeeded", "job_id": job_id, "event": row["value"] if row else None}
 
 
 class RoundtablePhase(StrEnum):

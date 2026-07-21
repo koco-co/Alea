@@ -1,72 +1,71 @@
-# Alea Next.js 前端设计 QA
+# Alea 端到端与视觉验证报告
 
-日期：2026-07-20
+日期：2026-07-21
 
-## 当前阻断更新
+## 验证口径
 
-- 新增比较目标：`/console/admin/lineup`，源视觉为 `/var/folders/_w/wn19b_9j67g7kzwwq7hhy8dh0000gn/T/codex-clipboard-9a4549d4-44f3-467a-aa26-2e1f93f7cedf.png`，目标视口为 `1440 × 900` 与 `390 × 844`，状态为已登录管理员、API 厂商与 CLI 工具均已配置并通过测试。
-- 本地 Supabase、FastAPI 与 Next.js 已启动；DeepSeek API 和 Codex CLI 均已通过真实后台测试，数据库中存在两类已启用连接与实例。
-- 内置浏览器可以打开 Next.js 登录页，但其安全策略阻止访问本地 Supabase Auth 端口；将 Auth 暴露到同源验收入口后，浏览器又明确阻止该入口，并禁止用其他浏览器自动化手段规避。
-- 因此未取得已登录的 lineup 实现截图，也未形成源图与实现图的同视口组合比较。以下既有自动检查与旧路由证据不能替代本次比较。
+- 浏览器：Codex 内置 Browser；本轮不使用 Chrome。
+- 服务：本地 Supabase、FastAPI、Next.js、Redis、Worker、Scheduler、Dispatcher。
+- 账号：本地管理员 `admin@alea.local`。
+- AI：DeepSeek API、Codex CLI。
+- 视口：`1440 × 900`、`390 × 844`。
+- 数据：Gate 0 人工 fixture；未授权前未访问 Sporttery Web Source。
+- 参考：`docs/PrototypeDesign/visual-qa/production-pass/screenshots/020-admin-lineup-desktop-final.png`、`021-admin-lineup-mobile-final.png`、`037-predictions-worldcup-mobile-final.png`。
 
-## Source of truth
+## 内置 Browser 步骤与结果
 
-- 产品行为：`docs/产品需求文档.md` §6–§14
-- 视觉系统：`DESIGN.md`，主背景 `#FAF9F5`、强调色 `#CC785C`
-- OpenDesign 原型：`docs/PrototypeDesign/open-design/alea.html`、`alea-predictions.html`、`alea-console.html`、`alea-calculator.html`
-- 同视口参考截图：
-  - `docs/PrototypeDesign/open-design/qa/final-production-audit-20260719/after/marketing-1440x900.png`
-  - `docs/PrototypeDesign/open-design/qa/final-production-audit-20260719/after/marketing-390x844.png`
-  - `docs/PrototypeDesign/open-design/qa/final-production-audit-20260719/after/predictions-today-1440x900.png`
-  - `docs/PrototypeDesign/open-design/qa/final-production-audit-20260719/after/predictions-today-390x844.png`
-  - `docs/PrototypeDesign/open-design/qa/final-production-audit-20260719/after/console-fixtures-1440x900.png`
-  - `docs/PrototypeDesign/open-design/qa/final-production-audit-20260719/after/console-fixtures-390x844.png`
-  - `docs/PrototypeDesign/open-design/qa/final-production-audit-20260719/after/console-fixture-detail-1440x900.png`
-  - `docs/PrototypeDesign/open-design/qa/final-production-audit-20260719/after/console-fixture-detail-390x844.png`
-  - `docs/PrototypeDesign/open-design/qa/final-production-audit-20260719/after/calculator-fact-1440x900.png`
-  - `docs/PrototypeDesign/open-design/qa/final-production-audit-20260719/after/calculator-fact-390x844.png`
+| #   | 操作                                   | 观察结果                                                                    | 状态           | 当前证据                                                                                        |
+| --- | -------------------------------------- | --------------------------------------------------------------------------- | -------------- | ----------------------------------------------------------------------------------------------- |
+| 1   | 在内置 Browser 打开 `/login`，1440×900 | 登录页真实渲染，风险说明、输入标签和登录卡片均可见                          | 通过           | `docs/evidence/e2e-inapp-20260721/01-login-1440x900.png`                                        |
+| 2   | 使用本地管理员完成邮箱登录             | 建立真实 Supabase 会话并进入 `/console/predictions`                         | 通过           | 内置 Browser URL 与 DOM snapshot                                                                |
+| 3   | 打开 `/console/admin/lineup` API 标签  | 11 个 API 目录、DeepSeek 配置、掩码密钥、模型和实例来自真实后台             | 通过           | `27-lineup-final-1440x900.png`                                                                   |
+| 4   | 点击 DeepSeek「测试连接」              | DeepSeek API 真实结构化测试返回 `测试通过 · 1183 ms`                        | 通过           | `05-deepseek-api-pass-1440x900.png`                                                             |
+| 5   | 切换 CLI 标签                          | 11 个 CLI 目录、Codex 路径/版本/认证/模型/实例真实加载                      | 通过           | `04-lineup-cli-1440x900.png`                                                                    |
+| 6   | 点击 Codex CLI「测试连接」             | Codex CLI 真实 `predict_score` Schema 测试返回 `测试通过 · 5494 ms`         | 通过           | `06-codex-cli-pass-1440x900.png`                                                                |
+| 7   | 390×844 复核 API/CLI 阵容页            | API/CLI 内容可纵向浏览；管理员导航已改为原型风格浅色横向浮层                | 通过           | `08-lineup-api-390x844-fixed.png`、`09-lineup-cli-390x844.png`                                  |
+| 8   | 1440×900 打开用户主导航                | `/console`、`/console/fixtures`、`/console/calculator` 均真实渲染，无空白页 | 通过           | `14-console-overview-1440x900.png`、`15-fixtures-1440x900.png`、`16-calculator-1440x900.png`    |
+| 9   | 1440×900 打开管理流程                  | 数据同步显示未授权来源降级；圆桌配置页可操作                                | 通过（降级态） | `17-admin-sync-1440x900.png`、`18-admin-roundtable-1440x900.png`                                |
+| 10  | 390×844 打开推演、总览、发起圆桌       | 三页可渲染；用户页改为原型风格底部导航，管理员页保持管理导航                | 通过           | `28-predictions-final-390x844.png`、`21-console-390x844.png`、`22-admin-roundtable-390x844.png` |
+| 11  | 点击「发起圆桌」并进入直播页           | 前端显示“任务已创建”，但实际数据库任务/事件/审计均未写入                    | **失败**       | `25-roundtable-submit-result-1440x900.png`、`26-roundtable-live-1440x900.png`                   |
 
-## Implementation targets
+## 原型对照与本轮修复
 
-- `/`
-- `/console/predictions`
-- `/console/predictions/match-104`
-- `/console/fixtures`
-- `/console/fixtures/104`
-- `/console/calculator`
+并排对照文件：`docs/evidence/e2e-inapp-20260721/12-reference-vs-inapp-lineup.png`。
 
-Acceptance viewports: `1440 × 900` and `390 × 844`.
+已确认并修复的差异：
 
-## Automated evidence
+1. 管理员桌面页原先左贴边并使用深色满高侧栏；现改为与 PrototypeDesign 一致的居中浅色卡片式管理工作台。
+2. 管理员移动页原先是黑色横向侧栏；现改为浅色圆角浮层、保留编号、隐藏冗余副标题。
+3. 移动用户页原先把完整主导航挤在顶部；现隐藏顶部模块导航，增加与原型一致的底部四项导航：总览、预测、赛程、算票。
+4. 阵容页仍保留 API/CLI 两个一等标签、目录搜索、真实测试、实例限制和保存状态，没有退回静态演示。
 
-- TypeScript (`tsc --noEmit`)：通过，退出码 0。
-- Web tests (`bun test`)：25 通过 / 0 失败，退出码 0。
-- Next.js 生产构建（Webpack）：通过，退出码 0。
-- 静态资源引用：通过；全部 `/assets/*` 引用均存在于 `web/public/`。
-- 服务器静态渲染 HTML：`docs/evidence/frontend-visual-20260720/`。该证据只检查结构与样式注入，不替代浏览器截图和交互验证。
+## 数据与数据库证据
 
-## Full-view comparison
+当前数据库中已启用并通过测试的连接为：
 
-状态：阻断。内置浏览器可以打开 Next.js 页面，但阻止本地 Supabase Auth 依赖端口与同源代理入口；未生成已登录 lineup 或其他受保护路由的 Next.js 实现截图，因此没有用 OpenDesign 旧截图、静态 HTML 或未登录页面冒充同视口对比。
+```text
+codex   | cli | passed | enabled | 1 enabled instance
+deepseek| api | passed | enabled | 1 enabled instance
+```
 
-## Focused comparison
+本次点击圆桌提交后只产生前端固定展示：
 
-状态：阻断。以下重点尚未获得实现截图：首屏动画密度与裁切、推演卡四层层级、详情五 Tab、计算器三栏与移动三步、票面 Canvas 输出。
+```text
+roundtable_jobs=0
+roundtable_events=0
+execution_audits=0
+```
 
-## Findings
+## 自动检查
 
-- `[P0]` 全部目标路由：缺少 Next.js 实现的 1440×900 与 390×844 新鲜渲染证据。影响：无法接受性判断溢出、折行、粘性元素、焦点、动画、图像裁切和响应式重排。修复：在允许本地 loopback 监听的环境启动 `web`，逐路由截图，与同视口参考并排检查后再修正。
-- `[P0]` `/console/admin/lineup`：内置浏览器无法完成本地 Supabase 登录，缺少“API 厂商”和“CLI 工具”两个标签页的已登录截图与交互证据。修复：使用内置浏览器可访问的 Supabase 验收环境登录，分别验证目录搜索、新增、编辑、真实连接测试、模型选择、1–3 实例、删除与失败恢复，再做桌面/移动同视口比较。
-- `[P1]` `/console/calculator`：复制、PNG 下载与移动三步依赖真实浏览器 API，尚未执行。修复：分别在桌面与移动完成选择、配置、预览、复制和下载流程，打开 PNG 检查品牌图与声明区。
-- `[P1]` `/console/fixtures/[id]`：五 Tab、缺失态与返回路径尚未执行。修复：逐 Tab 记录操作、结果、截图与剩余边界。
-- `[P1]` `/console/predictions/[id]`：辩论回放时间线与投票行 hover / focus 尚未执行。修复：键盘与指针分别验证并记录。
+本轮视觉 CSS/导航修复后需要重新执行 `make check`；上一轮基线检查为 API 229 通过 / 13 跳过、Web 36 通过、Ruff/Mypy/TypeScript/Prettier 通过、ESLint 0 错误（29 个既有 `<img>` 警告）。本报告不把上一轮结果冒充为本轮修复后的最终检查。
 
-## Unverified remainder
+## 未通过与未验证范围
 
-1. 营销页动画启停、锚点导航、CTA 与 reduced-motion。
-2. 推演卡投票行 tooltip / focus、详情导航、辩论回放。
-3. 赛程筛选组合、重置、空态、比赛详情五 Tab 与恢复路径。
-4. 计算器事实 / 样例切换、玩法与倍数、移动三步、复制、PNG 下载。
-5. 两个验收视口的页面级横向溢出、折行、裁切、控制台错误和资源加载。
+- `[P0]` `/console/admin/roundtable` 仍使用 `INSTANCES`、固定任务编号和 `window.setTimeout`；未读取已验证的 DeepSeek/Codex 连接，也未调用真实 roundtable command。
+- `[P0]` 圆桌直播页仍使用硬编码 OpenAI/Anthropic/Google 状态；0 条持久事件，九阶段、公证、发布、采用与结算主链未通过。
+- `[P0]` `/console/predictions` 仍显示“当前只有一个真实 Provider”，与数据库实际启用的 DeepSeek API + Codex CLI 不一致。
+- `[P1]` 视觉对照仍存在内容语义差异：原型展示固定演示结果，实际页按数据边界展示 no-quorum；这部分应由真实圆桌链路补齐，不应伪造结果。
+- 本轮未把比赛详情五 Tab、发布/撤回、账本结算、排行认定、备份恢复演练认定为通过。
 
-final result: blocked
+最终结果：**partial**。内置 Browser 的登录、关键路由、API/CLI AI 验证、桌面/移动视觉修复和数据源降级态通过；圆桌到结算的真实后端链路仍被静态实现阻断。

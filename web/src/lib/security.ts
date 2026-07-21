@@ -80,20 +80,43 @@ export function createCsrfToken(): string {
   return btoa(String.fromCharCode(...bytes)).replace(/[+/=]/g, "");
 }
 
-export function contentSecurityPolicy(nonce: string): string {
-  return [
+function supabaseConnectSources(url: string | undefined): string[] {
+  if (!url) return [];
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return [];
+    const websocketProtocol = parsed.protocol === "https:" ? "wss:" : "ws:";
+    return [parsed.origin, `${websocketProtocol}//${parsed.host}`];
+  } catch {
+    return [];
+  }
+}
+
+export function contentSecurityPolicy(
+  nonce: string,
+  supabaseUrl?: string,
+): string {
+  const connectSources = [
+    "'self'",
+    "https://*.supabase.co",
+    "wss://*.supabase.co",
+    ...supabaseConnectSources(supabaseUrl),
+  ];
+  const directives = [
     "default-src 'self'",
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'`,
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: https:",
     "font-src 'self' data:",
-    "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+    `connect-src ${[...new Set(connectSources)].join(" ")}`,
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",
     "object-src 'none'",
-    "upgrade-insecure-requests",
-  ].join("; ");
+  ];
+  if (!supabaseUrl?.startsWith("http://"))
+    directives.push("upgrade-insecure-requests");
+  return directives.join("; ");
 }
 
 const SENSITIVE_KEYS =

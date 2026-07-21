@@ -31,4 +31,19 @@ describe("web security helpers", () => {
     expect(csp).toContain("'nonce-nonce-value'");
     expect(csp).toContain("frame-ancestors 'none'");
   });
+
+  test("CSP permits the configured local Supabase HTTP and realtime origins", () => {
+    const csp = contentSecurityPolicy(
+      "nonce-value",
+      "http://127.0.0.1:54321/auth/v1",
+    );
+    expect(csp).toContain("http://127.0.0.1:54321");
+    expect(csp).toContain("ws://127.0.0.1:54321");
+    expect(csp).not.toContain("upgrade-insecure-requests");
+  });
+
+  test("CSP ignores invalid Supabase protocols", () => {
+    const csp = contentSecurityPolicy("nonce-value", "javascript:alert(1)");
+    expect(csp).not.toContain("javascript:");
+  });
 });

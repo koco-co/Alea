@@ -63,9 +63,14 @@ export function AuthForm({ mode }: { mode: Mode }) {
           router.refresh();
         }
       } else if (mode === "login") {
-        const { error: authError } =
-          await createClient().auth.signInWithPassword({ email, password });
-        if (authError) throw new Error("邮箱或密码不正确");
+        const response = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        });
+        const result = (await response.json()) as { error?: string };
+        if (!response.ok)
+          throw new Error(result.error ?? "登录失败，请稍后再试");
         router.replace(safeNext(params.get("next")));
         router.refresh();
       } else {

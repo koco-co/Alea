@@ -247,7 +247,9 @@ export default function LineupPage() {
         ? {
             runtime_key: selectedKey,
             executable_path: executablePath,
-            timeout_seconds: 15,
+            model_id: modelId,
+            schema_test: true,
+            timeout_seconds: 60,
           }
         : {
             provider_key: selectedKey,

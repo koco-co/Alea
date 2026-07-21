@@ -347,9 +347,13 @@ h3,
   backdrop-filter: blur(16px);
 }
 
+.mobile-module-nav {
+  display: none;
+}
+
 .topbar-main {
   display: flex;
-  width: min(100%, 1440px);
+  width: min(calc(100% - 48px), 1200px);
   min-height: 72px;
   align-items: center;
   gap: 28px;
@@ -859,18 +863,25 @@ h3,
   }
 
   .topbar-main {
+    width: 100%;
     min-height: auto;
     flex-wrap: wrap;
     gap: 10px;
     padding: 12px 16px 0;
   }
 
+  .admin-topbar .module-nav {
+    display: none;
+  }
+
+  .admin-topbar .topbar-main {
+    min-height: 64px;
+    flex-wrap: nowrap;
+    padding-bottom: 12px;
+  }
+
   .module-nav {
-    order: 3;
-    width: calc(100% + 32px);
-    flex-basis: calc(100% + 32px);
-    margin: 0 -16px;
-    padding: 0 10px;
+    display: none;
   }
 
   .account-nav {
@@ -888,6 +899,42 @@ h3,
 
   .console-main {
     padding: 18px 16px 50px;
+  }
+
+  .console-shell:has(.mobile-module-nav) .console-main {
+    padding-bottom: 104px;
+  }
+
+  .mobile-module-nav {
+    position: fixed;
+    z-index: 25;
+    right: 12px;
+    bottom: 10px;
+    left: 12px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+    padding: 6px;
+    background: rgb(251 250 245 / 96%);
+    border: 1px solid var(--line);
+    border-radius: 15px;
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(14px);
+  }
+
+  .mobile-module-nav a {
+    display: grid;
+    min-height: 44px;
+    place-items: center;
+    border-radius: 10px;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .mobile-module-nav a.active {
+    background: var(--surface-dark);
+    color: var(--canvas);
   }
 
   .global-banner {
@@ -1768,9 +1815,10 @@ h3,
 
 .admin-shell {
   display: grid;
-  width: min(100%, 1440px);
+  width: min(calc(100% - 48px), 1200px);
   min-height: calc(100vh - 72px);
-  grid-template-columns: 230px minmax(0, 1fr);
+  grid-template-columns: 214px minmax(0, 1fr);
+  column-gap: 18px;
   margin: 0 auto;
 }
 .admin-sidebar {
@@ -1780,15 +1828,18 @@ h3,
   height: calc(100vh - 72px);
   flex-direction: column;
   padding: 28px 18px;
-  background: var(--surface-dark);
-  color: var(--canvas);
+  background: var(--surface-raised);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  color: var(--ink);
 }
 .admin-sidebar h2 {
   margin-bottom: 5px;
   font-size: 28px;
 }
 .admin-sidebar > div > p:last-child {
-  color: #aaa59d;
+  color: var(--muted);
   font-size: 10px;
 }
 .admin-sidebar nav {
@@ -1802,15 +1853,15 @@ h3,
   gap: 9px;
   padding: 11px;
   border-radius: 8px;
-  color: #d5d0c8;
+  color: var(--muted);
   font-size: 12px;
 }
 .admin-sidebar nav a:hover {
-  background: #2a2824;
-  color: white;
+  background: var(--surface);
+  color: var(--ink);
 }
 .admin-sidebar nav a > span {
-  color: #77736c;
+  color: var(--faint);
   font-family: ui-monospace, SFMono-Regular, monospace;
   font-size: 9px;
 }
@@ -1818,22 +1869,22 @@ h3,
   display: grid;
 }
 .admin-sidebar nav small {
-  color: #87837c;
+  color: var(--faint);
   font-size: 9px;
   font-weight: 500;
 }
 .admin-back {
   margin-top: auto;
-  color: #aaa59d;
+  color: var(--muted);
   font-size: 11px;
 }
 .admin-content {
   min-width: 0;
 }
 .admin-main {
-  width: min(100%, 1160px);
+  width: 100%;
   margin: 0 auto;
-  padding: 34px 32px 90px;
+  padding: 34px 0 90px;
 }
 .admin-page-heading {
   display: flex;
@@ -2880,11 +2931,16 @@ h3,
   }
   .admin-shell {
     display: block;
+    width: 100%;
   }
   .admin-sidebar {
     position: static;
     height: auto;
-    padding: 16px;
+    padding: 16px 0 0;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
   }
   .admin-sidebar > div,
   .admin-back {
@@ -2892,14 +2948,27 @@ h3,
   }
   .admin-sidebar nav {
     display: flex;
-    margin: 0;
+    gap: 2px;
+    margin: 0 16px;
+    padding: 8px;
+    background: var(--surface-raised);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
     overflow-x: auto;
   }
   .admin-sidebar nav a {
     min-width: max-content;
-    grid-template-columns: 1fr;
+    grid-template-columns: auto 1fr;
+    gap: 7px;
+    padding: 10px 9px;
+    color: var(--muted);
   }
-  .admin-sidebar nav a > span,
+  .admin-sidebar nav a > span {
+    display: block;
+    color: var(--faint);
+    font-size: 10px;
+  }
   .admin-sidebar nav small {
     display: none;
   }

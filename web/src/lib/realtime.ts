@@ -131,7 +131,6 @@ export function useRoundtableEvents(
     const supabase = createClient();
     const controller = new AbortController();
     let active = true;
-    let subscribed = false;
     let backfillRunning = false;
     let backfillRequested = false;
     let stagnantGapRetries = 0;
@@ -159,10 +158,10 @@ export function useRoundtableEvents(
 
     const fetchPage = async (): Promise<EventPage> => {
       const token = await readAccessToken();
-      const url = new URL(
-        `${apiBaseUrl}/v1/roundtables/${encodeURIComponent(jobId)}/events`,
-        window.location.origin,
-      );
+      const eventPath = apiBaseUrl
+        ? `${apiBaseUrl}/v1/roundtables/${encodeURIComponent(jobId)}/events`
+        : `/api/roundtables/${encodeURIComponent(jobId)}/events`;
+      const url = new URL(eventPath, window.location.origin);
       url.searchParams.set("after_seq", String(lastEventSeqRef.current));
       url.searchParams.set("limit", "200");
       const response = await fetcher(url, {
@@ -178,7 +177,7 @@ export function useRoundtableEvents(
     };
 
     const backfill = async () => {
-      if (!subscribed || !active) return;
+      if (!active) return;
       if (backfillRunning) {
         backfillRequested = true;
         return;
@@ -240,7 +239,6 @@ export function useRoundtableEvents(
           .subscribe((subscriptionStatus: string) => {
             if (!active) return;
             if (subscriptionStatus === "SUBSCRIBED") {
-              subscribed = true;
               setConnectionState("subscribed");
               // The initial backfill starts only after the private subscription is live.
               requestBackfill();
@@ -251,7 +249,6 @@ export function useRoundtableEvents(
               subscriptionStatus === "TIMED_OUT" ||
               subscriptionStatus === "CLOSED"
             ) {
-              subscribed = false;
               setConnectionState("reconnecting");
             }
           });
@@ -263,10 +260,12 @@ export function useRoundtableEvents(
       }
     };
     void connect();
+    // Load the durable event log immediately. Realtime is an enhancement for
+    // low-latency updates, not a prerequisite for rendering persisted state.
+    void backfill();
 
     return () => {
       active = false;
-      subscribed = false;
       controller.abort();
       if (channel) void supabase.removeChannel(channel);
     };

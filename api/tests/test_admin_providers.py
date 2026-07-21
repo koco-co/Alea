@@ -189,6 +189,48 @@ def test_api_provider_validation_rejects_private_and_incomplete_secret_reference
 
 
 @pytest.mark.asyncio
+async def test_cli_probe_runs_a_real_structured_schema_test(
+    monkeypatch: pytest.MonkeyPatch,
+    admin_principal: AuthenticatedPrincipal,
+) -> None:
+    async def probe(*args: Any, **kwargs: Any) -> SimpleNamespace:
+        del args, kwargs
+        return SimpleNamespace(
+            runtime_key="codex",
+            executable_path="/opt/homebrew/bin/codex",
+            version="codex-cli test",
+            auth_status="authenticated",
+            models=("gpt-test",),
+            status="passed",
+            error_code=None,
+        )
+
+    class FakeCliProvider:
+        def __init__(self, **kwargs: Any) -> None:
+            assert kwargs["runtime_key"] == "codex"
+
+        async def predict_score(self, context: Mapping[str, Any], request: Any) -> SimpleNamespace:
+            assert context["source"] == "admin_connection_test"
+            assert request.model_id == "gpt-test"
+            return SimpleNamespace(latency_ms=42)
+
+    monkeypatch.setattr(admin, "probe_cli_runtime", probe)
+    monkeypatch.setattr(admin, "CliProvider", FakeCliProvider)
+    result = await admin.probe_provider_cli_runtime(
+        admin.ProbeCliRuntimeRequest(
+            runtime_key="codex",
+            executable_path="/opt/homebrew/bin/codex",
+            model_id="gpt-test",
+        ),
+        admin_principal,
+    )
+
+    assert result["status"] == "passed"
+    assert result["schema_status"] == "passed"
+    assert result["latency_ms"] == 42
+
+
+@pytest.mark.asyncio
 async def test_clear_secret_and_retire_provider_use_audited_commands(
     admin_principal: AuthenticatedPrincipal,
 ) -> None:

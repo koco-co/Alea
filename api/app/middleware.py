@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hmac
+import logging
 import os
 import threading
 import time
@@ -22,6 +23,7 @@ from app.security import JWTVerifier, SecurityError
 WRITE_METHODS = {"POST", "PUT", "PATCH", "DELETE"}
 PUBLIC_API_PATHS = {"/v1/auth/login"}
 DEFAULT_SUPABASE_URL = "https://qevyqgociclrqhglhqux.supabase.co"
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -115,7 +117,15 @@ class SecurityMiddleware(BaseHTTPMiddleware):
                 return self._error("authentication_required", 401, request_id)
             try:
                 request.state.principal = self.verifier.verify(token)
-            except SecurityError:
+            except SecurityError as exc:
+                # Keep the response deliberately generic, but leave a safe diagnostic
+                # class in server logs so configuration failures are actionable without
+                # ever logging the bearer token or its claims.
+                logger.warning(
+                    "access_token_verification_failed error_type=%s detail=%s",
+                    type(exc.__cause__ or exc).__name__,
+                    str(exc.__cause__ or exc)[:200],
+                )
                 return self._error("invalid_access_token", 401, request_id)
 
         principal = getattr(request.state, "principal", None)

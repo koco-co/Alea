@@ -16,6 +16,7 @@ from app.workers.celery_app import celery_app
 
 
 TOPIC_TASKS: Mapping[str, str] = {
+    "roundtable.lifecycle": "app.workers.tasks.run_roundtable_lifecycle",
     "roundtable.phase": "app.workers.tasks.run_provider_phase",
     "roundtable.nominate_matches": "app.workers.tasks.run_nominate_matches",
     "roundtable.selection_debate": "app.workers.tasks.run_selection_debate",

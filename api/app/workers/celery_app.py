@@ -5,7 +5,11 @@ import os
 from celery import Celery
 from kombu import Queue
 
-celery_app = Celery("alea", broker=os.getenv("REDIS_URL", "redis://redis:6379/0"))
+celery_app = Celery(
+    "alea",
+    broker=os.getenv("REDIS_URL", "redis://redis:6379/0"),
+    include=["app.workers.tasks"],
+)
 celery_app.conf.update(
     task_acks_late=True,
     task_acks_on_failure_or_timeout=True,

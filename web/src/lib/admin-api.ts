@@ -3,14 +3,17 @@ import "server-only";
 import { getAccessContext } from "@/lib/supabase/access";
 import { createClient } from "@/lib/supabase/server";
 
+import { isSameOriginRequest } from "./admin-origin";
+
 const ALLOWED_ADMIN_PATH =
-  /^(?:\/v1\/admin\/providers(?:\/catalog|\/runtime\/(?:probe|api-test)|\/[0-9a-f-]+(?:\/secret)?|\/[0-9a-f-]+\/instances(?:\/[0-9a-f-]+)?)?|\/v1\/admin\/sync(?:\/import|\/runs(?:\/[0-9a-f-]+\/retry)?)?|\/v1\/admin\/results\/conflicts(?:\/[0-9a-f-]+\/adjudicate)?)$/i;
+  /^(?:\/v1\/admin\/providers(?:\/catalog|\/runtime\/(?:probe|api-test)|\/[0-9a-f-]+(?:\/secret)?|\/[0-9a-f-]+\/instances(?:\/[0-9a-f-]+)?)?|\/v1\/admin\/sync(?:\/import|\/runs(?:\/[0-9a-f-]+\/retry)?)?|\/v1\/admin\/results\/conflicts(?:\/[0-9a-f-]+\/adjudicate)?|\/v1\/admin\/roundtables(?:\/[0-9a-f-]+(?:\/(?:skip-debate|terminate))?)?|\/v1\/roundtables\/[0-9a-f-]+\/events|\/v1\/matches)$/i;
 
 export async function proxyAdminApiRequest(
   request: Request,
   upstreamPath: string,
 ): Promise<Response> {
-  if (!ALLOWED_ADMIN_PATH.test(upstreamPath)) {
+  const upstreamUrl = new URL(upstreamPath, "http://alea.internal");
+  if (!ALLOWED_ADMIN_PATH.test(upstreamUrl.pathname)) {
     return Response.json({ error: "unsupported_admin_path" }, { status: 404 });
   }
   const access = await getAccessContext();
@@ -21,8 +24,7 @@ export async function proxyAdminApiRequest(
     return Response.json({ error: "administrator_required" }, { status: 403 });
   }
   if (request.method !== "GET") {
-    const requestUrl = new URL(request.url);
-    if (request.headers.get("origin") !== requestUrl.origin) {
+    if (!isSameOriginRequest(request)) {
       return Response.json(
         { error: "invalid_request_origin" },
         { status: 403 },
@@ -49,7 +51,7 @@ export async function proxyAdminApiRequest(
       : await request.text();
   try {
     const upstream = await fetch(
-      `${internalApiUrl.replace(/\/$/, "")}${upstreamPath}`,
+      `${internalApiUrl.replace(/\/$/, "")}${upstreamUrl.pathname}${upstreamUrl.search}`,
       {
         method: request.method,
         headers: {

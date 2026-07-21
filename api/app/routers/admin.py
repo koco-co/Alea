@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import ipaddress
 import os
+from datetime import date
 from enum import StrEnum
-from typing import Annotated, Any, Literal, Mapping, Protocol
+from typing import Annotated, Any, Literal, Mapping, Protocol, cast
 from urllib.parse import urlsplit
 from uuid import UUID, uuid4
 
@@ -12,9 +13,10 @@ from jsonschema import ValidationError, validate
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.providers.catalog import api_catalog_payload, get_api_provider
+from app.providers.cli import CliProvider
 from app.providers.cli_catalog import cli_catalog_payload, get_cli_runtime
 from app.providers.cli_executor import probe_cli_runtime, validate_cli_path
-from app.providers.contract import ProviderFailure, ProviderRequest
+from app.providers.contract import BaseProvider, ProviderFailure, ProviderRequest
 from app.runtime import ProviderFactory
 from app.security import AuthenticatedPrincipal, SecurityError, validate_outbound_url
 from app.secrets.envelope import EncryptedSecret, EnvelopeEncryption, EnvelopeError
@@ -167,6 +169,19 @@ class RoundtableControlRequest(StrictModel):
     confirmed: bool
 
 
+class StartRoundtableRequest(StrictModel):
+    mode: Literal["autonomous", "specified"] = "autonomous"
+    business_date: date
+    competition_scope: str = Field(default="all", min_length=1, max_length=80)
+    excluded_match_ids: list[UUID] = Field(default_factory=list, max_length=100)
+    match_ids: list[UUID] = Field(default_factory=list, max_length=20)
+    instance_ids: list[UUID] = Field(min_length=1, max_length=3)
+    rounds: int = Field(default=1, ge=1, le=2)
+    candidate_limit: int = Field(default=8, ge=1, le=20)
+    scheduled: bool = False
+    schedule_time: str = Field(default="08:00", pattern=r"^([01][0-9]|2[0-3]):[0-5][0-9]$")
+
+
 class ProviderExecutionMode(StrEnum):
     API = "api"
     CLI = "cli"
@@ -196,6 +211,8 @@ class SaveProviderRequest(StrictModel):
 class ProbeCliRuntimeRequest(StrictModel):
     runtime_key: str = Field(min_length=1, max_length=80)
     executable_path: str = Field(min_length=1, max_length=4096)
+    model_id: str | None = Field(default=None, min_length=1, max_length=128)
+    schema_test: bool = True
     timeout_seconds: int = Field(default=15, ge=1, le=60)
 
 
@@ -675,6 +692,45 @@ async def terminate_roundtable(
     )
 
 
+@router.get("/roundtables")
+async def list_roundtables(
+    principal: AdminPrincipal,
+    gateway: Gateway,
+    limit: int = Query(default=20, ge=1, le=100),
+) -> Mapping[str, Any]:
+    return await _query(gateway, "list_roundtables", principal, {"limit": limit})
+
+
+@router.get("/roundtables/{job_id}")
+async def read_roundtable(
+    job_id: UUID,
+    principal: AdminPrincipal,
+    gateway: Gateway,
+) -> Mapping[str, Any]:
+    value = await _query(gateway, "roundtable", principal, {"job_id": str(job_id)})
+    if not value.get("job"):
+        raise HTTPException(status_code=404, detail="roundtable_not_found")
+    return value
+
+
+@router.post("/roundtables", status_code=201)
+async def start_roundtable(
+    body: StartRoundtableRequest,
+    request: Request,
+    principal: AdminPrincipal,
+    gateway: Gateway,
+) -> Mapping[str, Any]:
+    if body.mode == "specified" and not body.match_ids:
+        raise HTTPException(status_code=422, detail="specified_mode_requires_matches")
+    return await _command(
+        gateway,
+        "start_roundtable",
+        principal,
+        request,
+        body.model_dump(mode="json"),
+    )
+
+
 @router.get("/providers")
 async def list_providers(
     principal: AdminPrincipal,
@@ -699,7 +755,7 @@ async def probe_provider_cli_runtime(
 ) -> Mapping[str, Any]:
     del principal
     try:
-        get_cli_runtime(body.runtime_key)
+        definition = get_cli_runtime(body.runtime_key)
     except ValueError as exc:
         raise HTTPException(status_code=422, detail="unsupported_cli_runtime") from exc
     result = await probe_cli_runtime(
@@ -707,7 +763,7 @@ async def probe_provider_cli_runtime(
         body.executable_path,
         timeout_seconds=body.timeout_seconds,
     )
-    return {
+    payload: dict[str, Any] = {
         "runtime_key": result.runtime_key,
         "executable_path": result.executable_path,
         "version": result.version,
@@ -716,6 +772,63 @@ async def probe_provider_cli_runtime(
         "status": result.status,
         "error_code": result.error_code,
     }
+    if not body.schema_test or result.status != "passed" or result.auth_status != "authenticated":
+        return payload
+    if not body.model_id or not definition.roundtable_capable:
+        payload.update(
+            status="failed",
+            error_code="cli_schema_test_unavailable",
+            schema_status="failed",
+        )
+        return payload
+    provider = CliProvider(
+        runtime_key=body.runtime_key,
+        executable_path=body.executable_path,
+    )
+    request = ProviderRequest(
+        request_id=uuid4(),
+        business_idempotency_key=f"cli-connection-test:{uuid4()}",
+        input_snapshot_id=None,
+        postmatch_review_context_snapshot_id=None,
+        methodology_review_context_snapshot_id=None,
+        history_context_version_id=None,
+        lesson_set_version_id=None,
+        model_id=body.model_id,
+        connection_version=1,
+        identity_prompt_version=1,
+        core_methodology_version=1,
+        phase_prompt_version=1,
+        output_schema_version=1,
+        tool_contract_version=1,
+        generation_parameter_version=1,
+        timeout_seconds=body.timeout_seconds,
+        max_output_tokens=300,
+    )
+    try:
+        execution = await cast(BaseProvider, provider).predict_score(
+            {
+                "source": "admin_connection_test",
+                "match": {
+                    "home": "fixture-home",
+                    "away": "fixture-away",
+                },
+            },
+            request,
+        )
+    except ProviderFailure as exc:
+        payload.update(
+            status="failed",
+            error_code=exc.code,
+            schema_status="failed",
+        )
+        return payload
+    payload.update(
+        status="passed",
+        error_code=None,
+        schema_status="passed",
+        latency_ms=execution.latency_ms,
+    )
+    return payload
 
 
 @router.post("/providers/runtime/api-test")

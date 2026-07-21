@@ -1,66 +1,236 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 
-const INSTANCES = [
-  ["openai-1", "OpenAI · 主分析", "GPT-5.2", "可用"],
-  ["anthropic-1", "Anthropic · 反方", "Claude Sonnet", "可用"],
-  ["google-1", "Google · 校验", "Gemini Pro", "待连接"],
-] as const;
+import type { ProviderConnectionRecord, ProviderRecord } from "../lineup/model";
 
-const MATCHES = [
-  ["match-104", "FIFA Match 104", "西班牙 vs 阿根廷", "20:00 停售"],
-  ["match-105", "FIFA Match 105", "法国 vs 巴西", "22:00 停售"],
-  ["match-106", "FIFA Match 106", "德国 vs 葡萄牙", "23:30 停售"],
-] as const;
+type Mode = "autonomous" | "specified";
 
-type Mode = "autonomous" | "selected";
+interface MatchRecord {
+  match_id: string;
+  competition: string;
+  home_team: string;
+  away_team: string;
+  kickoff_at: string;
+  sales_cutoff_at?: string | null;
+  state: string;
+}
+
+interface MatchResponse {
+  matches?: MatchRecord[];
+  freshness_state?: string;
+  error?: string;
+}
+
+interface ProviderResponse {
+  providers?: ProviderRecord[];
+  error?: string;
+}
+
+interface RoundtableInstance {
+  id: string;
+  label: string;
+  model: string;
+  provider: string;
+  connection: ProviderConnectionRecord;
+  enabled: boolean;
+  qualified: boolean;
+  availability: string;
+}
+
+function localDate(): string {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+}
+
+function connectionQualified(
+  provider: ProviderRecord,
+  connection: ProviderConnectionRecord,
+  instance: ProviderRecord["connections"][number]["instances"][number],
+): boolean {
+  const cli =
+    connection.execution_mode === "cli" ||
+    connection.execution_mode === "codex_cli";
+  return Boolean(
+    provider.enabled &&
+    connection.enabled &&
+    connection.test_status === "passed" &&
+    connection.health?.status === "passed" &&
+    (!cli || connection.health.auth_status === "authenticated") &&
+    instance.enabled,
+  );
+}
 
 export default function RoundtablePage() {
+  const router = useRouter();
   const [mode, setMode] = useState<Mode>("autonomous");
-  const [instances, setInstances] = useState(["openai-1", "anthropic-1"]);
-  const [matches, setMatches] = useState<string[]>([]);
+  const [businessDate, setBusinessDate] = useState(localDate);
+  const [scope, setScope] = useState("all");
+  const [instances, setInstances] = useState<RoundtableInstance[]>([]);
+  const [selectedInstances, setSelectedInstances] = useState<string[]>([]);
+  const [matches, setMatches] = useState<MatchRecord[]>([]);
+  const [selectedMatches, setSelectedMatches] = useState<string[]>([]);
   const [rounds, setRounds] = useState("1");
   const [candidateLimit, setCandidateLimit] = useState("8");
-  const [scheduled, setScheduled] = useState(true);
+  const [scheduled, setScheduled] = useState(false);
   const [scheduleTime, setScheduleTime] = useState("08:00");
-  const [status, setStatus] = useState<"idle" | "starting" | "created">("idle");
+  const [status, setStatus] = useState<"loading" | "idle" | "starting">(
+    "loading",
+  );
   const [error, setError] = useState("");
+  const [matchStatus, setMatchStatus] = useState("正在加载真实赛程…");
+
+  useEffect(() => {
+    let active = true;
+    void fetch("/api/admin/providers", { cache: "no-store" })
+      .then(async (response) => {
+        const body = (await response.json()) as ProviderResponse;
+        if (!response.ok) throw new Error(body.error ?? "provider_list_failed");
+        return body.providers ?? [];
+      })
+      .then((providers) => {
+        if (!active) return;
+        const next: RoundtableInstance[] = [];
+        for (const provider of providers) {
+          const connection = provider.connections[0];
+          if (!connection) continue;
+          for (const instance of connection.instances) {
+            const qualified = connectionQualified(
+              provider,
+              connection,
+              instance,
+            );
+            next.push({
+              id: instance.id,
+              label: `${provider.display_name} · ${instance.nickname}`,
+              model: instance.model_id,
+              provider: provider.key,
+              connection,
+              enabled: instance.enabled,
+              qualified,
+              availability: qualified ? "可参赛" : "未通过资格检查",
+            });
+          }
+        }
+        setInstances(next);
+        setSelectedInstances(
+          next
+            .filter((item) => item.qualified)
+            .slice(0, 3)
+            .map((item) => item.id),
+        );
+        setStatus("idle");
+      })
+      .catch((reason) => {
+        if (active) {
+          setError(
+            `阵容加载失败：${reason instanceof Error ? reason.message : "unknown_error"}`,
+          );
+          setStatus("idle");
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (mode !== "specified") return;
+    let active = true;
+    void fetch(
+      `/api/admin/matches?business_date=${encodeURIComponent(businessDate)}`,
+      { cache: "no-store" },
+    )
+      .then(async (response) => {
+        const body = (await response.json()) as MatchResponse;
+        if (!response.ok) throw new Error(body.error ?? "match_list_failed");
+        return body;
+      })
+      .then((body) => {
+        if (!active) return;
+        setMatches(body.matches ?? []);
+        setSelectedMatches([]);
+        setMatchStatus(
+          `${body.matches?.length ?? 0} 场可选 · 数据状态 ${body.freshness_state ?? "unknown"}`,
+        );
+      })
+      .catch((reason) => {
+        if (active)
+          setMatchStatus(
+            `赛程加载失败：${reason instanceof Error ? reason.message : "unknown_error"}`,
+          );
+      });
+    return () => {
+      active = false;
+    };
+  }, [businessDate, mode]);
 
   const quorum = useMemo(() => {
-    const selected = INSTANCES.filter(([id]) => instances.includes(id));
-    const providers = new Set(
-      selected.map(([, label]) => label.split(" · ")[0]),
+    const selected = instances.filter((item) =>
+      selectedInstances.includes(item.id),
     );
-    return { instances: selected.length, providers: providers.size };
-  }, [instances]);
+    return {
+      instances: selected.length,
+      providers: new Set(selected.map((item) => item.provider)).size,
+    };
+  }, [instances, selectedInstances]);
 
   const toggle = (
     id: string,
-    selected: string[],
+    values: string[],
     update: (next: string[]) => void,
   ) => {
     update(
-      selected.includes(id)
-        ? selected.filter((item) => item !== id)
-        : [...selected, id],
+      values.includes(id)
+        ? values.filter((item) => item !== id)
+        : [...values, id],
     );
   };
 
-  const start = () => {
-    if (mode === "selected" && matches.length === 0) {
-      setError("指定选场模式至少选择一场在售比赛。");
+  async function start() {
+    if (mode === "specified" && selectedMatches.length === 0) {
+      setError("指定选场模式至少选择一场真实赛程。");
       return;
     }
-    if (instances.length === 0) {
-      setError("至少选择一个可用 AI 实例。");
+    if (selectedInstances.length === 0) {
+      setError("至少选择一个已启用且通过测试的真实 AI 实例。");
       return;
     }
     setError("");
     setStatus("starting");
-    window.setTimeout(() => setStatus("created"), 500);
-  };
+    try {
+      const response = await fetch("/api/admin/roundtables", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          mode,
+          business_date: businessDate,
+          competition_scope: scope,
+          match_ids: selectedMatches,
+          instance_ids: selectedInstances,
+          rounds: Number(rounds),
+          candidate_limit: Number(candidateLimit),
+          scheduled,
+          schedule_time: scheduleTime,
+        }),
+      });
+      const body = (await response.json()) as {
+        job_id?: string;
+        detail?: string;
+        error?: string;
+      };
+      if (!response.ok || !body.job_id)
+        throw new Error(body.detail ?? body.error ?? "roundtable_start_failed");
+      router.push(`/console/admin/roundtable/${body.job_id}`);
+    } catch (reason) {
+      setStatus("idle");
+      setError(
+        `发起失败：${reason instanceof Error ? reason.message : "unknown_error"}`,
+      );
+    }
+  }
 
   return (
     <main className="admin-main">
@@ -69,12 +239,13 @@ export default function RoundtablePage() {
           <p className="eyebrow">系统管理 · 发起推演 · PRD 15.1</p>
           <h1>先冻结范围、阵容与规则，再让圆桌开始。</h1>
           <p>
-            自主推演用于日常全量扫描；指定选场用于聚焦已选比赛。两种模式共用同一审计与法定人数规则。
+            提交后由 FastAPI 事务写入任务、参与者、比赛运行、事件和
+            Outbox；直播页只读取持久化状态。
           </p>
         </div>
         <span
           className={
-            quorum.instances >= 3 && quorum.providers >= 2
+            quorum.instances >= 2 && quorum.providers >= 2
               ? "status-chip"
               : "status-chip warning"
           }
@@ -100,54 +271,77 @@ export default function RoundtablePage() {
             自主推演
           </button>
           <button
-            className={mode === "selected" ? "active" : ""}
+            className={mode === "specified" ? "active" : ""}
             type="button"
-            onClick={() => setMode("selected")}
+            onClick={() => setMode("specified")}
           >
             指定选场
           </button>
         </div>
         <div className="admin-form-section">
-          {mode === "autonomous" ? (
-            <div className="admin-form-grid three">
-              <label>
-                <span>业务日期</span>
-                <input type="date" defaultValue="2026-07-20" />
-              </label>
-              <label>
-                <span>赛事范围</span>
-                <select defaultValue="all">
-                  <option value="all">当日全部在售场次</option>
-                  <option value="fifa">仅 FIFA 赛事</option>
-                </select>
-              </label>
-              <label>
-                <span>排除比赛</span>
-                <select defaultValue="none">
-                  <option value="none">不排除</option>
-                  <option value="missing">排除关键数据暂缺场次</option>
-                </select>
-              </label>
+          <div className="admin-form-grid three">
+            <label>
+              <span>业务日期</span>
+              <input
+                type="date"
+                value={businessDate}
+                onChange={(event) => setBusinessDate(event.target.value)}
+              />
+            </label>
+            <label>
+              <span>赛事范围</span>
+              <select
+                value={scope}
+                onChange={(event) => setScope(event.target.value)}
+              >
+                <option value="all">当日全部在售场次</option>
+                <option value="fifa">仅 FIFA 赛事</option>
+              </select>
+            </label>
+            <label>
+              <span>排除比赛</span>
+              <select defaultValue="none">
+                <option value="none">不排除</option>
+                <option value="missing">排除关键数据暂缺场次</option>
+              </select>
+            </label>
+          </div>
+          {mode === "specified" ? (
+            <div className="switch-stack" aria-label="真实赛程多选">
+              <p className="eyebrow">{matchStatus}</p>
+              {matches.length ? (
+                matches.map((match) => (
+                  <label className="switch-row" key={match.match_id}>
+                    <input
+                      type="checkbox"
+                      checked={selectedMatches.includes(match.match_id)}
+                      onChange={() =>
+                        toggle(
+                          match.match_id,
+                          selectedMatches,
+                          setSelectedMatches,
+                        )
+                      }
+                    />
+                    <span>
+                      <strong>
+                        {match.home_team} vs {match.away_team}
+                      </strong>
+                      <small>
+                        {match.competition} ·{" "}
+                        {new Date(match.kickoff_at).toLocaleString("zh-CN")}
+                      </small>
+                    </span>
+                  </label>
+                ))
+              ) : (
+                <div className="wide-empty-state">
+                  <strong>该日期暂无可选真实赛程</strong>
+                  <p>请切换业务日期，或使用自主推演。</p>
+                </div>
+              )}
             </div>
-          ) : (
-            <div className="switch-stack" aria-label="在售比赛多选">
-              {MATCHES.map(([id, competition, teams, cutoff]) => (
-                <label className="switch-row" key={id}>
-                  <input
-                    type="checkbox"
-                    checked={matches.includes(id)}
-                    onChange={() => toggle(id, matches, setMatches)}
-                  />
-                  <span>
-                    <strong>{teams}</strong>
-                    <small>
-                      {competition} · {cutoff}
-                    </small>
-                  </span>
-                </label>
-              ))}
-            </div>
-          )}
+          ) : null}
         </div>
       </section>
 
@@ -162,32 +356,38 @@ export default function RoundtablePage() {
           </Link>
         </div>
         <div className="switch-stack">
-          {INSTANCES.map(([id, label, model, availability]) => {
-            const disabled = availability !== "可用";
-            return (
-              <label className="switch-row" key={id}>
+          {status === "loading" ? (
+            <p className="eyebrow">正在读取数据库阵容…</p>
+          ) : instances.length ? (
+            instances.map((item) => (
+              <label className="switch-row" key={item.id}>
                 <input
                   type="checkbox"
-                  disabled={disabled}
-                  checked={instances.includes(id)}
-                  onChange={() => toggle(id, instances, setInstances)}
+                  disabled={!item.qualified}
+                  checked={selectedInstances.includes(item.id)}
+                  onChange={() =>
+                    toggle(item.id, selectedInstances, setSelectedInstances)
+                  }
                 />
                 <span>
-                  <strong>{label}</strong>
+                  <strong>{item.label}</strong>
                   <small>
-                    {model} · {availability}
+                    {item.model} · {item.availability}
                   </small>
                 </span>
               </label>
-            );
-          })}
+            ))
+          ) : (
+            <div className="wide-empty-state">
+              <strong>数据库中没有可用实例</strong>
+              <p>先在模型阵容中完成 API/CLI 连接测试并启用实例。</p>
+            </div>
+          )}
         </div>
-        {quorum.instances < 3 || quorum.providers < 2 ? (
+        {quorum.instances < 2 || quorum.providers < 2 ? (
           <div className="inline-callout danger" role="status">
-            <strong>当前阵容未达到法定人数</strong>
-            <p>
-              任务仍可发起并生成执行审计，但不会写入公证账本，也不能发布预测卡。
-            </p>
+            <strong>当前阵容未达到跨厂商法定人数</strong>
+            <p>任务可以落库，但不会进入可公证、可发布状态。</p>
           </div>
         ) : null}
       </section>
@@ -246,9 +446,7 @@ export default function RoundtablePage() {
           <span>
             <strong>启用每日定时圆桌</strong>
             <small>
-              保存后按当前默认范围、阵容、轮数
-              {mode === "autonomous" ? `与 ${candidateLimit} 场上限` : ""}
-              自动创建任务
+              仅保存本次任务快照中的调度意图，不会覆盖版本化系统设置。
             </small>
           </span>
         </label>
@@ -259,30 +457,14 @@ export default function RoundtablePage() {
           {error}
         </p>
       ) : null}
-      {status === "created" ? (
-        <section className="audit-strip" role="status">
-          <p className="eyebrow">任务已创建</p>
-          <div>
-            <strong>ROUND-20260720-001</strong>
-            <span>配置已冻结，执行审计将在首份 AI 结果返回时建立。</span>
-            <Link
-              className="button primary inline"
-              href="/console/admin/roundtable/round-20260720-001"
-            >
-              查看推演直播
-            </Link>
-          </div>
-        </section>
-      ) : (
-        <button
-          className="button primary inline"
-          type="button"
-          disabled={status === "starting"}
-          onClick={start}
-        >
-          {status === "starting" ? "正在创建圆桌…" : "发起圆桌"}
-        </button>
-      )}
+      <button
+        className="button primary inline"
+        type="button"
+        disabled={status === "loading" || status === "starting"}
+        onClick={() => void start()}
+      >
+        {status === "starting" ? "正在创建圆桌…" : "发起圆桌"}
+      </button>
     </main>
   );
 }
