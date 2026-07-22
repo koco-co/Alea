@@ -14,7 +14,7 @@ import socket
 from collections.abc import Mapping
 from datetime import UTC, datetime
 from typing import Any
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from app.providers.catalog import get_api_provider
 from app.providers.cli import CliProvider
@@ -87,6 +87,17 @@ class PostgresPhaseExecutionStore(PhaseExecutionStore):
                     """,
                     (owner, self.lease_seconds, command.business_idempotency_key),
                 )
+                if command.phase is RoundtablePhase.REVIEW_PREDICTION:
+                    context_id = str(command.payload.get("postmatch_review_context_id", "")).strip()
+                    if context_id:
+                        cursor.execute(
+                            """
+                            update public.settlement_reviews
+                            set state='running', error_code=null
+                            where context_id=%s::uuid and state='scheduled'
+                            """,
+                            (context_id,),
+                        )
             connection.commit()
         return True
 
@@ -243,7 +254,28 @@ class PostgresPhaseExecutionStore(PhaseExecutionStore):
         if terminal != total:
             return
         if successful < 3:
-            if match_run_id is not None:
+            if command.phase is RoundtablePhase.REVIEW_PREDICTION:
+                cursor.execute(
+                    """
+                    update public.settlement_reviews
+                    set state='failed', error_code='review_quorum_not_met'
+                    where settlement_run_id in (
+                      select settlement_run_id
+                      from public.postmatch_review_contexts
+                      where notarized_prediction_id in (
+                        select id from public.notarized_predictions where job_id=%s::uuid
+                      )
+                    )
+                    """,
+                    (job_id,),
+                )
+                self._append_event(
+                    cursor,
+                    job_id,
+                    "roundtable.review_failed",
+                    {"successful": successful, "required": 3, "reason": "no_quorum"},
+                )
+            elif match_run_id is not None:
                 cursor.execute(
                     "update roundtable_match_runs set state='no_quorum', state_version=state_version+1, terminal_reason='phase_quorum_not_met', updated_at=now() where id=%s::uuid and state not in ('eligible','no_quorum','terminated','failed')",
                     (str(match_run_id),),
@@ -317,6 +349,28 @@ class PostgresPhaseExecutionStore(PhaseExecutionStore):
                 job_id,
                 "roundtable.published_pending",
                 {"status": "notarized", "publish_after": "sales_cutoff"},
+            )
+        elif command.phase is RoundtablePhase.REVIEW_PREDICTION:
+            cursor.execute(
+                """
+                update public.settlement_reviews sr
+                set state='completed', completed_at=now(), error_code=null
+                where sr.context_id = %s::uuid
+                """,
+                (str(command.payload.get("postmatch_review_context_id", "")),),
+            )
+            self._append_event(
+                cursor,
+                job_id,
+                "roundtable.review_completed",
+                {
+                    "phase": command.phase.value,
+                    "successful": successful,
+                    "required": 3,
+                    "postmatch_review_context_id": command.payload.get(
+                        "postmatch_review_context_id"
+                    ),
+                },
             )
 
     def _set_match_state(self, cursor: Any, match_run_id: str, phase: RoundtablePhase) -> None:
@@ -462,6 +516,27 @@ class ProviderPhaseHandler(PhaseHandler):
                     (command.instance_id,),
                 )
                 record = cursor.fetchone()
+                review_context: Mapping[str, Any] | None = None
+                review_context_id = command.payload.get("postmatch_review_context_id")
+                if command.phase is RoundtablePhase.REVIEW_PREDICTION:
+                    if not isinstance(review_context_id, str) or not review_context_id.strip():
+                        raise ProviderFailure(
+                            "postmatch_review_context_missing",
+                            "post-match review context is missing",
+                            retryable=False,
+                        )
+                    cursor.execute(
+                        "select id, payload from public.postmatch_review_contexts where id=%s::uuid",
+                        (review_context_id,),
+                    )
+                    context_row = cursor.fetchone()
+                    if context_row is None or not isinstance(context_row["payload"], Mapping):
+                        raise ProviderFailure(
+                            "postmatch_review_context_not_found",
+                            "post-match review context is not available",
+                            retryable=False,
+                        )
+                    review_context = context_row["payload"]
         if record is None:
             raise ProviderFailure(
                 "provider_instance_not_found", "provider instance not found", retryable=False
@@ -470,8 +545,16 @@ class ProviderPhaseHandler(PhaseHandler):
         request = ProviderRequest(
             request_id=uuid4(),
             business_idempotency_key=command.business_idempotency_key,
-            input_snapshot_id=None,
-            postmatch_review_context_snapshot_id=None,
+            input_snapshot_id=_optional_uuid(
+                review_context.get("prediction", {}).get("input_snapshot_id")
+                if review_context is not None
+                else None
+            ),
+            postmatch_review_context_snapshot_id=_optional_uuid(
+                str(command.payload.get("postmatch_review_context_id"))
+                if command.phase is RoundtablePhase.REVIEW_PREDICTION
+                else None
+            ),
             methodology_review_context_snapshot_id=None,
             history_context_version_id=None,
             lesson_set_version_id=None,
@@ -507,6 +590,8 @@ class ProviderPhaseHandler(PhaseHandler):
                 },
             ],
         }
+        if review_context is not None:
+            context["postmatch_review"] = dict(review_context)
         method = getattr(provider, command.phase.value, None)
         if not callable(method):
             raise ProviderFailure(
@@ -553,3 +638,12 @@ class ProviderPhaseHandler(PhaseHandler):
             allow_local_http=definition.allow_local_http,
             supports_json_schema=definition.supports_json_schema,
         )
+
+
+def _optional_uuid(value: Any) -> UUID | None:
+    if value is None or not str(value).strip():
+        return None
+    try:
+        return UUID(str(value))
+    except ValueError:
+        return None

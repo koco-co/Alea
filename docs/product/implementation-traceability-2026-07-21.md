@@ -8,6 +8,7 @@
 | No empty roundtable | Strict database wrapper | SQL contract test | Implemented |
 | API and CLI share a runtime contract | `PhaseExecutor` plus `app.workers.production_executor:create_phase_executor` | executor bootstrap unit tests; real DeepSeek + Codex execution | Implemented |
 | Durable lifecycle reaches Provider work | Worker lifecycle task, database initializer, Outbox phase message | real local run completed through notarize | Implemented for prediction/bet phases |
+| Post-match review and ticket settlement | `postmatch_review_contexts`, `settlement_reviews`, `settlement_position_plans`, worker settlement RPC and production phase executor | local authorized fixture: 3/3 review phases succeeded, review completion event persisted, 1x1 hit returned 250.00, repeated settlement/review calls idempotently replayed | Implemented for the supported frozen single-match ticket shapes; authorized history remains absent |
 | Historical source authorization | `BackfillSourcePolicy` | backfill policy unit tests | Implemented |
 | Historical data already synchronized | Sync coverage view and future batch evidence | No production batch evidence | Not complete |
 | Admin users/settings are database-backed | `/console/admin/users`, `/console/admin/settings`, versioned admin RPCs and audit log | Empty-reset migration smoke: 2 users queried, disable/restore and setting version write; container E2E settings save | Implemented |
