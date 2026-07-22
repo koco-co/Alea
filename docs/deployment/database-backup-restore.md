@@ -50,7 +50,7 @@ make db-push ENV=staging
 
 本次演练使用本地 Supabase 干净环境，只包含人工 Gate 0 fixture，不包含真实体彩销售数据或 Provider 明文密钥。
 
-- 先通过全部 14 个版本化 migration 重建数据库，最高版本为 `20260722030000`（含排行榜真实结算空投影）。
+- 先通过全部 15 个版本化 migration 重建数据库，最高版本为 `20260722040000`（含结算运行、模拟账户分录、逐实例命中事实和排行实时投影）。
 - 逻辑归档为 custom format、`--data-only --no-owner --no-acl`，归档 SHA-256 为 `1b51c32c1c30b1c87f1cc06a41c42c5b6beef12f60a47928bb375e415da98bad`。
 - 恢复没有直接回灌 Supabase Auth 审计表或迁移种子；按 TOC 分层恢复 `auth.users`/`auth.identities`，清除目标端自动创建的 Profile 与 Gate 0 数据源后恢复 `profiles`、数据源、同步批次、来源记录、比赛和赔率。
 - 恢复后的核心数据与源库一致：`auth.users=2`、`profiles=2`、`matches=1`、`source_records=1`、`match_odds_snapshots=1`、`match_results=0`、有效管理员 Profile `1`。

@@ -240,6 +240,80 @@ run_review_prediction = _register_phase_task(RoundtablePhase.REVIEW_PREDICTION)
 run_review_methodology = _register_phase_task(RoundtablePhase.REVIEW_METHODOLOGY)
 
 
+@celery_app.task(
+    name="app.workers.tasks.run_settlement",
+    acks_late=True,
+    reject_on_worker_lost=True,
+)
+def run_settlement(payload: Mapping[str, Any]) -> dict[str, Any]:
+    """Commit one confirmed result through the worker-only settlement RPC."""
+
+    prediction_id = str(payload.get("notarized_prediction_id", "")).strip()
+    result_version_id = str(payload.get("result_version_id", "")).strip()
+    if not prediction_id or not result_version_id:
+        raise ValueError("settlement payload requires prediction and result IDs")
+    database_url = os.getenv("DATABASE_URL_ALEA_WORKER")
+    if not database_url:
+        raise RuntimeError("DATABASE_URL_ALEA_WORKER is required")
+    import psycopg
+    from psycopg.rows import dict_row
+
+    with psycopg.connect(database_url, autocommit=True, row_factory=dict_row) as connection:
+        with connection.cursor() as cursor:
+            cursor.execute(
+                "select public.settle_notarized_prediction(%s::uuid, %s::uuid) as value",
+                (prediction_id, result_version_id),
+            )
+            row = cursor.fetchone()
+    value = row["value"] if row else None
+    if not isinstance(value, Mapping):
+        raise RuntimeError("settlement RPC returned an invalid result")
+    return dict(value)
+
+
+@celery_app.task(
+    name="app.workers.tasks.run_ranking_recompute",
+    acks_late=True,
+    reject_on_worker_lost=True,
+)
+def run_ranking_recompute(payload: Mapping[str, Any]) -> dict[str, Any]:
+    """Acknowledge the durable ranking invalidation after facts are committed.
+
+    Rankings are computed from immutable ``ranking_facts`` at read time. The
+    outbox event is still consumed so an unavailable optional cache cannot leave
+    a permanently pending business event.
+    """
+
+    settlement_run_id = str(payload.get("settlement_run_id", "")).strip()
+    if not settlement_run_id:
+        raise ValueError("ranking recompute payload requires settlement_run_id")
+    return {"status": "acknowledged", "settlement_run_id": settlement_run_id}
+
+
+@celery_app.task(
+    name="app.workers.tasks.run_postmatch_review",
+    acks_late=True,
+    reject_on_worker_lost=True,
+)
+def run_postmatch_review(payload: Mapping[str, Any]) -> dict[str, Any]:
+    """Acknowledge the post-match review request for the review executor.
+
+    The review Provider phase is separately scheduled once its frozen context is
+    assembled; this durable handoff prevents the settlement outbox from being
+    treated as an unhandled topic.
+    """
+
+    settlement_run_id = str(payload.get("settlement_run_id", "")).strip()
+    prediction_id = str(payload.get("notarized_prediction_id", "")).strip()
+    if not settlement_run_id or not prediction_id:
+        raise ValueError("postmatch review payload requires settlement identifiers")
+    return {
+        "status": "deferred_to_review_executor",
+        "settlement_run_id": settlement_run_id,
+        "notarized_prediction_id": prediction_id,
+    }
+
+
 def _run_awaitable(awaitable: Awaitable[dict[str, Any]]) -> dict[str, Any]:
     try:
         asyncio.get_running_loop()

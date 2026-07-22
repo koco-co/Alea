@@ -30,6 +30,9 @@ TOPIC_TASKS: Mapping[str, str] = {
     "roundtable.vote_bet": "app.workers.tasks.run_vote_bet",
     "roundtable.review_prediction": "app.workers.tasks.run_review_prediction",
     "roundtable.review_methodology": "app.workers.tasks.run_review_methodology",
+    "settlement.run": "app.workers.tasks.run_settlement",
+    "ranking.recompute": "app.workers.tasks.run_ranking_recompute",
+    "prediction.review": "app.workers.tasks.run_postmatch_review",
 }
 
 
