@@ -28,6 +28,8 @@
 | `bunx supabase@2.109.1 db reset --local --yes` | 通过，16 个迁移从空库顺序执行 |
 | `bunx supabase@2.109.1 migration list --local` | 通过，最高 `20260722050000` |
 | `cd api && UV_CACHE_DIR=../.uv-cache uv run --locked pytest` | 全量 API 测试通过 |
+| `cd api && UV_CACHE_DIR=../.uv-cache uv run --locked mypy app/` | 通过；生产源码 68 个文件无类型错误 |
+| `cd api && UV_CACHE_DIR=../.uv-cache uv run --locked mypy .` | 未作为项目门禁；该宽范围命令仍报告 43 个既有测试夹具类型错误，`Makefile` 的正式范围为 `mypy app/` |
 | `cd web && bun test` | 40 passed，0 failed，97 expect calls |
 | `cd web && bun run typecheck && bun run lint` | 通过；仅既有 `<img>` 优化警告 |
 | `cd web && bun run build` | 通过，包含排行榜 API、列表和档案路由 |
