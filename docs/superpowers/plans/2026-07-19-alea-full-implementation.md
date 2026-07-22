@@ -21,7 +21,7 @@
 | API + CLI 生产 PhaseExecutor | ✅ | `app.workers.production_executor:create_phase_executor`；DeepSeek + Codex CLI 全阶段本地运行 |
 | Worker / Dispatcher 心跳与 `/readyz` | ✅ | local `/readyz` HTTP 200，依赖检查全绿 |
 | 真实授权历史数据导入 | [ ] | 未提供授权数据文件；仅完成 raw-first 能力和 fixture 测试 |
-| Docker full-stack、内置 Browser 双视口视觉证据 | [ ] | Docker 基础镜像拉取和 iab 可用性仍阻塞，不能标记完成 |
+| Docker full-stack、内置 Browser 双视口视觉证据 | [~] | Docker 全栈 `/readyz` HTTP 200；内置 Browser 已验证 `/console/admin/lineup` API/CLI 标签的桌面与移动状态，尚未完成全路由视觉回归 |
 | 真实认证 Playwright 双视口 E2E | ✅ | `make test-e2e` with `ALEA_E2E_REAL=1`：20/20；API/Redis/Worker chain separately verified |
 
 - PRD v1.9 为产品事实唯一来源，TECH v1.5 为架构决策来源，提示词架构 v1.2 为 AI 行为规范来源
