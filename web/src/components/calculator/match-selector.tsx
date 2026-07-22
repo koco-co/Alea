@@ -23,7 +23,7 @@ export function MatchSelector() {
       <dl className="data-checklist">
         <div>
           <dt>赛事身份</dt>
-          <dd className="good-text">FIFA 已确认</dd>
+          <dd>待授权来源确认</dd>
         </div>
         <div>
           <dt>竞彩销售编号</dt>

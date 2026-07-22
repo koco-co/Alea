@@ -1,41 +1,17 @@
 "use client";
 
-import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 const tabs = [
-  { id: "teams", label: "球队", count: 2 },
+  { id: "teams", label: "球队", count: 0 },
   { id: "players", label: "球员", count: 0 },
   { id: "coaches", label: "教练", count: 0 },
   { id: "referees", label: "裁判", count: 0 },
 ] as const;
 
-const teams = [
-  {
-    id: "spain",
-    name: "西班牙",
-    subtitle: "国家队 · UEFA",
-    flag: "/assets/teams/flag-spain.png",
-    rank: "FIFA 排名 2",
-    form: ["w", "w", "d", "w", "w"],
-  },
-  {
-    id: "argentina",
-    name: "阿根廷",
-    subtitle: "国家队 · CONMEBOL",
-    flag: "/assets/teams/flag-argentina.png",
-    rank: "FIFA 排名 1",
-    form: ["w", "d", "w", "w", "w"],
-  },
-] as const;
-
 export default function WikiPage() {
   const [tab, setTab] = useState<(typeof tabs)[number]["id"]>("teams");
   const [query, setQuery] = useState("");
-  const visible = useMemo(
-    () => teams.filter((team) => team.name.includes(query.trim())),
-    [query],
-  );
   return (
     <main className="console-main research-page wiki-page">
       <div className="page-heading research-heading">
@@ -76,8 +52,8 @@ export default function WikiPage() {
         <label>
           <span>赛事</span>
           <select>
-            <option>2026 FIFA 世界杯</option>
-            <option>全部赛事</option>
+            <option>全部授权赛事</option>
+            <option>等待来源同步</option>
           </select>
         </label>
         <label>
@@ -88,33 +64,16 @@ export default function WikiPage() {
         </label>
       </div>
       {tab === "teams" ? (
-        <div className="wiki-grid">
-          {visible.map((team) => (
-            <Link
-              className="wiki-card"
-              href={`/console/wiki/team/${team.id}`}
-              key={team.id}
-            >
-              <div className="wiki-identity">
-                <img src={team.flag} alt={`${team.name}国旗`} />
-                <div>
-                  <span>{team.subtitle}</span>
-                  <h2>{team.name}</h2>
-                  <small>{team.rank}</small>
-                </div>
-              </div>
-              <div className="form-strip" aria-label="近五场战绩">
-                {team.form.map((result, index) => (
-                  <span className={result} key={`${result}-${index}`} />
-                ))}
-              </div>
-              <footer>
-                <span>Alea 关联预测 1 场</span>
-                <strong>查看档案 →</strong>
-              </footer>
-            </Link>
-          ))}
-        </div>
+        <section className="wiki-source-empty">
+          <img src="/assets/icons/user-round.svg" alt="" />
+          <p className="eyebrow">球队资料</p>
+          <h2>暂无可核验的球队档案</h2>
+          <p>
+            {query.trim()
+              ? `没有匹配“${query.trim()}”的已授权资料。`
+              : "授权来源同步并完成实体映射后，球队档案会在此出现。"}
+          </p>
+        </section>
       ) : (
         <section className="wiki-source-empty">
           <img src="/assets/icons/user-round.svg" alt="" />

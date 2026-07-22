@@ -1,5 +1,7 @@
 # Alea 端到端与视觉验证报告
 
+> 状态：superseded。以 `docs/qa/reports/2026-07-21-df533f7-hardening.md` 及其后续证据为准；本文件保留作历史审计记录。
+
 日期：2026-07-21
 
 ## 验证口径

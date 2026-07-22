@@ -1,14 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const groups = [
-  ["scoring", "评分与规则"],
-  ["risk", "模拟盘与风控"],
-  ["automation", "数据与自动化"],
-  ["access", "用户管理"],
-  ["prompts", "提示词与方法论"],
+  ["scoring_rules", "评分与规则"],
+  ["ledger_risk", "模拟盘与风控"],
+  ["data_automation", "数据与自动化"],
+  ["user_management", "用户管理"],
+  ["prompts_methodology", "提示词与方法论"],
 ] as const;
 
 export default function AdminSettingsPage() {
@@ -16,6 +16,9 @@ export default function AdminSettingsPage() {
   const [status, setStatus] = useState("未修改");
   const [query, setQuery] = useState("");
   const [showRuleHistory, setShowRuleHistory] = useState(false);
+  const [versions, setVersions] = useState<Record<string, number>>({});
+  const [backendNotice, setBackendNotice] = useState<string | null>(null);
+  const formRef = useRef<HTMLFormElement>(null);
   const [sourceCheck, setSourceCheck] = useState<"pending" | "error">(
     "pending",
   );
@@ -24,8 +27,72 @@ export default function AdminSettingsPage() {
     setStatus("存在未保存修改");
   };
   const shown = (keywords: string) => !query || keywords.includes(query.trim());
-  const save = () => {
-    setStatus("保存已阻断：系统设置后端命令尚未返回真实版本，未写入数据库。");
+  useEffect(() => {
+    let cancelled = false;
+    void Promise.all(
+      groups.map(async ([group]) => {
+        const response = await fetch(`/api/admin/settings/${group}`, {
+          cache: "no-store",
+        });
+        if (!response.ok) throw new Error("settings_unavailable");
+        const payload = (await response.json()) as {
+          items?: Array<{ setting_key: string; version: number }>;
+        };
+        return [
+          group,
+          payload.items?.find((item) => item.setting_key === group)?.version ??
+            0,
+        ] as const;
+      }),
+    )
+      .then((loaded) => {
+        if (cancelled) return;
+        setVersions(Object.fromEntries(loaded));
+        setBackendNotice("已读取数据库中的设置版本；保存会创建不可变新版本。");
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setBackendNotice(
+            "设置数据库暂不可用；页面不会把本地默认值冒充为已保存版本。",
+          );
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  const save = async () => {
+    const form = formRef.current;
+    if (!form) return;
+    setStatus("正在保存新版本");
+    const formData = new FormData(form);
+    const values = Object.fromEntries(
+      Array.from(formData.entries()).map(([key, value]) => [key, value]),
+    );
+    try {
+      await Promise.all(
+        groups
+          .filter(([group]) => group !== "user_management")
+          .map(async ([group]) => {
+            const response = await fetch(`/api/admin/settings/${group}`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                expected_version: versions[group] || undefined,
+                value: values,
+                change_note: "管理员从系统设置页面发布新版本",
+              }),
+            });
+            if (!response.ok) throw new Error("settings_save_failed");
+          }),
+      );
+      setDirty(false);
+      setStatus("已保存新版本");
+      setBackendNotice("设置已写入数据库，并生成管理员审计记录。");
+    } catch {
+      setStatus("保存失败");
+      setBackendNotice("保存失败；数据库未接受不完整或版本冲突的设置。");
+    }
   };
   return (
     <main className="admin-main">
@@ -37,6 +104,9 @@ export default function AdminSettingsPage() {
         </div>
         <span className="status-chip">system-settings-v2.0</span>
       </header>
+      {backendNotice ? (
+        <div className="inline-callout">{backendNotice}</div>
+      ) : null}
       <div className="settings-search">
         <label>
           <span>快速定位</span>
@@ -49,7 +119,14 @@ export default function AdminSettingsPage() {
         </label>
         <span>{groups.filter((group) => shown(group[1])).length} 个分组</span>
       </div>
-      <div className="settings-layout">
+      <form
+        className="settings-layout"
+        ref={formRef}
+        onSubmit={(event) => {
+          event.preventDefault();
+          void save();
+        }}
+      >
         <nav>
           {groups.map(([id, label]) => (
             <a href={`#settings-${id}`} key={id}>
@@ -59,7 +136,7 @@ export default function AdminSettingsPage() {
         </nav>
         <div className="settings-panels">
           {shown("评分 规则 权重 体彩 版本") ? (
-            <section id="settings-scoring" className="settings-panel">
+            <section id="settings-scoring_rules" className="settings-panel">
               <header>
                 <div>
                   <p className="eyebrow">评分与规则</p>
@@ -70,15 +147,30 @@ export default function AdminSettingsPage() {
               <div className="admin-form-grid three">
                 <label>
                   <span>准确率权重（%）</span>
-                  <input type="number" defaultValue="50" onChange={change} />
+                  <input
+                    name="scoring_accuracy_weight"
+                    type="number"
+                    defaultValue="50"
+                    onChange={change}
+                  />
                 </label>
                 <label>
                   <span>校准度权重（%）</span>
-                  <input type="number" defaultValue="25" onChange={change} />
+                  <input
+                    name="scoring_calibration_weight"
+                    type="number"
+                    defaultValue="25"
+                    onChange={change}
+                  />
                 </label>
                 <label>
                   <span>模拟收益权重（%）</span>
-                  <input type="number" defaultValue="25" onChange={change} />
+                  <input
+                    name="scoring_profit_weight"
+                    type="number"
+                    defaultValue="25"
+                    onChange={change}
+                  />
                 </label>
               </div>
               <div className="version-row">
@@ -157,7 +249,7 @@ export default function AdminSettingsPage() {
             </section>
           ) : null}
           {shown("模拟盘 风控 资金 仓位 风险 文案") ? (
-            <section id="settings-risk" className="settings-panel">
+            <section id="settings-ledger_risk" className="settings-panel">
               <header>
                 <div>
                   <p className="eyebrow">模拟盘与风控</p>
@@ -167,23 +259,44 @@ export default function AdminSettingsPage() {
               <div className="admin-form-grid">
                 <label>
                   <span>初始资金（模拟币）</span>
-                  <input type="number" defaultValue="10000" onChange={change} />
+                  <input
+                    name="risk_initial_balance"
+                    type="number"
+                    defaultValue="10000"
+                    onChange={change}
+                  />
                 </label>
                 <label>
                   <span>单日风险敞口（%）</span>
-                  <input type="number" defaultValue="15" onChange={change} />
+                  <input
+                    name="risk_daily_percent"
+                    type="number"
+                    defaultValue="15"
+                    onChange={change}
+                  />
                 </label>
                 <label>
                   <span>单方案仓位下限（%）</span>
-                  <input type="number" defaultValue="1" onChange={change} />
+                  <input
+                    name="risk_position_min_percent"
+                    type="number"
+                    defaultValue="1"
+                    onChange={change}
+                  />
                 </label>
                 <label>
                   <span>单方案仓位上限（%）</span>
-                  <input type="number" defaultValue="5" onChange={change} />
+                  <input
+                    name="risk_position_max_percent"
+                    type="number"
+                    defaultValue="5"
+                    onChange={change}
+                  />
                 </label>
                 <label className="wide">
                   <span>风险提示文案</span>
                   <textarea
+                    name="risk_copy"
                     defaultValue="本产品仅用于 AI 推演研究与娱乐展示，不构成投注建议；请理性购彩。"
                     onChange={change}
                   />
@@ -192,7 +305,7 @@ export default function AdminSettingsPage() {
             </section>
           ) : null}
           {shown("数据 自动化 同步 定时 圆桌 复盘 历史 上下文") ? (
-            <section id="settings-automation" className="settings-panel">
+            <section id="settings-data_automation" className="settings-panel">
               <header>
                 <div>
                   <p className="eyebrow">数据与自动化</p>
@@ -203,19 +316,39 @@ export default function AdminSettingsPage() {
               <div className="admin-form-grid three">
                 <label>
                   <span>同步周期（分钟）</span>
-                  <input type="number" defaultValue="30" onChange={change} />
+                  <input
+                    name="automation_sync_interval"
+                    type="number"
+                    defaultValue="30"
+                    onChange={change}
+                  />
                 </label>
                 <label>
                   <span>每日发起时间</span>
-                  <input type="time" defaultValue="08:00" onChange={change} />
+                  <input
+                    name="automation_schedule_time"
+                    type="time"
+                    defaultValue="08:00"
+                    onChange={change}
+                  />
                 </label>
                 <label>
                   <span>默认辩论轮数</span>
-                  <input type="number" defaultValue="2" onChange={change} />
+                  <input
+                    name="automation_debate_rounds"
+                    type="number"
+                    defaultValue="2"
+                    onChange={change}
+                  />
                 </label>
                 <label>
                   <span>默认入围上限</span>
-                  <input type="number" defaultValue="8" onChange={change} />
+                  <input
+                    name="automation_nomination_limit"
+                    type="number"
+                    defaultValue="8"
+                    onChange={change}
+                  />
                 </label>
                 <label>
                   <span>近期结算记录（1–50）</span>
@@ -223,6 +356,7 @@ export default function AdminSettingsPage() {
                     type="number"
                     min="1"
                     max="50"
+                    name="automation_recent_match_limit"
                     defaultValue="10"
                     onChange={change}
                   />
@@ -233,6 +367,7 @@ export default function AdminSettingsPage() {
                     type="number"
                     min="1"
                     max="20"
+                    name="automation_lesson_limit"
                     defaultValue="5"
                     onChange={change}
                   />
@@ -240,14 +375,24 @@ export default function AdminSettingsPage() {
               </div>
               <div className="switch-stack">
                 <label className="switch-row">
-                  <input type="checkbox" defaultChecked onChange={change} />
+                  <input
+                    name="automation_scheduled_roundtable"
+                    type="checkbox"
+                    defaultChecked
+                    onChange={change}
+                  />
                   <span>
                     <strong>开启每日定时圆桌</strong>
                     <small>按默认阵容与轮数创建新任务</small>
                   </span>
                 </label>
                 <label className="switch-row">
-                  <input type="checkbox" defaultChecked onChange={change} />
+                  <input
+                    name="automation_auto_review"
+                    type="checkbox"
+                    defaultChecked
+                    onChange={change}
+                  />
                   <span>
                     <strong>赛果确认后自动创建复盘</strong>
                     <small>冲突未裁定时不会触发</small>
@@ -257,7 +402,7 @@ export default function AdminSettingsPage() {
             </section>
           ) : null}
           {shown("用户 管理 权限") ? (
-            <section id="settings-access" className="settings-panel">
+            <section id="settings-user_management" className="settings-panel">
               <header>
                 <div>
                   <p className="eyebrow">用户管理</p>
@@ -271,7 +416,10 @@ export default function AdminSettingsPage() {
             </section>
           ) : null}
           {shown("提示词 方法论 版本 发布 回滚") ? (
-            <section id="settings-prompts" className="settings-panel">
+            <section
+              id="settings-prompts_methodology"
+              className="settings-panel"
+            >
               <header>
                 <div>
                   <p className="eyebrow">提示词与方法论</p>
@@ -296,7 +444,7 @@ export default function AdminSettingsPage() {
             </section>
           ) : null}
         </div>
-      </div>
+      </form>
       <footer className="admin-savebar settings-sticky">
         <div>
           <span className={dirty ? "status-chip warning" : "status-chip"}>
@@ -324,7 +472,7 @@ export default function AdminSettingsPage() {
             className="button primary inline"
             disabled={!dirty}
             type="button"
-            onClick={save}
+            onClick={() => void save()}
           >
             保存新版本
           </button>

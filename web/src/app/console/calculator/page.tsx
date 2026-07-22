@@ -19,13 +19,13 @@ export default function CalculatorPage() {
           <p className="eyebrow">竞彩方案 · 选择比赛</p>
           <h1>先确认销售数据，再生成方案。</h1>
           <p>
-            当前只保留 FIFA 已确认事实和固定 AI
-            推演结果；竞彩场次编号、玩法、固定奖金、停售时间与销售状态尚无可信快照。
+            当前没有从授权竞彩来源取得可信快照；竞彩场次编号、玩法、固定奖金、
+            停售时间与销售状态尚未确认。
           </p>
         </div>
         <div className="source-badges">
           <span>AI 推演数据</span>
-          <span>来源：FIFA · 采集 2026-07-19</span>
+          <span>来源：等待授权竞彩 Offer</span>
         </div>
       </div>
       <aside className="calculator-warning">

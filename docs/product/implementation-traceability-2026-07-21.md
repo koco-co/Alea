@@ -10,7 +10,8 @@
 | Durable lifecycle reaches Provider work | Worker lifecycle task, database initializer, Outbox phase message | real local run completed through notarize | Implemented for prediction/bet phases |
 | Historical source authorization | `BackfillSourcePolicy` | backfill policy unit tests | Implemented |
 | Historical data already synchronized | Sync coverage view and future batch evidence | No production batch evidence | Not complete |
-| Real full-stack E2E and visual validation | Docker API/Web/Redis/Dispatcher/Worker/Scheduler plus in-app Browser evidence | Playwright real auth 20/20 at 1440×900 and 390×844; Docker `/readyz` HTTP 200; in-app Browser inspected `/console/admin/lineup` API/CLI tabs at desktop/mobile | Provider lineup visual state verified; all-route visual regression remains |
+| Admin users/settings are database-backed | `/console/admin/users`, `/console/admin/settings`, versioned admin RPCs and audit log | Empty-reset migration smoke: 2 users queried, disable/restore and setting version write; container E2E settings save | Implemented |
+| Real full-stack E2E and visual validation | Docker API/Web/Redis/Dispatcher/Worker/Scheduler plus in-app Browser evidence | Playwright real auth 20/20 at 1440×900 and 390×844 in both host and production-container paths; Docker `/readyz` HTTP 200; in-app Browser inspected lineup API/CLI tabs plus sync, roundtable no-quorum, predictions empty and calculator unavailable states | Key states verified; all-route visual regression remains |
 | Documentation reflects implementation | Chinese/English README status blocks, this matrix, QA report | hardening verifier | Partially synchronized |
 
 The PRD, architecture, prototype, implementation plan, rule version, migration, tests,

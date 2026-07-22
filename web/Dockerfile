@@ -13,6 +13,9 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN bun run build
 
+FROM deps AS development
+COPY . .
+
 FROM oven/bun:1.3.10-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production

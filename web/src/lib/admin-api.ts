@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { isSameOriginRequest } from "./admin-origin";
 
 const ALLOWED_ADMIN_PATH =
-  /^(?:\/v1\/admin\/providers(?:\/catalog|\/runtime\/(?:probe|api-test)|\/[0-9a-f-]+(?:\/secret)?|\/[0-9a-f-]+\/instances(?:\/[0-9a-f-]+)?)?|\/v1\/admin\/sync(?:\/import|\/runs(?:\/[0-9a-f-]+\/retry)?)?|\/v1\/admin\/results\/conflicts(?:\/[0-9a-f-]+\/adjudicate)?|\/v1\/admin\/roundtables(?:\/[0-9a-f-]+(?:\/(?:skip-debate|terminate))?)?|\/v1\/roundtables\/[0-9a-f-]+\/events|\/v1\/matches)$/i;
+  /^(?:\/v1\/admin\/providers(?:\/catalog|\/runtime\/(?:probe|api-test)|\/[0-9a-f-]+(?:\/secret)?|\/[0-9a-f-]+\/instances(?:\/[0-9a-f-]+)?)?|\/v1\/admin\/sync(?:\/import|\/runs(?:\/[0-9a-f-]+\/retry)?)?|\/v1\/admin\/results\/conflicts(?:\/[0-9a-f-]+\/adjudicate)?|\/v1\/admin\/roundtables(?:\/[0-9a-f-]+(?:\/(?:skip-debate|terminate))?)?|\/v1\/admin\/settings\/(?:scoring_rules|ledger_risk|data_automation|user_management|prompts_methodology)|\/v1\/admin\/users(?:\/[0-9a-f-]+\/(?:disable|restore))?|\/v1\/roundtables\/[0-9a-f-]+\/events|\/v1\/matches)$/i;
 
 export async function proxyAdminApiRequest(
   request: Request,

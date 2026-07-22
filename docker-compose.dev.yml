@@ -4,6 +4,8 @@ services:
       - "6379:6379"
 
   web:
+    build:
+      target: development
     command: bun run dev
     volumes:
       - ./web:/app

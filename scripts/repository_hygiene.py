@@ -19,7 +19,7 @@ SAFE_GENERATED = (
 )
 REVIEW_ONLY = (
     "Web-Prototype.zip",
-    "design-qa.md",
+    "docs/qa/reports/2026-07-21-design-qa-superseded.md",
     "SUPPORT.md",
     "THIRD_PARTY_REFERENCES.md",
     "docs/evidence",

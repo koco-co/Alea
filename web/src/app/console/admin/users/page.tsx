@@ -1,50 +1,89 @@
 "use client";
 
-import { useMemo, useState } from "react";
-
-const seedUsers = [
-  {
-    id: "u1",
-    name: "林舟",
-    email: "lin@example.com",
-    role: "普通用户",
-    status: "正常",
-    joined: "2026-07-02",
-  },
-  {
-    id: "u2",
-    name: "周岚",
-    email: "lan@example.com",
-    role: "普通用户",
-    status: "已禁用",
-    joined: "2026-06-18",
-  },
-  {
-    id: "u3",
-    name: "系统管理员",
-    email: "admin@alea.local",
-    role: "管理员",
-    status: "正常",
-    joined: "2026-05-01",
-  },
-] as const;
+import { useEffect, useMemo, useState } from "react";
 
 type ManagedUser = {
   id: string;
   name: string;
   email: string;
   role: "普通用户" | "管理员";
-  status: "正常" | "已禁用";
+  status: "正常" | "已禁用" | "待同意";
   joined: string;
 };
 
+type UserRecord = {
+  id: string;
+  name: string;
+  email: string | null;
+  role: "user" | "admin";
+  status: "active" | "pending_consent" | "disabled";
+  joined: string;
+};
+type UserResponse = { items?: UserRecord[] };
+
+const roleLabel = (role: UserRecord["role"]) =>
+  role === "admin" ? "管理员" : "普通用户";
+const statusLabels: Record<UserRecord["status"], ManagedUser["status"]> = {
+  active: "正常",
+  disabled: "已禁用",
+  pending_consent: "待同意",
+};
+const statusLabel = (status: UserRecord["status"]): ManagedUser["status"] =>
+  statusLabels[status];
+
 export default function UsersPage() {
-  const [users, setUsers] = useState<ManagedUser[]>(
-    seedUsers.map((user) => ({ ...user })),
-  );
+  const [users, setUsers] = useState<ManagedUser[]>([]);
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("all");
   const [pending, setPending] = useState<string | null>(null);
+  const [reason, setReason] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const fetchUsers = async (): Promise<ManagedUser[]> => {
+    const response = await fetch("/api/admin/users", { cache: "no-store" });
+    if (!response.ok) throw new Error("users_unavailable");
+    const payload = (await response.json()) as UserResponse;
+    return (payload.items ?? []).map((user) => ({
+      id: user.id,
+      name: user.name,
+      email: user.email ?? "未提供邮箱",
+      role: roleLabel(user.role),
+      status: statusLabel(user.status),
+      joined: new Date(user.joined).toLocaleDateString("zh-CN"),
+    }));
+  };
+  const loadUsers = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      setUsers(await fetchUsers());
+    } catch {
+      setError("用户数据暂不可用；未加载任何演示账户。");
+      setUsers([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
+    let cancelled = false;
+    void fetchUsers()
+      .then((nextUsers) => {
+        if (!cancelled) setUsers(nextUsers);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setError("用户数据暂不可用；未加载任何演示账户。");
+          setUsers([]);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   const visible = useMemo(
     () =>
       users.filter(
@@ -58,16 +97,31 @@ export default function UsersPage() {
     [users, query, status],
   );
   const target = users.find((user) => user.id === pending);
-  const confirm = () => {
+  const confirm = async () => {
     if (!target) return;
-    setUsers((items) =>
-      items.map((user) =>
-        user.id === target.id
-          ? { ...user, status: user.status === "正常" ? "已禁用" : "正常" }
-          : user,
-      ),
-    );
-    setPending(null);
+    if (!reason.trim()) {
+      setError("请填写操作原因，原因会写入管理员审计记录。");
+      return;
+    }
+    const action = target.status === "正常" ? "disable" : "restore";
+    try {
+      const response = await fetch(`/api/admin/users/${target.id}/${action}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ confirmed: true, reason: reason.trim() }),
+      });
+      if (!response.ok) throw new Error("user_status_update_failed");
+      setPending(null);
+      setReason("");
+      setNotice(
+        action === "disable"
+          ? "账户已禁用并记录审计。"
+          : "账户已恢复并记录审计。",
+      );
+      await loadUsers();
+    } catch {
+      setError("账户状态更新失败，数据库没有被前端假保存覆盖。");
+    }
   };
   return (
     <main className="admin-main">
@@ -77,8 +131,12 @@ export default function UsersPage() {
           <h1>角色权限要可见，每次变化都要留痕。</h1>
           <p>禁用与恢复不删除历史预测、公证、积分、盈亏或审计记录。</p>
         </div>
-        <span className="status-chip">{users.length} 个账户</span>
+        <span className="status-chip">
+          {loading ? "加载中" : `${users.length} 个账户`}
+        </span>
       </header>
+      {error ? <div className="inline-callout danger">{error}</div> : null}
+      {notice ? <div className="inline-callout">{notice}</div> : null}
       <div className="user-filters">
         <label>
           <span>搜索用户</span>
@@ -131,7 +189,7 @@ export default function UsersPage() {
               <button
                 className="button secondary"
                 type="button"
-                disabled={user.role === "管理员"}
+                disabled={user.role === "管理员" || user.status === "待同意"}
                 onClick={() => setPending(user.id)}
               >
                 {user.status === "正常" ? "禁用" : "恢复"}
@@ -139,20 +197,16 @@ export default function UsersPage() {
             </div>
           ))}
         </div>
-        {!visible.length ? (
+        {!loading && !visible.length ? (
           <div className="wide-empty-state">
-            <strong>没有符合条件的用户</strong>
-            <p>调整搜索词或状态筛选后再试。</p>
+            <strong>{error ? "暂无可展示的用户" : "没有符合条件的用户"}</strong>
+            <p>
+              {error
+                ? "请确认管理员 API 与数据库已就绪。"
+                : "调整搜索词或状态筛选后再试。"}
+            </p>
           </div>
         ) : null}
-      </section>
-      <section className="audit-strip">
-        <p className="eyebrow">最近操作</p>
-        <div>
-          <strong>恢复账户 · 周岚</strong>
-          <span>系统管理员 · 2026-07-18 14:32</span>
-          <span className="status-chip">已记录</span>
-        </div>
       </section>
       {target ? (
         <div className="confirm-overlay" role="presentation">
@@ -172,7 +226,11 @@ export default function UsersPage() {
             </p>
             <label>
               <span>操作原因</span>
-              <input placeholder="填写原因以写入审计" />
+              <input
+                value={reason}
+                onChange={(event) => setReason(event.target.value)}
+                placeholder="填写原因以写入审计"
+              />
             </label>
             <div>
               <button

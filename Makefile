@@ -83,7 +83,7 @@ check: format lint typecheck test
 .PHONY: test-hardening verify-hardening
 
 test-hardening:
-	cd api && uv run pytest -q tests/test_executor_bootstrap.py tests/test_sporttery_backfill.py tests/test_roundtable_hardening_contract.py
+	cd api && uv run pytest -q tests/test_executor_bootstrap.py tests/test_sporttery_backfill.py tests/test_roundtable_hardening_contract.py tests/test_admin_users_settings_contract.py
 
 verify-hardening:
 	python scripts/verify_hardening_contracts.py

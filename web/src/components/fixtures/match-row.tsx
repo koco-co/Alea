@@ -46,9 +46,9 @@ export function MatchRow({
         </small>
       </div>
       <div className="fixture-prediction">
-        <span>固定 AI 原型输出 · 非赛果</span>
+        <span>AI 预测结果 · 仅展示已发布记录</span>
         <strong>{prediction ?? "暂无发布的预测"}</strong>
-        {prediction ? <small>5 / 7 票 · 71% 加权共识</small> : null}
+        {prediction ? <small>来自已公证圆桌</small> : null}
       </div>
       <div className="fixture-state">
         <span className="status-chip warning">{status}</span>

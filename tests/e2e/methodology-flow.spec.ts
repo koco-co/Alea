@@ -41,10 +41,9 @@ test.describe("Task 8.1 P1 methodology flow", () => {
     await syncInterval.fill("45");
     await expect(page.getByText("存在未保存修改")).toBeVisible();
     await page.getByRole("button", { name: "保存新版本" }).click();
+    await expect(page.getByText("已保存新版本")).toBeVisible();
     await expect(
-      page.getByText(
-        "保存已阻断：系统设置后端命令尚未返回真实版本，未写入数据库。",
-      ),
+      page.getByText("设置已写入数据库，并生成管理员审计记录。"),
     ).toBeVisible();
   });
 });

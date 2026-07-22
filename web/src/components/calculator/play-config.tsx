@@ -61,7 +61,7 @@ export function PlayConfig({
           <>
             <p>交互样例 · 非体彩 SP</p>
             <div className="option-grid">
-              {["西班牙胜 · 1.82", "平 · 3.15", "阿根廷胜 · 3.72"].map(
+              {["主队胜 · 待确认", "平 · 待确认", "客队胜 · 待确认"].map(
                 (option, index) => (
                   <button
                     className={index === 0 ? "selected" : ""}

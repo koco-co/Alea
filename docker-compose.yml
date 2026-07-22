@@ -17,6 +17,8 @@ services:
     environment:
       - INTERNAL_API_URL=http://api:8000
       - PORT=3000
+      - NEXT_PUBLIC_SUPABASE_URL=${PROJECT_URL}
+      - NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=${PUBLISHABLE_KEY}
     healthcheck:
       test: ["CMD-SHELL", "bun -e \"fetch('http://0.0.0.0:3000/api/health').then(r=>{if(!r.ok)process.exit(1)})\""]
       interval: 10s
@@ -30,6 +32,8 @@ services:
       - SUPABASE_URL=${PROJECT_URL}
       - SUPABASE_PUBLISHABLE_KEY=${PUBLISHABLE_KEY}
       - SUPABASE_SECRET_KEY=${SECRET_KEY}
+      - SUPABASE_JWT_ISSUER=${SUPABASE_JWT_ISSUER}
+      - SUPABASE_JWKS_URL=${SUPABASE_JWKS_URL}
       - DATABASE_URL_ALEA_API=${DATABASE_URL_ALEA_API}
       - PROVIDER_KEK_V1=${PROVIDER_KEK_V1}
       - ALEA_PHASE_EXECUTOR_FACTORY=app.workers.production_executor:create_phase_executor
