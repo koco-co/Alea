@@ -2,23 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-
-type RankingRow = {
-  ai_instance_id: string;
-  display_name: string;
-  formula_version_id: string;
-  settled_count: number;
-  participation_coverage: number;
-  raw_score: number;
-  smoothed_score: number;
-  exact_score_rate: number;
-  direction_rate: number;
-  total_goals_rate: number;
-  half_full_rate: number;
-  eligible_for_rank: boolean;
-  eligibility_reasons: string[];
-  rank: number | null;
-};
+import { normalizeRankingRows, type RankingRow } from "@/lib/rankings-model";
 
 const dimensions = [
   ["composite", "综合分"],
@@ -42,7 +26,7 @@ export default function RankingsPage() {
     })
       .then(async (response) => {
         if (!response.ok) throw new Error("ranking_request_failed");
-        return (await response.json()) as RankingRow[];
+        return normalizeRankingRows(await response.json());
       })
       .then((value) => {
         if (!cancelled) {
