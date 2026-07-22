@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 
 const currentDirectory = path.dirname(fileURLToPath(import.meta.url));
 const baseURL = process.env.PLAYWRIGHT_BASE_URL ?? "http://127.0.0.1:3000";
+const storageState = process.env.ALEA_E2E_STORAGE_STATE;
 
 export default defineConfig({
   testDir: currentDirectory,
@@ -15,6 +16,7 @@ export default defineConfig({
   expect: { timeout: 10_000 },
   use: {
     baseURL,
+    ...(storageState ? { storageState } : {}),
     locale: "zh-CN",
     timezoneId: "Asia/Taipei",
     trace: "retain-on-failure",
@@ -28,7 +30,11 @@ export default defineConfig({
     },
     {
       name: "mobile-390x844",
-      use: { viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true },
+      use: {
+        viewport: { width: 390, height: 844 },
+        isMobile: true,
+        hasTouch: true,
+      },
     },
   ],
   webServer: process.env.PLAYWRIGHT_BASE_URL
@@ -37,7 +43,7 @@ export default defineConfig({
         command:
           "bun node_modules/next/dist/bin/next dev --hostname 0.0.0.0 --port 3000",
         cwd: path.resolve(currentDirectory, "../../web"),
-        env: { ...process.env, ALEA_DEMO_ROLE: "admin" },
+        env: { ...process.env },
         url: baseURL,
         reuseExistingServer: !process.env.CI,
         timeout: 120_000,

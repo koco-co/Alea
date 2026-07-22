@@ -5,42 +5,17 @@ import { useEffect, useRef, useState } from "react";
 
 import type { AppRole } from "@/lib/supabase/access";
 
-const userNotices = [
-  {
-    id: "prediction",
-    title: "世界杯决赛推演已发布",
-    meta: "西班牙 vs 阿根廷 · 12 分钟前",
-    href: "/console/predictions/n8c4-02",
-  },
-  {
-    id: "review",
-    title: "你关注的复盘已发布",
-    meta: "法国 vs 巴西 · 昨天 22:18",
-    href: "/console/reviews/review-20260718",
-  },
-];
-
-const adminNotices = [
-  {
-    id: "sync",
-    title: "赛果来源存在冲突",
-    meta: "FIFA Match 104 · 等待人工确认",
-    href: "/console/admin/sync",
-  },
-  {
-    id: "method",
-    title: "新方法论提议待审",
-    meta: "雨战总进球修正 · 3 场证据",
-    href: "/console/admin/settings/methodology",
-  },
-];
-
 export function NotificationCenter({ role }: { role: AppRole }) {
+  void role;
   const [open, setOpen] = useState(false);
   const [read, setRead] = useState<string[]>([]);
   const root = useRef<HTMLDivElement>(null);
-  const notices =
-    role === "admin" ? [...adminNotices, ...userNotices] : userNotices;
+  const notices: Array<{
+    id: string;
+    title: string;
+    meta: string;
+    href: string;
+  }> = [];
   const unread = notices.filter((notice) => !read.includes(notice.id)).length;
 
   useEffect(() => {
@@ -89,27 +64,36 @@ export function NotificationCenter({ role }: { role: AppRole }) {
             </button>
           </header>
           <div className="notification-list">
-            {notices.map((notice) => (
-              <Link
-                className={
-                  read.includes(notice.id)
-                    ? "notification-item read"
-                    : "notification-item"
-                }
-                href={notice.href}
-                key={notice.id}
-                onClick={() => {
-                  setRead((items) => [...new Set([...items, notice.id])]);
-                  setOpen(false);
-                }}
-              >
-                <span className="notification-dot" />
-                <span>
-                  <strong>{notice.title}</strong>
-                  <small>{notice.meta}</small>
-                </span>
-              </Link>
-            ))}
+            {notices.length ? (
+              notices.map((notice) => (
+                <Link
+                  className={
+                    read.includes(notice.id)
+                      ? "notification-item read"
+                      : "notification-item"
+                  }
+                  href={notice.href}
+                  key={notice.id}
+                  onClick={() => {
+                    setRead((items) => [...new Set([...items, notice.id])]);
+                    setOpen(false);
+                  }}
+                >
+                  <span className="notification-dot" />
+                  <span>
+                    <strong>{notice.title}</strong>
+                    <small>{notice.meta}</small>
+                  </span>
+                </Link>
+              ))
+            ) : (
+              <div className="wide-empty-state">
+                <strong>暂无新消息</strong>
+                <p>
+                  真实发布、赛果、复盘或管理事件产生后，通知会从数据库加载。
+                </p>
+              </div>
+            )}
           </div>
           <Link
             className="notification-footer"

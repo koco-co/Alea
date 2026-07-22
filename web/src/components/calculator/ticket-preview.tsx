@@ -17,7 +17,7 @@ export function TicketPreview({
   async function exportCard(action: "copy" | "download") {
     if (!ready) return;
     try {
-      const blob = await createTicketCardBlob(multiplier);
+      const blob = await createTicketCardBlob();
       if (
         action === "copy" &&
         navigator.clipboard &&

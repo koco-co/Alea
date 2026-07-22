@@ -21,3 +21,15 @@ redis_data/
 .codex-runner.log
 supabase/.temp/
 docs/evidence/**/artifacts/private/
+
+# ALEA-HARDENING-FIXPACK-2026-07-21: generated and local-only artifacts
+.tmp/
+playwright-report/
+test-results/
+**/playwright-report/
+**/test-results/
+*.trace.zip
+coverage.xml
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/

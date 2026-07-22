@@ -18,36 +18,21 @@ export default async function PredictionDetailPage({
         <div>
           <p className="eyebrow">推演详情 · 辩论回放</p>
           <h1>公证记录 {id.toUpperCase()}</h1>
-          <p>回放展示真实身份，并保留它们在辩论当时使用的匿名代号。</p>
+          <p>
+            只有真实数据库事件、Provider receipt 和公证记录完成后才会展示回放。
+          </p>
         </div>
-        <span className="status-chip">待赛果确认</span>
+        <span className="status-chip warning">等待真实记录</span>
       </header>
       <PredictionCard compact />
       <div className="debate-detail-grid">
         <RoundtableEventReplay jobId={id} />
         <aside className="notary-panel">
           <p className="eyebrow">公证摘要</p>
-          <strong>N8C4-02</strong>
-          <dl>
-            <div>
-              <dt>冻结阵容</dt>
-              <dd>LINEUP-7.4</dd>
-            </div>
-            <div>
-              <dt>输入快照</dt>
-              <dd>INPUT-M104-20260719</dd>
-            </div>
-            <div>
-              <dt>票权版本</dt>
-              <dd>VOTE-7.1</dd>
-            </div>
-            <div>
-              <dt>规则版本</dt>
-              <dd>SPORTTERY-2026.07</dd>
-            </div>
-          </dl>
+          <strong>等待真实公证数据</strong>
           <p>
-            只展示脱敏引用，不包含 Provider 密钥、成本、请求头或内部错误正文。
+            读取完成后只展示脱敏引用，不包含 Provider
+            密钥、成本、请求头或内部错误正文。
           </p>
         </aside>
       </div>

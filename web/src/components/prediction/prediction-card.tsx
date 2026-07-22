@@ -1,172 +1,89 @@
 import Link from "next/link";
 
-import { ConsensusRing } from "./consensus-ring";
-import { VoteBar, type VoteAgent } from "./vote-bar";
-
-const primaryVotes: VoteAgent[] = [
-  {
-    name: "Claude-1",
-    logo: "/assets/vendors/anthropic.svg",
-    score: 88,
-    reason: "事实缺失时降低零封假设，保留阿根廷一球。",
-  },
-  {
-    name: "GPT-1",
-    logo: "/assets/vendors/openai.svg",
-    score: 86,
-    reason: "欧洲冠军与卫冕冠军的对抗更接近小分差。",
-  },
-  {
-    name: "Gemini-1",
-    logo: "/assets/vendors/gemini.svg",
-    score: 82,
-    reason: "在现有可信快照下，2:1 是更稳健的模型判断。",
-  },
-  {
-    name: "DeepSeek-1",
-    logo: "/assets/vendors/deepseek.svg",
-    instance: 1,
-    score: 79,
-    reason: "经过互相质询后从 2:0 改票到 2:1。",
-  },
-  {
-    name: "Qwen-1",
-    logo: "/assets/vendors/qwen.svg",
-    score: 77,
-    reason: "终投接受单球差结论。",
-  },
-];
-
-const secondaryVotes: VoteAgent[] = [
-  {
-    name: "DeepSeek-2",
-    logo: "/assets/vendors/deepseek.svg",
-    instance: 2,
-    score: 76,
-    reason: "模型仍倾向平局，事实性陈述未引用缺失信息。",
-  },
-];
+export interface PredictionProjection {
+  matchLabel: string;
+  competitionLabel: string;
+  kickoffLabel: string;
+  scoreLabel?: string | null;
+  halfTimeLabel?: string | null;
+  consensusLabel?: string | null;
+  statusLabel: string;
+  auditLabel?: string | null;
+  jobId?: string | null;
+}
 
 export function PredictionCard({
   compact = false,
-  noQuorum = true,
+  projection,
 }: {
   compact?: boolean;
-  noQuorum?: boolean;
+  projection?: PredictionProjection | null;
 }) {
-  return (
-    <article className={`prediction-card ${compact ? "compact" : ""}`}>
-      <header className="prediction-fixture-layer">
-        <div className="prediction-flags" aria-hidden="true">
-          <img src="/assets/teams/flag-spain.png" alt="" />
-          <img src="/assets/teams/flag-argentina.png" alt="" />
-        </div>
-        <div>
-          <span>2026 FIFA 世界杯 · 第 104 场 · 决赛</span>
-          <h2>西班牙 vs 阿根廷</h2>
-          <p>北京时间 7 月 20 日 03:00 · New York New Jersey Stadium</p>
-        </div>
-        <span className="status-chip warning">待竞彩销售数据确认</span>
-      </header>
-
-      {noQuorum ? (
+  if (!projection) {
+    return (
+      <article className={`prediction-card ${compact ? "compact" : ""}`}>
         <section
           className="prediction-consensus-layer no-quorum"
-          aria-label="圆桌法定人数不足"
+          aria-label="暂无真实公证投影"
         >
           <div className="prediction-score">
             <strong>— : —</strong>
-            <span>尚未执行</span>
+            <span>等待后端投影</span>
           </div>
           <div className="prediction-decision">
-            <span>NO-QUORUM</span>
-            <strong>真实 Provider 不足，圆桌已阻断</strong>
-            <small>当前 1 个可执行 Provider · 最低要求 2 个</small>
-            <p>不会用静态厂商配置、历史结果或固定原型票数冒充成功共识。</p>
+            <span>暂无真实预测</span>
+            <strong>未读取到可公开的公证记录</strong>
+            <small>只有授权竞彩 Offer 与真实 Provider 结果才会展示</small>
           </div>
         </section>
-      ) : (
-        <section className="prediction-consensus-layer" aria-label="共识结论">
-          <div className="prediction-score">
-            <strong>2 : 1</strong>
-            <span>半场 1 : 0</span>
-          </div>
-          <ConsensusRing value={71} />
-          <div className="prediction-decision">
-            <span>固定 AI 原型输出</span>
-            <strong>西班牙 2:1 阿根廷</strong>
-            <small>终投预测 · 待赛果确认</small>
-            <p>本场仅推演 · 竞彩销售数据待确认，尚未形成可采用方案</p>
-          </div>
-        </section>
-      )}
+        <footer className="prediction-actions-layer">
+          <span>不使用固定球队、比分、票数或 Provider 文案</span>
+          <Link className="button secondary" href="/console/fixtures">
+            查看真实赛程
+          </Link>
+          <button
+            className="button primary prediction-disabled"
+            type="button"
+            disabled
+          >
+            暂无可采用方案
+          </button>
+        </footer>
+      </article>
+    );
+  }
 
-      {!compact && !noQuorum ? (
-        <section className="prediction-vote-layer" aria-labelledby="vote-title">
-          <div className="layer-heading">
-            <div>
-              <span>终投分布</span>
-              <h3 id="vote-title">匿名票权冻结后揭示身份</h3>
-            </div>
-            <span className="status-chip">3 位改票</span>
-          </div>
-          <VoteBar score="2 : 1" agents={primaryVotes} />
-          <VoteBar score="1 : 1" agents={secondaryVotes} />
-          <VoteBar
-            score="2 : 0"
-            agents={[
-              {
-                name: "Kimi-1",
-                logo: "/assets/vendors/kimi.png",
-                score: 73,
-                reason: "保留初稿判断，未使用未核验伤停信息。",
-              },
-            ]}
-          />
-          <p className="vote-help">
-            聚焦或点按头像可查看实例、综合准确分与投票理由；金色描边表示高准确分实例。
-          </p>
-        </section>
-      ) : null}
-
+  return (
+    <article className={`prediction-card ${compact ? "compact" : ""}`}>
+      <header className="prediction-fixture-layer">
+        <div>
+          <span>{projection.competitionLabel}</span>
+          <h2>{projection.matchLabel}</h2>
+          <p>{projection.kickoffLabel}</p>
+        </div>
+        <span className="status-chip">{projection.statusLabel}</span>
+      </header>
+      <section className="prediction-consensus-layer" aria-label="共识结论">
+        <div className="prediction-score">
+          <strong>{projection.scoreLabel ?? "— : —"}</strong>
+          <span>{projection.halfTimeLabel ?? "半场待确认"}</span>
+        </div>
+        <div className="prediction-decision">
+          <span>真实公证投影</span>
+          <strong>{projection.consensusLabel ?? "等待共识"}</strong>
+          <small>{projection.statusLabel}</small>
+        </div>
+      </section>
       <footer className="prediction-actions-layer">
-        <span>
-          {noQuorum
-            ? "未生成公证记录 · no-quorum"
-            : "公证示例 N8C4-02 · AI 推演数据"}
-        </span>
-        {noQuorum ? (
-          <button className="button secondary" type="button" disabled>
-            圆桌未执行
-          </button>
-        ) : (
+        <span>{projection.auditLabel ?? "执行审计已脱敏"}</span>
+        {projection.jobId ? (
           <Link
             className="button secondary"
-            href="/console/predictions/n8c4-02"
+            href={`/console/predictions/${projection.jobId}`}
           >
-            圆桌辩论
+            查看圆桌回放
           </Link>
-        )}
-        <button
-          className="button primary prediction-disabled"
-          type="button"
-          disabled
-          title="待竞彩销售数据确认"
-        >
-          采用方案
-        </button>
-        {noQuorum ? (
-          <button className="button secondary" type="button" disabled>
-            无共识可配置
-          </button>
-        ) : (
-          <Link
-            className="button secondary"
-            href="/console/calculator?from=consensus"
-          >
-            共识配置
-          </Link>
-        )}
+        ) : null}
       </footer>
     </article>
   );

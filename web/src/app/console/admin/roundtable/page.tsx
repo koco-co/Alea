@@ -74,8 +74,6 @@ export default function RoundtablePage() {
   const [selectedMatches, setSelectedMatches] = useState<string[]>([]);
   const [rounds, setRounds] = useState("1");
   const [candidateLimit, setCandidateLimit] = useState("8");
-  const [scheduled, setScheduled] = useState(false);
-  const [scheduleTime, setScheduleTime] = useState("08:00");
   const [status, setStatus] = useState<"loading" | "idle" | "starting">(
     "loading",
   );
@@ -194,8 +192,8 @@ export default function RoundtablePage() {
       setError("指定选场模式至少选择一场真实赛程。");
       return;
     }
-    if (selectedInstances.length === 0) {
-      setError("至少选择一个已启用且通过测试的真实 AI 实例。");
+    if (quorum.instances !== 3 || quorum.providers < 2) {
+      setError("必须选择 3 个不同实例，并覆盖至少 2 个 Provider 厂商。");
       return;
     }
     setError("");
@@ -212,8 +210,7 @@ export default function RoundtablePage() {
           instance_ids: selectedInstances,
           rounds: Number(rounds),
           candidate_limit: Number(candidateLimit),
-          scheduled,
-          schedule_time: scheduleTime,
+          scheduled: false,
         }),
       });
       const body = (await response.json()) as {
@@ -245,7 +242,7 @@ export default function RoundtablePage() {
         </div>
         <span
           className={
-            quorum.instances >= 2 && quorum.providers >= 2
+            quorum.instances === 3 && quorum.providers >= 2
               ? "status-chip"
               : "status-chip warning"
           }
@@ -384,10 +381,12 @@ export default function RoundtablePage() {
             </div>
           )}
         </div>
-        {quorum.instances < 2 || quorum.providers < 2 ? (
+        {quorum.instances !== 3 || quorum.providers < 2 ? (
           <div className="inline-callout danger" role="status">
             <strong>当前阵容未达到跨厂商法定人数</strong>
-            <p>任务可以落库，但不会进入可公证、可发布状态。</p>
+            <p>
+              需要 3 个不同实例和至少 2 个 Provider 厂商；当前状态为 no_quorum。
+            </p>
           </div>
         ) : null}
       </section>
@@ -396,7 +395,7 @@ export default function RoundtablePage() {
         <div className="panel-heading">
           <div>
             <p className="eyebrow">03 · 参数与定时</p>
-            <h2>辩论轮数、入围上限与每日计划</h2>
+            <h2>辩论轮数与入围上限</h2>
           </div>
           <Link
             className="button secondary"
@@ -428,28 +427,11 @@ export default function RoundtablePage() {
               />
             </label>
           ) : null}
-          <label>
-            <span>每日自动发起时间</span>
-            <input
-              type="time"
-              value={scheduleTime}
-              onChange={(event) => setScheduleTime(event.target.value)}
-            />
-          </label>
         </div>
-        <label className="switch-row">
-          <input
-            type="checkbox"
-            checked={scheduled}
-            onChange={(event) => setScheduled(event.target.checked)}
-          />
-          <span>
-            <strong>启用每日定时圆桌</strong>
-            <small>
-              仅保存本次任务快照中的调度意图，不会覆盖版本化系统设置。
-            </small>
-          </span>
-        </label>
+        <div className="inline-callout" role="note">
+          <strong>计划调度暂未开放</strong>
+          <p>当前入口已隐藏，避免创建看似已计划但不会被 Worker 消费的任务。</p>
+        </div>
       </section>
 
       {error ? (

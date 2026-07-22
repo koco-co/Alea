@@ -1,20 +1,17 @@
-import { PredictionCard } from "@/components/prediction/prediction-card";
-
 export default function PredictionsPage() {
   return (
     <main className="console-main research-page">
       <div className="page-heading research-heading">
         <div>
           <p className="eyebrow">太玄问机 · 今日推演</p>
-          <h1>决赛推演，先把事实与模型判断分开。</h1>
+          <h1>真实公证投影与圆桌回放。</h1>
           <p>
-            比赛身份与开球时间来自 FIFA；当前只有一个真实
-            Provider，圆桌尚未执行。
+            只展示由授权竞彩 Offer、真实 Provider 执行与公证账本产生的记录。
           </p>
         </div>
         <div className="source-badges">
           <span>AI 推演数据</span>
-          <span>来源：FIFA · 采集 2026-07-19</span>
+          <span>来源：授权竞彩 Offer · 等待真实投影</span>
         </div>
       </div>
       <nav className="page-tabs" aria-label="推演视图">
@@ -25,8 +22,8 @@ export default function PredictionsPage() {
         <a href="#states">生命周期状态</a>
       </nav>
       <div className="list-meta">
-        <strong>今日 1 张</strong>
-        <span>北京时间 7 月 20 日 03:00</span>
+        <strong>今日 — 张</strong>
+        <span>未取得可展示的公证预测</span>
       </div>
       <aside className="source-boundary">
         <strong>数据边界</strong>
@@ -35,8 +32,9 @@ export default function PredictionsPage() {
           <span>相关字段统一显示待确认；不生成场次编号、赔率或命中结果。</span>
         </div>
       </aside>
-      <div id="today">
-        <PredictionCard />
+      <div id="today" className="wide-empty-state">
+        <strong>暂无可公开展示的预测</strong>
+        <p>只有满足法定人数并完成公证的真实圆桌，才会出现在这里。</p>
       </div>
       <section className="wide-empty-state" id="history">
         <strong>暂无可核验的历史推演</strong>

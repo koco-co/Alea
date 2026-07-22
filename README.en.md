@@ -27,9 +27,25 @@ make db-push ENV=staging
 
 Product behavior is defined by `docs/产品需求文档.md`, architecture by `docs/技术架构设计文档.md`, and visual rules by `DESIGN.md`.
 
+<!-- ALEA-HARDENING-FIXPACK-2026-07-21: implementation-status -->
+## Implementation status and release gates
+
+- Roundtable start requires three distinct instances across at least two provider families.
+- Autonomous and specified selection accept only authorized, on-sale, pre-cutoff Sporttery offers with an odds snapshot.
+- The worker idempotently creates the first `predict_score` phase and uses `ALEA_PHASE_EXECUTOR_FACTORY=app.workers.production_executor:create_phase_executor`; the local fixture chain has been verified through notarization.
+- Historical backfills require an adapter licensed for automated access, caching, historical storage, public display, and redistribution. This repository does not include an authorization-bypassing scraper.
+- The real local API/CLI multi-phase chain is verified. No licensed historical dataset was provided, so no historical backfill is claimed; full-stack E2E and browser evidence remain tracked in the latest QA report.
+
+Verification:
+
+```bash
+python scripts/verify_hardening_contracts.py
+make test-hardening
+```
+
 ## Current boundaries
 
-- A roundtable with only one real available provider must end as `no_quorum`.
+- A roundtable must use exactly three qualified instances across at least two Provider families; otherwise it ends as `no_quorum`.
 - `/console/admin/lineup` manages both API vendors and administrator-specified absolute CLI paths. No standalone runner daemon is deployed.
 - The Sporttery Web Source stays disabled until permission is confirmed. Gate 0 historical-data validation uses explicitly labeled football-sale fixtures only.
 - Database and Storage migration, off-site logical backup, and clean-environment restore are documented in [the backup and restore runbook](docs/deployment/database-backup-restore.md).

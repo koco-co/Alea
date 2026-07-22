@@ -175,7 +175,7 @@ class StartRoundtableRequest(StrictModel):
     competition_scope: str = Field(default="all", min_length=1, max_length=80)
     excluded_match_ids: list[UUID] = Field(default_factory=list, max_length=100)
     match_ids: list[UUID] = Field(default_factory=list, max_length=20)
-    instance_ids: list[UUID] = Field(min_length=1, max_length=3)
+    instance_ids: list[UUID] = Field(min_length=3, max_length=3)
     rounds: int = Field(default=1, ge=1, le=2)
     candidate_limit: int = Field(default=8, ge=1, le=20)
     scheduled: bool = False
@@ -722,6 +722,12 @@ async def start_roundtable(
 ) -> Mapping[str, Any]:
     if body.mode == "specified" and not body.match_ids:
         raise HTTPException(status_code=422, detail="specified_mode_requires_matches")
+    if len(set(body.instance_ids)) != 3:
+        raise HTTPException(status_code=422, detail="three_distinct_instances_required")
+    if body.scheduled:
+        raise HTTPException(status_code=422, detail="scheduled_roundtable_not_supported")
+    if set(body.match_ids) & set(body.excluded_match_ids):
+        raise HTTPException(status_code=422, detail="selected_match_is_excluded")
     return await _command(
         gateway,
         "start_roundtable",

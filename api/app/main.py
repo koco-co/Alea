@@ -15,17 +15,14 @@ from app.routers import admin, ledger, matches, real_ledger, roundtable, setting
 from app.runtime import BusinessGateway, DatasourceFactory, ProviderFactory
 
 
-DEFAULT_SUPABASE_URL = "https://qevyqgociclrqhglhqux.supabase.co"
-
-
 def _create_supabase_client() -> Any | None:
-    secret_key = os.getenv("SUPABASE_SECRET_KEY")
-    if not secret_key:
+    url = os.getenv("SUPABASE_URL", "").strip().rstrip("/")
+    secret_key = os.getenv("SUPABASE_SECRET_KEY", "").strip()
+    if not url or not secret_key:
         return None
 
     from supabase import ClientOptions, create_client
 
-    url = os.getenv("SUPABASE_URL", DEFAULT_SUPABASE_URL).rstrip("/")
     return create_client(
         url,
         secret_key,
@@ -132,13 +129,84 @@ app.include_router(settings.admin_settings_router)
 
 @app.get("/health", tags=["system"])
 async def health() -> dict[str, str]:
+    """Process liveness only; dependency health belongs to /readyz."""
     return {"service": "alea-api", "status": "ok"}
+
+
+@app.get("/livez", tags=["system"])
+async def liveness() -> dict[str, str]:
+    return {"service": "alea-api", "status": "ok"}
+
+
+@app.get("/readyz", tags=["system"])
+async def readiness() -> JSONResponse:
+    checks: dict[str, bool] = {
+        "database": False,
+        "migration": False,
+        "redis": False,
+        "supabase": app.state.supabase is not None,
+        "dispatcher": False,
+        "worker": False,
+        "executor_factory": bool(os.getenv("ALEA_PHASE_EXECUTOR_FACTORY", "").strip()),
+    }
+    database = getattr(app.state, "database", None)
+    if database is not None:
+        try:
+            async with database.cursor() as cursor:
+                await cursor.execute("select 1")
+                database_row = await cursor.fetchone()
+                checks["database"] = bool(database_row and next(iter(database_row.values())) == 1)
+                await cursor.execute(
+                    "select max(version) from supabase_migrations.schema_migrations"
+                )
+                latest = await cursor.fetchone()
+                latest_value = next(iter(latest.values())) if latest else None
+                checks["migration"] = bool(latest_value and str(latest_value) >= "20260722010000")
+                await cursor.execute(
+                    """
+                    select service_name, status
+                    from public.service_heartbeats
+                    where heartbeat_at > now() - interval '45 seconds'
+                    """
+                )
+                heartbeat_rows = await cursor.fetchall()
+                for heartbeat_row in heartbeat_rows:
+                    service_name = heartbeat_row["service_name"]
+                    service_status = heartbeat_row["status"]
+                    if service_status == "ready" and service_name in {"dispatcher", "worker"}:
+                        checks[service_name] = True
+        except Exception:
+            pass
+    redis_url = os.getenv("REDIS_URL", "").strip()
+    if redis_url:
+        redis_client = None
+        try:
+            from redis.asyncio import from_url
+
+            redis_client = from_url(redis_url)  # type: ignore[no-untyped-call]
+            checks["redis"] = bool(await redis_client.ping())
+        except Exception:
+            checks["redis"] = False
+        finally:
+            if redis_client is not None:
+                await redis_client.aclose()
+    missing = [name for name, passed in checks.items() if not passed]
+    status_code = 503 if missing else 200
+    return JSONResponse(
+        {
+            "service": "alea-api",
+            "status": "not_ready" if missing else "ready",
+            "missing": missing,
+            "checks": checks,
+        },
+        status_code=status_code,
+    )
 
 
 @app.post("/auth/signup", status_code=201, tags=["auth"])
 async def signup(request: SignupRequest) -> JSONResponse:
     required = {
-        "url": os.getenv("SUPABASE_URL", DEFAULT_SUPABASE_URL),
+        "url": os.getenv("SUPABASE_URL"),
         "publishable_key": os.getenv("SUPABASE_PUBLISHABLE_KEY"),
         "secret_key": os.getenv("SUPABASE_SECRET_KEY"),
     }

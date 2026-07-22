@@ -10,6 +10,20 @@
 
 ## 全局约束
 
+### 2026-07-22 发布修复跟踪
+
+以下是本轮修复分支的可核验状态；原计划中没有代码、测试和证据的项目保持 `[ ]`，不因本节存在而批量完成：
+
+| 项目 | 状态 | 证据 |
+| --- | --- | --- |
+| 3 实例 / 2 Provider 家族法定人数 | ✅ | API、SQL、Worker contract tests；真实本地运行 3/2 |
+| Sporttery Offer 资格与空任务拦截 | ✅ | `alea_is_sporttery_offer_eligible`、指定/自主共用 wrapper、clean `db reset` |
+| API + CLI 生产 PhaseExecutor | ✅ | `app.workers.production_executor:create_phase_executor`；DeepSeek + Codex CLI 全阶段本地运行 |
+| Worker / Dispatcher 心跳与 `/readyz` | ✅ | local `/readyz` HTTP 200，依赖检查全绿 |
+| 真实授权历史数据导入 | [ ] | 未提供授权数据文件；仅完成 raw-first 能力和 fixture 测试 |
+| Docker full-stack、内置 Browser 双视口视觉证据 | [ ] | Docker 基础镜像拉取和 iab 可用性仍阻塞，不能标记完成 |
+| 真实认证 Playwright 双视口 E2E | ✅ | `make test-e2e` with `ALEA_E2E_REAL=1`：20/20；API/Redis/Worker chain separately verified |
+
 - PRD v1.9 为产品事实唯一来源，TECH v1.5 为架构决策来源，提示词架构 v1.2 为 AI 行为规范来源
 - 竞彩足球五种玩法（胜平负/让球胜平负/比分/总进球/半全场）；常规时间 90 分钟+伤停补时
 - 平台只预测不购买；首版 Web 桌面优先（1440×900），移动端自适应（390×844）

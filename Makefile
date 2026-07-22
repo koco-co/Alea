@@ -1,4 +1,4 @@
-.PHONY: bootstrap env-check env-check-db env-init verify-kek dev dev-down format format-fix lint lint-sql typecheck test check generate-types db-push bootstrap-admin gate0
+.PHONY: bootstrap env-check env-check-db env-init verify-kek dev dev-down format format-fix lint lint-sql typecheck test test-e2e check generate-types db-push bootstrap-admin gate0
 
 SUPABASE_CLI ?= bunx supabase@2.109.1
 
@@ -53,6 +53,10 @@ test:
 	cd api && UV_CACHE_DIR=../.uv-cache uv run --locked pytest -v
 	cd web && bun test
 
+test-e2e:
+	@test "$(ALEA_E2E_REAL)" = "1" || (echo "ERROR: ALEA_E2E_REAL=1 is required; demo-role E2E is not a release gate"; exit 2)
+	cd tests/e2e && bunx playwright test . --config=playwright.config.ts
+
 generate-types:
 	python3 scripts/generate_types.py
 	bun scripts/generate_types.ts
@@ -74,3 +78,12 @@ gate0:
 	cd api && UV_CACHE_DIR=../.uv-cache uv run --locked python ../scripts/run_gate0.py
 
 check: format lint typecheck test
+
+# ALEA-HARDENING-FIXPACK-2026-07-21
+.PHONY: test-hardening verify-hardening
+
+test-hardening:
+	cd api && uv run pytest -q tests/test_executor_bootstrap.py tests/test_sporttery_backfill.py tests/test_roundtable_hardening_contract.py
+
+verify-hardening:
+	python scripts/verify_hardening_contracts.py

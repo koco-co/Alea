@@ -58,7 +58,7 @@ async def test_start_roundtable_forwards_a_transactional_snapshot(
     admin_principal: AuthenticatedPrincipal,
 ) -> None:
     gateway = RoundtableGateway()
-    instance_ids = [uuid4(), uuid4()]
+    instance_ids = [uuid4(), uuid4(), uuid4()]
     body = admin.StartRoundtableRequest(
         mode="autonomous",
         business_date="2030-01-02",
@@ -66,7 +66,7 @@ async def test_start_roundtable_forwards_a_transactional_snapshot(
         instance_ids=instance_ids,
         rounds=2,
         candidate_limit=4,
-        scheduled=True,
+        scheduled=False,
         schedule_time="08:30",
     )
 
@@ -96,7 +96,7 @@ async def test_specified_roundtable_requires_match_ids(
             admin.StartRoundtableRequest(
                 mode="specified",
                 business_date="2030-01-02",
-                instance_ids=[uuid4()],
+                instance_ids=[uuid4(), uuid4(), uuid4()],
             ),
             SimpleNamespace(state=SimpleNamespace(request_id="roundtable-request-2")),
             admin_principal,

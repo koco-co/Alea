@@ -2,16 +2,13 @@
 
 import { useState } from "react";
 
-import {
-  MatchSelector,
-  type CalculatorMode,
-} from "@/components/calculator/match-selector";
+import { MatchSelector } from "@/components/calculator/match-selector";
 import { PlayConfig } from "@/components/calculator/play-config";
 import { TicketPreview } from "@/components/calculator/ticket-preview";
 
 export default function CalculatorPage() {
-  const [mode, setMode] = useState<CalculatorMode>("fact");
-  const [selected, setSelected] = useState(true);
+  const mode = "fact" as const;
+  const [selected] = useState(false);
   const [play, setPlay] = useState("胜平负");
   const [multiplier, setMultiplier] = useState(1);
   const [step, setStep] = useState(1);
@@ -31,42 +28,9 @@ export default function CalculatorPage() {
           <span>来源：FIFA · 采集 2026-07-19</span>
         </div>
       </div>
-      <div className="calculator-mode" role="tablist">
-        <button
-          className={mode === "fact" ? "active" : ""}
-          onClick={() => {
-            setMode("fact");
-            setStep(1);
-          }}
-          role="tab"
-          type="button"
-          aria-selected={mode === "fact"}
-        >
-          当前事实态
-        </button>
-        <button
-          className={mode === "sample" ? "active" : ""}
-          onClick={() => setMode("sample")}
-          role="tab"
-          type="button"
-          aria-selected={mode === "sample"}
-        >
-          P0 交互样例
-        </button>
-      </div>
-      <aside
-        className={`calculator-warning ${mode === "sample" ? "sample" : ""}`}
-      >
-        <strong>
-          {mode === "fact"
-            ? "销售数据缺失，采纳、出图与下载保持禁用"
-            : "独立交互样例：参数为非官方值，不是体彩 SP"}
-        </strong>
-        <p>
-          {mode === "fact"
-            ? "不生成场次编号、赔率、固定奖金、理论回报或结算结果。"
-            : "仅用于验证选择、配置与出图流程，不与当前事实记录或公证记录混合。"}
-        </p>
+      <aside className="calculator-warning">
+        <strong>销售数据缺失，采纳、出图与下载保持禁用</strong>
+        <p>不生成场次编号、赔率、固定奖金、理论回报或结算结果。</p>
       </aside>
       <div className="mobile-stepper" aria-label="移动端步骤">
         {[1, 2, 3].map((value) => (
@@ -85,11 +49,7 @@ export default function CalculatorPage() {
         <div
           className={`calculator-column mobile-step-${step === 1 ? "active" : "hidden"}`}
         >
-          <MatchSelector
-            mode={mode}
-            selected={selected}
-            onToggle={() => setSelected((value) => !value)}
-          />
+          <MatchSelector />
           <button
             className="button primary mobile-next"
             onClick={() => setStep(2)}

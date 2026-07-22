@@ -22,7 +22,6 @@ from app.security import JWTVerifier, SecurityError
 
 WRITE_METHODS = {"POST", "PUT", "PATCH", "DELETE"}
 PUBLIC_API_PATHS = {"/v1/auth/login"}
-DEFAULT_SUPABASE_URL = "https://qevyqgociclrqhglhqux.supabase.co"
 logger = logging.getLogger(__name__)
 
 
@@ -158,9 +157,11 @@ def configure_security(app: FastAPI, *, verifier: JWTVerifier | None = None) -> 
     if "*" in allowed_origins:
         raise RuntimeError("CORS_ALLOWED_ORIGINS must not contain a wildcard")
     if verifier is None:
-        issuer = os.getenv("SUPABASE_JWT_ISSUER") or (
-            f"{os.getenv('SUPABASE_URL', DEFAULT_SUPABASE_URL).rstrip('/')}/auth/v1"
-        )
+        configured_issuer = os.getenv("SUPABASE_JWT_ISSUER", "").strip()
+        supabase_url = os.getenv("SUPABASE_URL", "").strip().rstrip("/")
+        issuer = configured_issuer or (f"{supabase_url}/auth/v1" if supabase_url else "")
+        if not issuer:
+            raise RuntimeError("SUPABASE_JWT_ISSUER or SUPABASE_URL is required")
         verifier = JWTVerifier(
             issuer=issuer,
             audience=os.getenv("SUPABASE_JWT_AUDIENCE", "authenticated"),

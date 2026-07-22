@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  hardening-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python scripts/verify_hardening_contracts.py
+
+  api:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: astral-sh/setup-uv@v6
+      - name: Install locked dependencies
+        working-directory: api
+        run: uv sync --frozen
+      - name: Ruff
+        working-directory: api
+        run: uv run ruff check app tests
+      - name: Mypy
+        working-directory: api
+        run: uv run mypy app
+      - name: Pytest
+        working-directory: api
+        run: uv run pytest
+
+  web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.10
+      - name: Install locked dependencies
+        working-directory: web
+        run: bun install --frozen-lockfile
+      - name: Lint
+        working-directory: web
+        run: bun run lint
+      - name: Typecheck
+        working-directory: web
+        run: bun run typecheck
+      - name: Unit tests
+        working-directory: web
+        run: bun run test
+      - name: Production build
+        working-directory: web
+        run: bun run build

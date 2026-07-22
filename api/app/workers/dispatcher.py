@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import os
 import signal
 import socket
@@ -183,6 +184,19 @@ class PostgresOutboxRepository:
     async def close(self) -> None:
         await self.connection.close()
 
+    async def heartbeat(self, status: str = "ready") -> None:
+        async with self.connection.cursor() as cursor:
+            await cursor.execute(
+                """
+                insert into public.service_heartbeats(service_name, status, heartbeat_at, metadata)
+                values ('dispatcher', %s, now(), %s::jsonb)
+                on conflict (service_name) do update
+                set status=excluded.status, heartbeat_at=excluded.heartbeat_at,
+                    metadata=excluded.metadata
+                """,
+                (status, json.dumps({"pid": os.getpid(), "host": socket.gethostname()})),
+            )
+
     async def claim_batch(
         self,
         *,
@@ -286,7 +300,9 @@ async def run_dispatcher() -> None:
     for signal_name in (signal.SIGINT, signal.SIGTERM):
         loop.add_signal_handler(signal_name, stop.set)
     try:
+        await repository.heartbeat("ready")
         while not stop.is_set():
+            await repository.heartbeat("ready")
             stats = await dispatch_once(
                 repository,
                 lease_owner=lease_owner,
@@ -298,6 +314,7 @@ async def run_dispatcher() -> None:
                 except TimeoutError:
                     pass
     finally:
+        await repository.heartbeat("stopping")
         await repository.close()
 
 

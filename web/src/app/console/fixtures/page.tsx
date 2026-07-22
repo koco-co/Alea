@@ -2,42 +2,19 @@
 
 import { useMemo, useState } from "react";
 
-import { MatchRow } from "@/components/fixtures/match-row";
-
-const match = {
-  id: "104",
-  competition: "2026 FIFA 世界杯",
-  round: "决赛",
-  kickoff: "03:00",
-  home: "西班牙",
-  away: "阿根廷",
-  homeFlag: "/assets/teams/flag-spain.png",
-  awayFlag: "/assets/teams/flag-argentina.png",
-  prediction: "2 : 1 · 半场 1 : 0",
-};
-
 export default function FixturesPage() {
   const [day, setDay] = useState("today");
   const [status, setStatus] = useState("all");
   const [query, setQuery] = useState("");
-  const showMatch = useMemo(
-    () =>
-      day === "today" &&
-      (status === "all" || status === "presale") &&
-      (!query || `${match.home}${match.away}`.includes(query.trim())),
-    [day, status, query],
-  );
+  const hasLiveData = useMemo(() => false, []);
 
   return (
     <main className="console-main research-page fixtures-page">
       <div className="page-heading research-heading">
         <div>
           <p className="eyebrow">赛程研究台 · 北京时间</p>
-          <h1>世界杯决赛赛前研究。</h1>
-          <p>
-            仅展示已核对的赛事身份与固定 AI
-            原型输出；官方竞彩信息和外部研究源未接入时保持空缺。
-          </p>
+          <h1>真实竞彩 Offer 赛程研究。</h1>
+          <p>仅展示已获授权来源返回的具体销售场次；来源不可用时保持空缺。</p>
         </div>
         <span className="status-chip warning">来源未连接</span>
       </div>
@@ -83,7 +60,7 @@ export default function FixturesPage() {
           <span>赛事</span>
           <select>
             <option>全部赛事</option>
-            <option>2026 FIFA 世界杯</option>
+            <option>全部授权赛事</option>
           </select>
         </label>
         <label className="fixture-search">
@@ -97,15 +74,13 @@ export default function FixturesPage() {
       </div>
       <section className="fixture-group">
         <header>
-          <strong>2026 FIFA 世界杯</strong>
-          <span>决赛 · 赛果待定</span>
+          <strong>授权来源赛程</strong>
+          <span>等待真实数据</span>
         </header>
-        {showMatch ? (
-          <MatchRow {...match} />
-        ) : (
+        {!hasLiveData ? (
           <div className="wide-empty-state">
-            <strong>当前筛选下没有可核验赛程</strong>
-            <p>切回比赛日与“全部”状态，或清除球队搜索后查看已确认赛事。</p>
+            <strong>当前没有可核验的真实竞彩场次</strong>
+            <p>未取得授权数据时不会展示世界杯、联赛或固定球队示例。</p>
             <button
               className="button secondary"
               onClick={() => {
@@ -118,7 +93,7 @@ export default function FixturesPage() {
               重置筛选
             </button>
           </div>
-        )}
+        ) : null}
       </section>
     </main>
   );

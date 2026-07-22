@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import re
 from dataclasses import dataclass
 from typing import Any
@@ -56,6 +57,13 @@ class SupabaseAuthGateway:
             raise SignupFailure("invalid_email", 400)
         if not request.age_confirmed or not request.terms_accepted:
             raise SignupFailure("consent_required", 422)
+        consent_versions = {
+            "terms": os.getenv("ALEA_TERMS_VERSION", "").strip(),
+            "privacy": os.getenv("ALEA_PRIVACY_VERSION", "").strip(),
+            "risk": os.getenv("ALEA_RISK_VERSION", "").strip(),
+        }
+        if not all(consent_versions.values()):
+            raise SignupFailure("consent_configuration_missing", 503)
         try:
             response = await self.client.post(
                 f"{self.url}/auth/v1/signup",
@@ -83,9 +91,9 @@ class SupabaseAuthGateway:
             },
             json={
                 "p_user_id": user_id,
-                "p_terms_version": "terms-v1",
-                "p_privacy_version": "privacy-v1",
-                "p_risk_version": "risk-v1",
+                "p_terms_version": consent_versions["terms"],
+                "p_privacy_version": consent_versions["privacy"],
+                "p_risk_version": consent_versions["risk"],
             },
         )
         if consent.status_code not in {200, 204}:

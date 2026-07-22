@@ -3,18 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 
-const initialFollowing = [
-  {
-    id: "match-104",
-    title: "西班牙 vs 阿根廷",
-    meta: "2026 世界杯决赛 · 07-20 03:00",
-  },
-  {
-    id: "prediction-n8c4",
-    title: "公证预测 N8C4-02",
-    meta: "圆桌共识 2 : 1 · 已发布",
-  },
-];
+const initialFollowing: Array<{ id: string; title: string; meta: string }> = [];
 
 export default function PersonalSettingsPage() {
   const [following, setFollowing] = useState(initialFollowing);

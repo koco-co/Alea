@@ -8,35 +8,11 @@ import {
 } from "@/components/ui/system-status";
 import { getAccessContext } from "@/lib/supabase/access";
 
-const focusMatches = [
-  {
-    competition: "2026 世界杯 · 决赛",
-    time: "07-20 03:00",
-    teams: "西班牙  vs  阿根廷",
-    status: "已发布推演",
-    tone: "positive",
-  },
-  {
-    competition: "挪威超级联赛",
-    time: "今日 23:00",
-    teams: "罗森博格  vs  布兰",
-    status: "距停售 02:18",
-    tone: "warning",
-  },
-  {
-    competition: "瑞典超级联赛",
-    time: "明日 01:00",
-    teams: "马尔默  vs  天狼星",
-    status: "资料待补全",
-    tone: "neutral",
-  },
-] as const;
-
 export default async function ConsoleOverviewPage() {
   const access = await getAccessContext();
   const isAdmin = access?.role === "admin";
   const now = new Date();
-  const syncedAt = new Date(now.getTime() - 18 * 60_000);
+  const syncedAt = now;
   return (
     <main className="console-main">
       <GlobalStatusBanner status="data_source_partial" />
@@ -59,28 +35,17 @@ export default async function ConsoleOverviewPage() {
             <Link href="/console/fixtures">全部赛程</Link>
           </div>
           <div className="match-list">
-            {focusMatches.map((match, index) => (
-              <Link
-                className="match-row"
-                href={
-                  index === 0 ? "/console/predictions" : "/console/fixtures"
-                }
-                key={match.teams}
-              >
-                <div>
-                  <small>{match.competition}</small>
-                  <strong>{match.teams}</strong>
-                  <span>{match.time}</span>
-                </div>
-                <span className={`status-dot ${match.tone}`}>
-                  {match.status}
-                </span>
+            <div className="wide-empty-state">
+              <strong>暂无可核验的竞彩 Offer</strong>
+              <p>页面不会用固定比赛或静态预测填充生产状态。</p>
+              <Link className="button secondary" href="/console/fixtures">
+                查看真实赛程
               </Link>
-            ))}
+            </div>
             {isAdmin ? (
               <div className="admin-inline">
                 <span>管理员视图</span>
-                <strong>1 场推演中 · 2 份待审核</strong>
+                <strong>待办数量由真实后端返回</strong>
                 <Link href="/console/admin/publish">进入审核</Link>
               </div>
             ) : null}
@@ -95,30 +60,30 @@ export default async function ConsoleOverviewPage() {
               <p className="eyebrow">圆桌与数据</p>
               <h2 id="roundtable-title">运行状态</h2>
             </div>
-            <span className="status-dot positive">运行中</span>
+            <span className="status-dot warning">等待真实投影</span>
           </div>
           <dl className="status-list">
             <div>
               <dt>最近阶段</dt>
-              <dd>比分终投完成</dd>
+              <dd>—</dd>
             </div>
             <div>
               <dt>Provider 可用</dt>
-              <dd>8 / 9</dd>
+              <dd>—</dd>
             </div>
             <div>
               <dt>数据新鲜度</dt>
-              <dd>18 分钟</dd>
+              <dd>—</dd>
             </div>
             {isAdmin ? (
               <>
                 <div>
                   <dt>失败任务</dt>
-                  <dd className="warning-text">1</dd>
+                  <dd className="warning-text">—</dd>
                 </div>
                 <div>
                   <dt>赛果冲突</dt>
-                  <dd>1</dd>
+                  <dd>—</dd>
                 </div>
               </>
             ) : null}

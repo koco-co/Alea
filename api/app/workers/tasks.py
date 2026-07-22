@@ -5,9 +5,9 @@ import inspect
 import json
 import os
 from collections.abc import Awaitable, Callable, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import StrEnum
-from typing import Any, Protocol
+from typing import Any, Protocol, cast
 
 from celery import Task
 
@@ -20,12 +20,10 @@ from app.workers.celery_app import celery_app
     reject_on_worker_lost=True,
 )
 def run_roundtable_lifecycle(payload: Mapping[str, Any]) -> dict[str, Any]:
-    """Persist the worker receipt for a newly created roundtable.
+    """Validate the durable job and enqueue its first provider phase idempotently.
 
-    Starting a roundtable is a database transaction. The first worker hop is kept
-    deliberately small and idempotent so the UI can prove that Dispatcher and
-    Worker consumed the durable outbox row before provider phases are scheduled.
-    Provider phase execution remains behind the existing PhaseExecutor contract.
+    The database function owns quorum checks, Sporttery-scope checks, state
+    transitions and phase/outbox creation. Redelivery is safe.
     """
 
     job_id = str(payload.get("job_id", "")).strip()
@@ -42,11 +40,21 @@ def run_roundtable_lifecycle(payload: Mapping[str, Any]) -> dict[str, Any]:
     with psycopg.connect(database_url, autocommit=True, row_factory=dict_row) as connection:
         with connection.cursor() as cursor:
             cursor.execute(
-                "select alea_worker_append_roundtable_event(%s::uuid, %s, %s::jsonb) as value",
+                "select alea_worker_initialize_roundtable(%s::uuid, %s, %s::jsonb) as value",
                 (job_id, event_type, json.dumps(dict(event_payload), ensure_ascii=False)),
             )
             row = cursor.fetchone()
-    return {"status": "succeeded", "job_id": job_id, "event": row["value"] if row else None}
+    initialization = row["value"] if row else None
+    status_value = (
+        str(initialization.get("status", "succeeded"))
+        if isinstance(initialization, Mapping)
+        else "succeeded"
+    )
+    return {
+        "status": status_value,
+        "job_id": job_id,
+        "initialization": initialization,
+    }
 
 
 class RoundtablePhase(StrEnum):
@@ -112,6 +120,8 @@ class PhaseOutcome:
     result_id: str
     payload_hash: str
     provider_request_id: str | None = None
+    payload: Mapping[str, Any] = field(default_factory=dict)
+    usage: Mapping[str, Any] | None = None
 
 
 class PhaseExecutionStore(Protocol):
@@ -191,8 +201,11 @@ def run_provider_phase(self: Task[Any, Any], payload: Mapping[str, Any]) -> dict
 
 
 def _run_command(command: PhaseCommand, *, task_id: str | None) -> dict[str, Any]:
+    global _executor
     if _executor is None:
-        raise RuntimeError("phase executor has not been configured")
+        from app.workers.executor_bootstrap import resolve_phase_executor
+
+        _executor = cast(PhaseExecutor, resolve_phase_executor())
     return _run_awaitable(_executor.execute(command, celery_task_id=task_id))
 
 

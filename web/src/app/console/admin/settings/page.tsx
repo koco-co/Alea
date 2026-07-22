@@ -25,11 +25,7 @@ export default function AdminSettingsPage() {
   };
   const shown = (keywords: string) => !query || keywords.includes(query.trim());
   const save = () => {
-    setStatus("保存中…");
-    setTimeout(() => {
-      setDirty(false);
-      setStatus("已保存 · system-settings-v2.1");
-    }, 600);
+    setStatus("保存已阻断：系统设置后端命令尚未返回真实版本，未写入数据库。");
   };
   return (
     <main className="admin-main">
