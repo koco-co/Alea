@@ -63,6 +63,17 @@ OpenDesign 项目：`c73b3011-35b7-4a7a-a8e9-a22f12257c20`
 - 关键一致性：发起推演显示 `7 个配置实例 · 7 个已启用`，不存在 `6 个已启用` 残留；预测页分列展示 `原始票 5/7` 与 `加权共识 71%`。
 - 保存栏：模型阵容与系统设置在移动端均为文档流 `position: static`，不覆盖目录、表单或错误提示。
 
+## Next.js 全栈实现增量（2026-07-22）
+
+本节只记录真实 Docker/Nginx/本地 Supabase 环境中的页面证据，不把 OpenDesign 截图冒充生产实现验收。
+
+| PRD | 路由 / 入口文件 | 关键状态与本轮操作 | 证据 | 结果 | 剩余边界 |
+|---|---|---|---|---|---|
+| §10.1–10.3 | `/console/rankings`、`/console/rankings/[aiId]` | 真实登录后通过 `/api/rankings` → FastAPI → `alea_api` → Supabase 查询；五个维度可切换；无结算事实时显示诚实空态，不显示固定模型/比分/命中率 | `/tmp/alea-iab-rankings-desktop-20260722.png`、`/tmp/alea-iab-rankings-mobile-20260722.png` | 通过（诚实空态） | 赛后结算事实表尚未具备可排名数据，不能生成正式名次 |
+| 全局 | 关键已实现路由清单 | 内置 Browser 逐个打开 `/console`、`/console/fixtures`、`/console/predictions`、`/console/rankings`、`/console/pnl`、`/console/reviews`、`/console/calculator`、`/console/wiki`、`/console/settings`、`/console/settings/security`、`/console/admin/roundtable`、`/console/admin/publish`、`/console/admin/lineup`、`/console/admin/sync`、`/console/admin/settings`、`/console/admin/settings/methodology`、`/console/admin/users`，确认无 404、无加载卡死 | `/tmp/alea-iab-route-*-20260722.png` | 通过（17/17） | 详情页和真实业务数据主链仍以 E2E 与后端证据为准 |
+
+本轮内置 Browser 仍受应用窗口最大渲染尺寸限制，截图文件以实际渲染尺寸保存；Playwright 继续负责严格 `1440×900` 与 `390×844` 视口回归。
+
 ## 未验证或外部阻断
 
 1. 真实 OAuth、邮件、厂商 API、赛事 / 竞彩 / 阵容数据源、任务执行器、服务端持久化、系统分享最终发送和外部通知服务未连接；原型保持明确空态、失败态或本地反馈。

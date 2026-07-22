@@ -3768,7 +3768,25 @@ h3,
   font-weight: 700;
 }
 
+.page-tabs button {
+  min-width: max-content;
+  padding: 10px 15px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+}
+
 .page-tabs a.active {
+  background: var(--surface-dark);
+  color: #faf9f5;
+}
+
+.page-tabs button.active {
   background: var(--surface-dark);
   color: #faf9f5;
 }
