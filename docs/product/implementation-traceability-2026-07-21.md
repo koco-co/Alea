@@ -18,3 +18,13 @@
 The PRD, architecture, prototype, implementation plan, rule version, migration, tests,
 and QA report must all point to the same release commit. Historical documents should
 be marked superseded rather than silently deleted.
+
+## 2026-07-23 acceptance update
+
+The local Gate 0 fixture acceptance is recorded in
+[`docs/qa/reports/2026-07-23-full-ai-acceptance.md`](../qa/reports/2026-07-23-full-ai-acceptance.md).
+The final local roundtable job `929f1c7b-8d38-460e-8987-e033b94d5882` used one Codex CLI
+instance and two DeepSeek API instances, completed 72/72 provider phases, persisted 76
+ordered events, and notarized seven predictions. This evidence is limited to the seven
+non-production fixture matches; it does not establish Sporttery authorization or historical
+data synchronization.

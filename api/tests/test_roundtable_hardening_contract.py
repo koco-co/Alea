@@ -74,3 +74,14 @@ def test_match_projection_exposes_offer_identity_and_provenance() -> None:
     assert "sporttery_match_number" in sql
     assert "source_authorization_status" in sql
     assert "left join public.data_sources" in sql
+
+
+def test_terminal_roundtable_retry_keeps_successful_jobs_idempotent() -> None:
+    migration = ROOT / "supabase/migrations/20260723141220_allow_terminal_roundtable_retry.sql"
+    sql = migration.read_text(encoding="utf-8")
+
+    assert "alea_command_start_roundtable_unhardened_20260721" in sql
+    assert "existing_job.state in ('failed', 'no_quorum', 'terminated')" in sql
+    assert "retry_match.state = 'no_quorum'" in sql
+    assert "p_request_id" in sql
+    assert "idempotent', true" in sql

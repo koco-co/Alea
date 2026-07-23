@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 import re
 import time
@@ -120,6 +121,24 @@ class OpenAICompatProvider(HTTPProvider):
         )
 
     async def _invoke(
+        self, method: str, ctx: Mapping[str, Any], req: ProviderRequest
+    ) -> ProviderResult[dict[str, Any]]:
+        last_failure: ProviderFailure | None = None
+        for attempt in range(2):
+            try:
+                return await self._invoke_once(method, ctx, req)
+            except ProviderFailure as exc:
+                last_failure = exc
+                # OpenAI-compatible providers occasionally ignore JSON mode and
+                # return a short explanation before the object. Give one retry for
+                # transient output-format failures without hiding schema errors.
+                if attempt == 1 or not exc.retryable:
+                    raise
+                await asyncio.sleep(0.15 * (attempt + 1))
+        assert last_failure is not None
+        raise last_failure
+
+    async def _invoke_once(
         self, method: str, ctx: Mapping[str, Any], req: ProviderRequest
     ) -> ProviderResult[dict[str, Any]]:
         response, latency_ms = await self._post(
@@ -264,7 +283,7 @@ def _object_output(value: Any) -> dict[str, Any]:
     if isinstance(value, Mapping):
         return dict(value)
     if not isinstance(value, str):
-        raise ProviderFailure("invalid_json", "provider content is not JSON", retryable=False)
+        raise ProviderFailure("invalid_json", "provider content is not JSON", retryable=True)
     candidates = [value.strip()]
     fenced = re.fullmatch(r"```(?:json)?\s*(.*?)\s*```", value.strip(), re.IGNORECASE | re.DOTALL)
     if fenced is not None:
@@ -277,7 +296,21 @@ def _object_output(value: Any) -> dict[str, Any]:
         except json.JSONDecodeError:
             continue
     if decoded is None:
-        raise ProviderFailure("invalid_json", "provider returned invalid JSON", retryable=False)
+        # Some compatible endpoints honor ``json_object`` but still surround the
+        # object with a brief sentence. Recover only a complete JSON object; the
+        # schema validator remains the final authority on the result.
+        decoder = json.JSONDecoder()
+        for start, character in enumerate(value):
+            if character != "{":
+                continue
+            try:
+                decoded, _ = decoder.raw_decode(value[start:])
+            except json.JSONDecodeError:
+                continue
+            if isinstance(decoded, dict):
+                break
+    if decoded is None:
+        raise ProviderFailure("invalid_json", "provider returned invalid JSON", retryable=True)
     if not isinstance(decoded, dict):
         raise ProviderFailure(
             "invalid_json", "provider JSON root must be an object", retryable=False

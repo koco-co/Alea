@@ -240,3 +240,47 @@ async def test_json_object_fallback_includes_exact_schema_instruction(
 
 def test_json_object_parser_accepts_a_single_json_code_fence() -> None:
     assert _object_output('```json\n{"summary":"ok"}\n```') == {"summary": "ok"}
+
+
+def test_json_object_parser_recovers_object_surrounded_by_commentary() -> None:
+    assert _object_output('Here is the result:\n{"summary":"ok"}\nDone.') == {"summary": "ok"}
+
+
+@pytest.mark.asyncio
+async def test_openai_compatible_provider_retries_transient_invalid_json(
+    provider_request: ProviderRequest,
+) -> None:
+    calls = 0
+
+    def handler(_: httpx.Request) -> httpx.Response:
+        nonlocal calls
+        calls += 1
+        content = (
+            "not JSON"
+            if calls == 1
+            else '{"phase":"predict_score","payload":{"summary":"ok"},"confidence":0.5}'
+        )
+        return httpx.Response(
+            200,
+            json={
+                "id": f"retry-{calls}",
+                "model": "deepseek-chat",
+                "choices": [{"message": {"content": content}, "finish_reason": "stop"}],
+                "usage": {},
+            },
+        )
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        provider = OpenAICompatProvider(
+            api_key="contract-secret",
+            base_url="https://api.deepseek.com",
+            client=client,
+            supports_json_schema=False,
+        )
+        result = await provider.predict_score(
+            {"output_schema": _schema("predict_score")},
+            provider_request,
+        )
+
+    assert calls == 2
+    assert result.output["confidence"] == 0.5
