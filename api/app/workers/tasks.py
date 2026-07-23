@@ -16,6 +16,7 @@ from uuid import uuid4
 
 from celery import Task
 
+from app.providers.contract import ProviderFailure
 from app.workers.celery_app import celery_app
 
 
@@ -159,6 +160,13 @@ class PhaseExecutor:
         try:
             outcome = await self.handler(command)
             await self.store.commit_success(command, outcome)
+        except ProviderFailure as exc:
+            await self.store.append_failure(
+                command,
+                code=exc.code,
+                detail_redacted="phase execution failed",
+            )
+            raise
         except Exception as exc:
             await self.store.append_failure(
                 command,

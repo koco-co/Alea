@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 import time
 from collections.abc import Mapping, Sequence
 from typing import Any, ClassVar
@@ -264,12 +265,19 @@ def _object_output(value: Any) -> dict[str, Any]:
         return dict(value)
     if not isinstance(value, str):
         raise ProviderFailure("invalid_json", "provider content is not JSON", retryable=False)
-    try:
-        decoded = json.loads(value)
-    except json.JSONDecodeError as exc:
-        raise ProviderFailure(
-            "invalid_json", "provider returned invalid JSON", retryable=False
-        ) from exc
+    candidates = [value.strip()]
+    fenced = re.fullmatch(r"```(?:json)?\s*(.*?)\s*```", value.strip(), re.IGNORECASE | re.DOTALL)
+    if fenced is not None:
+        candidates.append(fenced.group(1).strip())
+    decoded: Any = None
+    for candidate in candidates:
+        try:
+            decoded = json.loads(candidate)
+            break
+        except json.JSONDecodeError:
+            continue
+    if decoded is None:
+        raise ProviderFailure("invalid_json", "provider returned invalid JSON", retryable=False)
     if not isinstance(decoded, dict):
         raise ProviderFailure(
             "invalid_json", "provider JSON root must be an object", retryable=False

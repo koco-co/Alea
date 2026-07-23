@@ -108,6 +108,58 @@ async def test_specified_roundtable_requires_match_ids(
 
 
 @pytest.mark.asyncio
+async def test_local_fixture_roundtable_requires_explicit_local_flag(
+    admin_principal: AuthenticatedPrincipal,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("ALEA_ALLOW_LOCAL_FIXTURE_ROUNDTABLE", raising=False)
+    body = admin.StartRoundtableRequest(
+        mode="specified",
+        business_date="2030-01-02",
+        match_ids=[uuid4()],
+        instance_ids=[uuid4(), uuid4(), uuid4()],
+        fixture_mode=True,
+    )
+
+    with pytest.raises(HTTPException) as error:
+        await admin.start_roundtable(
+            body,
+            SimpleNamespace(state=SimpleNamespace(request_id="fixture-request-1")),
+            admin_principal,
+            RoundtableGateway(),
+        )
+
+    assert error.value.status_code == 422
+    assert error.value.detail == "local_fixture_roundtable_disabled"
+
+
+@pytest.mark.asyncio
+async def test_local_fixture_roundtable_forwards_explicit_mode(
+    admin_principal: AuthenticatedPrincipal,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("ALEA_ALLOW_LOCAL_FIXTURE_ROUNDTABLE", "true")
+    gateway = RoundtableGateway()
+    body = admin.StartRoundtableRequest(
+        mode="specified",
+        business_date="2030-01-02",
+        match_ids=[uuid4()],
+        instance_ids=[uuid4(), uuid4(), uuid4()],
+        fixture_mode=True,
+    )
+
+    await admin.start_roundtable(
+        body,
+        SimpleNamespace(state=SimpleNamespace(request_id="fixture-request-2")),
+        admin_principal,
+        gateway,
+    )
+
+    assert gateway.payload is not None
+    assert gateway.payload["fixture_mode"] is True
+
+
+@pytest.mark.asyncio
 async def test_read_roundtable_returns_not_found_for_missing_projection(
     admin_principal: AuthenticatedPrincipal,
 ) -> None:

@@ -7,17 +7,7 @@ import { useEffect, useMemo, useState } from "react";
 import { DebateTimeline } from "@/components/prediction/debate-timeline";
 import { useRoundtableEvents } from "@/lib/realtime";
 
-const PHASES = [
-  "选场提名",
-  "匿名互阅",
-  "选场终投",
-  "独立预测",
-  "匿名辩论",
-  "比分终投",
-  "组单提案",
-  "组单辩论",
-  "方案终投",
-] as const;
+import { ROUND_TABLE_PHASES, roundtablePhaseIndex } from "./phase";
 
 interface Participant {
   id: string;
@@ -86,18 +76,13 @@ export default function RoundtableLivePage() {
   const participants = job.participants ?? [];
   const currentPhase = useMemo(() => {
     const latest = events.at(-1)?.payload?.phase;
-    const index =
-      latest === "select_nomination"
-        ? 0
-        : latest === "select_debate"
-          ? 1
-          : latest === "select_vote"
-            ? 2
-            : events.length
-              ? 3
-              : 0;
-    return Math.min(index, PHASES.length - 1);
+    return roundtablePhaseIndex(
+      typeof latest === "string" ? latest : undefined,
+      events.length > 0,
+    );
   }, [events]);
+
+  const isFixtureMode = job.job?.config_snapshot?.fixture_mode === true;
 
   async function confirmAction() {
     if (!reason.trim()) {
@@ -183,13 +168,22 @@ export default function RoundtableLivePage() {
           <p>{loadError}</p>
         </div>
       ) : null}
+      {isFixtureMode ? (
+        <div className="inline-callout warning" role="status">
+          <strong>Fixture / 非生产数据</strong>
+          <p>
+            本圆桌使用管理员导入的本地演练数据，不代表已获授权的体彩销售
+            Offer，也不会产生真实投注。
+          </p>
+        </div>
+      ) : null}
       <section className="data-table-card">
         <div className="panel-heading">
           <div>
             <p className="eyebrow">阶段进度</p>
             <h2>
               {events.length
-                ? PHASES[currentPhase]
+                ? ROUND_TABLE_PHASES[currentPhase]
                 : "等待 Worker 首个持久事件"}
             </h2>
           </div>
@@ -198,7 +192,7 @@ export default function RoundtableLivePage() {
           </span>
         </div>
         <ol className="flex gap-2 overflow-x-auto pb-2" aria-label="圆桌阶段">
-          {PHASES.map((phase, index) => (
+          {ROUND_TABLE_PHASES.map((phase, index) => (
             <li
               className={`shrink-0 rounded-full border px-3 py-2 text-xs font-bold ${index < currentPhase ? "border-[#3f7a4e] bg-[#edf6ef] text-[#315f3d]" : index === currentPhase ? "border-[#c0613b] bg-[#f7ece5] text-[#9f4d2f]" : "border-stone-200 text-stone-500"}`}
               key={phase}

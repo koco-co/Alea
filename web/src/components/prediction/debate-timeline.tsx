@@ -4,6 +4,8 @@ import { useId } from "react";
 
 import type { RoundtableEvent } from "@/lib/realtime";
 
+import { summarizeTimeline } from "./timeline-summary";
+
 const PHASES = [
   ["selection", "选场"],
   ["prediction", "独立预测"],
@@ -43,6 +45,16 @@ export function DebateTimeline({
   const finalConsensus = readPercent(
     ordered.findLast(hasConsensus)?.payload.consensus,
   );
+  const notarized = ordered.some((event) => {
+    const type = event.event_type.toLowerCase();
+    return type.includes("notar") || event.payload.status === "notarized";
+  });
+  const timelineSummary = summarizeTimeline({
+    firstConsensus,
+    finalConsensus,
+    voteChanges: voteChanges.length,
+    notarized,
+  });
 
   return (
     <section
@@ -70,15 +82,10 @@ export function DebateTimeline({
         </div>
         <div className="rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-right">
           <strong className="font-mono text-xl">
-            {firstConsensus === null || finalConsensus === null
-              ? "等待终投"
-              : `${firstConsensus}% → ${finalConsensus}%`}
+            {timelineSummary.headline}
           </strong>
           <small className="mt-1 block text-[#d7cfc4]">
-            {voteChanges.length} 位改票
-            {firstConsensus !== null && finalConsensus !== null
-              ? ` · 共识增益 ${formatDelta(finalConsensus - firstConsensus)}pt`
-              : " · 事件持续补拉"}
+            {timelineSummary.detail}
           </small>
         </div>
       </header>
@@ -319,10 +326,6 @@ function readPercent(value: unknown): number | null {
   if (typeof value !== "number" || !Number.isFinite(value)) return null;
   const percent = value <= 1 ? value * 100 : value;
   return Math.round(percent);
-}
-
-function formatDelta(value: number): string {
-  return value > 0 ? `+${value}` : String(value);
 }
 
 function formatTime(value: string): string {

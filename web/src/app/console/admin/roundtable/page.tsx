@@ -74,6 +74,7 @@ export default function RoundtablePage() {
   const [selectedMatches, setSelectedMatches] = useState<string[]>([]);
   const [rounds, setRounds] = useState("1");
   const [candidateLimit, setCandidateLimit] = useState("8");
+  const [fixtureMode, setFixtureMode] = useState(false);
   const [status, setStatus] = useState<"loading" | "idle" | "starting">(
     "loading",
   );
@@ -211,6 +212,7 @@ export default function RoundtablePage() {
           rounds: Number(rounds),
           candidate_limit: Number(candidateLimit),
           scheduled: false,
+          fixture_mode: fixtureMode,
         }),
       });
       const body = (await response.json()) as {
@@ -339,6 +341,20 @@ export default function RoundtablePage() {
               )}
             </div>
           ) : null}
+          <label className="switch-row">
+            <input
+              type="checkbox"
+              checked={fixtureMode}
+              onChange={(event) => setFixtureMode(event.target.checked)}
+            />
+            <span>
+              <strong>本地 Fixture 演练（非生产）</strong>
+              <small>
+                仅允许使用明确标记的人工 fixture
+                验证完整圆桌链路，不代表体彩在售事实，也不会产生真实投注。
+              </small>
+            </span>
+          </label>
         </div>
       </section>
 

@@ -1,0 +1,135 @@
+{
+  "fixture_kind": "sporttery_sales_fixture",
+  "fixture": true,
+  "sporttery_sale_scope": true,
+  "parser_version": "sporttery-manual-20260723-v1",
+  "provenance_note": "Administrator-manually transcribed from the visible Sporttery mobile calculator page for local, non-production acceptance only. This fixture is not an official authorization or production sales record.",
+  "records": [
+    {
+      "source_record_key": "sporttery:20260723:201:2040594",
+      "sporttery_match_number": "201",
+      "business_date": "2026-07-23",
+      "observed_at": "2026-07-23T20:30:00+08:00",
+      "source_url": "https://m.sporttery.cn/mjc/jsq/zqspf/",
+      "competition": {"source_key": "sporttery:competition:brasil-serie-a", "name": "巴甲", "country_code": "BR", "competition_type": "league"},
+      "season": {"source_key": "sporttery:season:brasil-serie-a:2026", "name": "2026", "starts_on": "2026-01-01", "ends_on": "2026-12-31"},
+      "home_team": {"source_key": "sporttery:team:corinthians", "name": "科林蒂安", "country_code": "BR"},
+      "away_team": {"source_key": "sporttery:team:remo", "name": "里莫", "country_code": "BR"},
+      "kickoff_at": "2026-07-24T06:30:00+08:00",
+      "sales_cutoff_at": "2026-07-24T06:20:00+08:00",
+      "sales_status": "on_sale",
+      "odds": [
+        {"play_type": "HAD", "values": {"home": 1.33, "draw": 4.15, "away": 7.30}, "observed_at": "2026-07-23T20:30:00+08:00"},
+        {"play_type": "HHAD", "values": {"handicap": -1, "home": 2.31, "draw": 3.05, "away": 2.72}, "observed_at": "2026-07-23T20:30:00+08:00"}
+      ]
+    },
+    {
+      "source_record_key": "sporttery:20260723:202:2040593",
+      "sporttery_match_number": "202",
+      "business_date": "2026-07-23",
+      "observed_at": "2026-07-23T20:30:00+08:00",
+      "source_url": "https://m.sporttery.cn/mjc/jsq/zqspf/",
+      "competition": {"source_key": "sporttery:competition:brasil-serie-a", "name": "巴甲", "country_code": "BR", "competition_type": "league"},
+      "season": {"source_key": "sporttery:season:brasil-serie-a:2026", "name": "2026", "starts_on": "2026-01-01", "ends_on": "2026-12-31"},
+      "home_team": {"source_key": "sporttery:team:botafogo", "name": "博塔弗戈", "country_code": "BR"},
+      "away_team": {"source_key": "sporttery:team:vitoria", "name": "维多利亚", "country_code": "BR"},
+      "kickoff_at": "2026-07-24T06:30:00+08:00",
+      "sales_cutoff_at": "2026-07-24T06:20:00+08:00",
+      "sales_status": "on_sale",
+      "odds": [
+        {"play_type": "HAD", "values": {"home": 1.53, "draw": 3.60, "away": 5.05}, "observed_at": "2026-07-23T20:30:00+08:00"},
+        {"play_type": "HHAD", "values": {"handicap": -1, "home": 2.97, "draw": 3.05, "away": 2.15}, "observed_at": "2026-07-23T20:30:00+08:00"}
+      ]
+    },
+    {
+      "source_record_key": "sporttery:20260723:203:2040597",
+      "sporttery_match_number": "203",
+      "business_date": "2026-07-23",
+      "observed_at": "2026-07-23T20:30:00+08:00",
+      "source_url": "https://m.sporttery.cn/mjc/zqlszl/bssj/index.html?mid=2040597",
+      "competition": {"source_key": "sporttery:competition:europa-league", "name": "欧罗巴", "country_code": "EU", "competition_type": "cup"},
+      "season": {"source_key": "sporttery:season:europa-league:2026-27", "name": "2026-27", "starts_on": "2026-07-01", "ends_on": "2027-05-31"},
+      "home_team": {"source_key": "sporttery:team:hammarby", "name": "哈马比", "country_code": "SE"},
+      "away_team": {"source_key": "sporttery:team:anderlecht", "name": "安德莱赫特", "country_code": "BE"},
+      "kickoff_at": "2026-07-24T01:00:00+08:00",
+      "sales_cutoff_at": "2026-07-24T00:50:00+08:00",
+      "sales_status": "on_sale",
+      "odds": [
+        {"play_type": "HAD", "values": {"home": 1.75, "draw": 3.40, "away": 3.80}, "observed_at": "2026-07-23T20:30:00+08:00"},
+        {"play_type": "HHAD", "values": {"handicap": -1, "home": 3.45, "draw": 3.35, "away": 1.85}, "observed_at": "2026-07-23T20:30:00+08:00"}
+      ]
+    },
+    {
+      "source_record_key": "sporttery:20260723:204:2040603",
+      "sporttery_match_number": "204",
+      "business_date": "2026-07-23",
+      "observed_at": "2026-07-23T20:30:00+08:00",
+      "source_url": "https://m.sporttery.cn/mjc/zqspf/",
+      "competition": {"source_key": "sporttery:competition:europa-league", "name": "欧罗巴", "country_code": "EU", "competition_type": "cup"},
+      "season": {"source_key": "sporttery:season:europa-league:2026-27", "name": "2026-27", "starts_on": "2026-07-01", "ends_on": "2027-05-31"},
+      "home_team": {"source_key": "sporttery:team:st-gallen", "name": "圣加仑", "country_code": "CH"},
+      "away_team": {"source_key": "sporttery:team:benfica", "name": "本菲卡", "country_code": "PT"},
+      "kickoff_at": "2026-07-24T02:00:00+08:00",
+      "sales_cutoff_at": "2026-07-24T01:50:00+08:00",
+      "sales_status": "on_sale",
+      "odds": [
+        {"play_type": "HAD", "values": {"home": 7.95, "draw": 5.25, "away": 1.23}, "observed_at": "2026-07-23T20:30:00+08:00"},
+        {"play_type": "HHAD", "values": {"handicap": 1, "home": 3.35, "draw": 3.55, "away": 1.82}, "observed_at": "2026-07-23T20:30:00+08:00"}
+      ]
+    },
+    {
+      "source_record_key": "sporttery:20260723:205:2040598",
+      "sporttery_match_number": "205",
+      "business_date": "2026-07-23",
+      "observed_at": "2026-07-23T20:30:00+08:00",
+      "source_url": "https://m.sporttery.cn/mjc/jsq/zqspf/",
+      "competition": {"source_key": "sporttery:competition:europa-league", "name": "欧罗巴", "country_code": "EU", "competition_type": "cup"},
+      "season": {"source_key": "sporttery:season:europa-league:2026-27", "name": "2026-27", "starts_on": "2026-07-01", "ends_on": "2027-05-31"},
+      "home_team": {"source_key": "sporttery:team:besiktas", "name": "贝西克塔斯", "country_code": "TR"},
+      "away_team": {"source_key": "sporttery:team:midtjylland", "name": "中日德兰", "country_code": "DK"},
+      "kickoff_at": "2026-07-24T02:00:00+08:00",
+      "sales_cutoff_at": "2026-07-24T01:50:00+08:00",
+      "sales_status": "on_sale",
+      "odds": [
+        {"play_type": "HAD", "values": {"home": 2.05, "draw": 3.13, "away": 3.10}, "observed_at": "2026-07-23T20:30:00+08:00"},
+        {"play_type": "HHAD", "values": {"handicap": -1, "home": 4.50, "draw": 3.70, "away": 1.57}, "observed_at": "2026-07-23T20:30:00+08:00"}
+      ]
+    },
+    {
+      "source_record_key": "sporttery:20260723:206:2040599",
+      "sporttery_match_number": "206",
+      "business_date": "2026-07-23",
+      "observed_at": "2026-07-23T20:30:00+08:00",
+      "source_url": "https://m.sporttery.cn/mjc/jsq/zqspf/",
+      "competition": {"source_key": "sporttery:competition:europa-league", "name": "欧罗巴", "country_code": "EU", "competition_type": "cup"},
+      "season": {"source_key": "sporttery:season:europa-league:2026-27", "name": "2026-27", "starts_on": "2026-07-01", "ends_on": "2027-05-31"},
+      "home_team": {"source_key": "sporttery:team:twente", "name": "特温特", "country_code": "NL"},
+      "away_team": {"source_key": "sporttery:team:ferencvaros", "name": "费伦茨瓦罗斯", "country_code": "HU"},
+      "kickoff_at": "2026-07-24T02:00:00+08:00",
+      "sales_cutoff_at": "2026-07-24T01:50:00+08:00",
+      "sales_status": "on_sale",
+      "odds": [
+        {"play_type": "HAD", "values": {"home": 1.38, "draw": 4.08, "away": 6.25}, "observed_at": "2026-07-23T20:30:00+08:00"},
+        {"play_type": "HHAD", "values": {"handicap": -1, "home": 2.45, "draw": 3.08, "away": 2.52}, "observed_at": "2026-07-23T20:30:00+08:00"}
+      ]
+    },
+    {
+      "source_record_key": "sporttery:20260723:207:2040600",
+      "sporttery_match_number": "207",
+      "business_date": "2026-07-23",
+      "observed_at": "2026-07-23T20:30:00+08:00",
+      "source_url": "https://m.sporttery.cn/mjc/jsq/zqspf/",
+      "competition": {"source_key": "sporttery:competition:europa-league", "name": "欧罗巴", "country_code": "EU", "competition_type": "cup"},
+      "season": {"source_key": "sporttery:season:europa-league:2026-27", "name": "2026-27", "starts_on": "2026-07-01", "ends_on": "2027-05-31"},
+      "home_team": {"source_key": "sporttery:team:hajduk-split", "name": "斯普利特海杜克", "country_code": "HR"},
+      "away_team": {"source_key": "sporttery:team:pafos", "name": "帕福斯", "country_code": "CY"},
+      "kickoff_at": "2026-07-24T03:00:00+08:00",
+      "sales_cutoff_at": "2026-07-24T02:50:00+08:00",
+      "sales_status": "on_sale",
+      "odds": [
+        {"play_type": "HAD", "values": {"home": 1.81, "draw": 3.22, "away": 3.75}, "observed_at": "2026-07-23T20:30:00+08:00"},
+        {"play_type": "HHAD", "values": {"handicap": -1, "home": 3.85, "draw": 3.35, "away": 1.75}, "observed_at": "2026-07-23T20:30:00+08:00"}
+      ]
+    }
+  ]
+}

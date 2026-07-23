@@ -2,19 +2,22 @@ import Link from "next/link";
 
 export interface MatchRowProps {
   id: string;
+  matchNumber?: string | null;
   competition: string;
   round: string;
   kickoff: string;
   home: string;
   away: string;
-  homeFlag: string;
-  awayFlag: string;
+  homeFlag?: string;
+  awayFlag?: string;
   prediction?: string;
   status?: string;
+  sourceLabel?: string;
 }
 
 export function MatchRow({
   id,
+  matchNumber,
   competition,
   round,
   kickoff,
@@ -24,22 +27,23 @@ export function MatchRow({
   awayFlag,
   prediction,
   status = "赛前 · 赛果待定",
+  sourceLabel = "来源未连接",
 }: MatchRowProps) {
   return (
     <Link className="fixture-row" href={`/console/fixtures/${id}`}>
       <div className="fixture-id">
-        <strong>Match {id}</strong>
+        <strong>场次 {matchNumber ?? id}</strong>
         <span>{kickoff} 北京</span>
       </div>
       <div className="fixture-matchup">
         <div>
-          <img src={homeFlag} alt={`${home}国旗`} />
+          {homeFlag ? <img src={homeFlag} alt={`${home}国旗`} /> : null}
           <strong>{home}</strong>
         </div>
         <span>vs</span>
         <div>
           <strong>{away}</strong>
-          <img src={awayFlag} alt={`${away}国旗`} />
+          {awayFlag ? <img src={awayFlag} alt={`${away}国旗`} /> : null}
         </div>
         <small>
           {competition} · {round}
@@ -52,7 +56,7 @@ export function MatchRow({
       </div>
       <div className="fixture-state">
         <span className="status-chip warning">{status}</span>
-        <small>来源未连接</small>
+        <small>{sourceLabel}</small>
         <b>查看比赛详情</b>
       </div>
     </Link>

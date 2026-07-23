@@ -17,12 +17,17 @@ class MatchSummary(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     match_id: UUID
+    sporttery_match_number: str | None = None
     competition: str
     home_team: str
     away_team: str
     kickoff_at: datetime
     sales_cutoff_at: datetime | None = None
     state: str
+    sales_status: str | None = None
+    fact_state: str = "unavailable"
+    source_type: str | None = None
+    source_authorization_status: str | None = None
     data_completeness: float = Field(ge=0, le=1)
     missing_fields: list[str] = Field(default_factory=list)
     latest_observed_at: datetime | None = None

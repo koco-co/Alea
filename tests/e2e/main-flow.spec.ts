@@ -28,9 +28,14 @@ test.describe("Task 8.1 P0 three-scenario main flow", () => {
     ).toBeVisible();
 
     await page.goto("/console/fixtures");
-    await expect(
-      page.getByText("当前没有可核验的真实竞彩场次", { exact: true }),
-    ).toBeVisible();
+    const fixtureCount = page.getByText("7 场", { exact: true });
+    const emptyState = page.getByText("当前没有可核验的竞彩场次", { exact: true });
+    await expect(fixtureCount.or(emptyState)).toBeVisible();
+    if (await fixtureCount.isVisible()) {
+      await expect(page.getByText("Fixture / 非生产数据", { exact: true })).toBeVisible();
+      await expect(page.getByText("场次 201", { exact: true })).toBeVisible();
+      await expect(page.getByText("场次 207", { exact: true })).toBeVisible();
+    }
 
     await page.goto("/console/calculator");
     await expect(

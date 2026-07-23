@@ -180,6 +180,7 @@ class StartRoundtableRequest(StrictModel):
     candidate_limit: int = Field(default=8, ge=1, le=20)
     scheduled: bool = False
     schedule_time: str = Field(default="08:00", pattern=r"^([01][0-9]|2[0-3]):[0-5][0-9]$")
+    fixture_mode: bool = False
 
 
 class ProviderExecutionMode(StrEnum):
@@ -726,6 +727,14 @@ async def start_roundtable(
         raise HTTPException(status_code=422, detail="three_distinct_instances_required")
     if body.scheduled:
         raise HTTPException(status_code=422, detail="scheduled_roundtable_not_supported")
+    if body.fixture_mode and os.getenv(
+        "ALEA_ALLOW_LOCAL_FIXTURE_ROUNDTABLE", ""
+    ).strip().lower() not in {
+        "1",
+        "true",
+        "yes",
+    }:
+        raise HTTPException(status_code=422, detail="local_fixture_roundtable_disabled")
     if set(body.match_ids) & set(body.excluded_match_ids):
         raise HTTPException(status_code=422, detail="selected_match_is_excluded")
     return await _command(

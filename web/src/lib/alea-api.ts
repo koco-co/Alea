@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { isSameOriginRequest } from "./admin-origin";
 import { getAccessContext } from "./supabase/access";
 
-const ALLOWED_PATH = /^\/v1\/rankings(?:\/[0-9a-f-]+)?$/i;
+const ALLOWED_PATH = /^(?:\/v1\/rankings(?:\/[0-9a-f-]+)?|\/v1\/matches)$/i;
 
 export async function proxyAuthenticatedApiRequest(
   request: Request,

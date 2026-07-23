@@ -12,7 +12,7 @@ from app.providers.catalog import API_PROVIDER_CATALOG, ApiProviderDefinition
 from app.providers.contract import ProviderFailure, ProviderRequest
 from app.providers.google import GoogleProvider
 from app.providers.openai import OpenAIProvider
-from app.providers.openai_compat import BUSINESS_METHODS, OpenAICompatProvider
+from app.providers.openai_compat import BUSINESS_METHODS, OpenAICompatProvider, _object_output
 
 
 @pytest.fixture()
@@ -236,3 +236,7 @@ async def test_json_object_fallback_includes_exact_schema_instruction(
         )
 
     assert result.output["confidence"] == 0.5
+
+
+def test_json_object_parser_accepts_a_single_json_code_fence() -> None:
+    assert _object_output('```json\n{"summary":"ok"}\n```') == {"summary": "ok"}
